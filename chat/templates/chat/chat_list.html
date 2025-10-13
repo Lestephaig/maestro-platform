@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Чаты</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .chat-item { padding: 10px; border-bottom: 1px solid #eee; }
+        .chat-link { text-decoration: none; color: #007bff; }
+        .chat-link:hover { text-decoration: underline; }
+        .actions a { display: inline-block; margin-right: 15px; color: #007bff; text-decoration: none; }
+        .actions a:hover { text-decoration: underline; }
+    </style>
+    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
+</head>
+<body>
+    <h1>Ваши чаты</h1>
+
+    {% if chats %}
+        <ul style="list-style: none; padding: 0;">
+            {% for chat in chats %}
+                <li class="chat-item">
+                    {% if user == chat.performer %}
+                        <a href="{% url 'chat_room' chat.id %}" class="chat-link">
+                            Чат с {{ chat.client.username }} ({{ chat.client.get_full_name|default:chat.client.username }})
+                        </a>
+                    {% elif user == chat.client %}
+                        <a href="{% url 'chat_room' chat.id %}" class="chat-link">
+                            Чат с {{ chat.performer.username }} ({{ chat.performer.get_full_name|default:chat.performer.username }})
+                        </a>
+                    {% endif %}
+                    <small>— {{ chat.created_at|date:"d.m.Y H:i" }}</small>
+                </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <p>У вас пока нет чатов.</p>
+    {% endif %}
+
+    <div class="actions">
+        <a href="{% url 'profile' %}">Личный кабинет</a>
+        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">
+                Выйти
+            </button>
+        </form>
+    </div>
+</body>
+</html>

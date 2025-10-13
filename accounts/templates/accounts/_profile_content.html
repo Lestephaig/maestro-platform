@@ -1,0 +1,26 @@
+<div id="profile-section">
+    {% if user.performer_profile %}
+        <h2>Профиль исполнителя</h2>
+        <p><strong>Полное имя:</strong> {{ user.performer_profile.full_name }}</p>
+        <p><strong>Тип голоса:</strong> {{ user.performer_profile.voice_type|default:"Не указан" }}</p>
+        <p><strong>Репертуар:</strong> {{ user.performer_profile.repertoire|linebreaks }}</p>
+        <p><strong>Биография:</strong> {{ user.performer_profile.bio|linebreaks }}</p>
+        {% if user.performer_profile.video_url %}
+            <p><strong>Видео:</strong> <a href="{{ user.performer_profile.video_url }}" target="_blank">Ссылка</a></p>
+        {% endif %}
+        {% if user.performer_profile.photo_url %}
+            <p><strong>Фото:</strong> <img src="{{ user.performer_profile.photo_url }}" alt="Фото" style="max-width: 200px; margin-top: 10px;"></p>
+        {% endif %}
+    {% elif user.client_profile %}
+        <h2>Профиль заказчика</h2>
+        <p><strong>Компания:</strong> {{ user.client_profile.company_name }}</p>
+        <p><strong>Контактное лицо:</strong> {{ user.client_profile.contact_person|default:"Не указано" }}</p>
+        {% if user.client_profile.website %}
+            <p><strong>Сайт:</strong> <a href="{{ user.client_profile.website }}" target="_blank">{{ user.client_profile.website }}</a></p>
+        {% endif %}
+    {% endif %}
+
+    <button hx-get="{% url 'profile_edit' %}" hx-target="#profile-content" hx-swap="innerHTML">
+        Редактировать профиль
+    </button>
+</div>

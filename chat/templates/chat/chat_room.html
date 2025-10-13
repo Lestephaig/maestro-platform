@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Чат</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .message { padding: 10px; margin: 5px 0; border-radius: 5px; }
+        .message.sent { background: #d1ecf1; text-align: right; }
+        .message.received { background: #f8f9fa; text-align: left; }
+        .message-text { margin: 0; }
+        .message-time { font-size: 0.8em; color: #6c757d; }
+        .form-group { margin-top: 20px; }
+        textarea { width: 100%; padding: 10px; box-sizing: border-box; }
+        button { background: #007bff; color: white; padding: 10px 20px; border: none; cursor: pointer; }
+        button:hover { background: #0056b3; }
+        .actions a { display: inline-block; margin-right: 15px; color: #007bff; text-decoration: none; }
+        .actions a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>Чат с
+        {% if user == room.performer %}
+            {{ room.client.username }}
+        {% elif user == room.client %}
+            {{ room.performer.username }}
+        {% endif %}
+    </h1>
+
+    <div id="messages">
+        {% for message in messages %}
+            <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
+                <div class="message-text">{{ message.text }}</div>
+                <div class="message-time">{{ message.timestamp|date:"H:i" }}</div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="form-group">
+        <textarea id="messageInput" placeholder="Введите сообщение..." rows="3"></textarea>
+        <button id="sendBtn">Отправить</button>
+    </div>
+
+    <div class="actions">
+        <a href="{% url 'chat_list' %}">Назад к списку чатов</a>
+        <a href="{% url 'profile' %}">Личный кабинет</a>
+        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">
+                Выйти
+            </button>
+        </form>
+    </div>
+
+    <script>
+        const room_id = {{ room.id }};
+        const user_id = {{ user.id }};
+        const messageInput = document.getElementById('messageInput');
+        const sendBtn = document.getElementById('sendBtn');
+        const messagesContainer = document.getElementById('messages');
+
+        // Подключаемся к WebSocket
+        const chatSocket = new WebSocket(
+            'ws://' + window.location.host + '/ws/chat/' + room_id + '/'
+        );
+
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const message = data['message'];
+            const sender_id = data['sender_id'];
+
+            // Создаём элемент сообщения
+            const messageElement = document.createElement('div');
+            messageElement.classList.add('message');
+            if (sender_id == user_id) {
+                messageElement.classList.add('sent');
+            } else {
+                messageElement.classList.add('received');
+            }
+
+            const textElement = document.createElement('div');
+            textElement.classList.add('message-text');
+            textElement.textContent = message;
+
+            const timeElement = document.createElement('div');
+            timeElement.classList.add('message-time');
+            const now = new Date();
+            timeElement.textContent = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+
+            messageElement.appendChild(textElement);
+            messageElement.appendChild(timeElement);
+            messagesContainer.appendChild(messageElement);
+
+            // Прокручиваем вниз
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
+
+        chatSocket.onclose = function(e) {
+            console.error('Chat socket closed unexpectedly');
+        };
+
+        // Отправка сообщения
+        sendBtn.onclick = function(e) {
+            const message = messageInput.value.trim();
+            if (message) {
+                chatSocket.send(JSON.stringify({
+                    'message': message
+                }));
+                messageInput.value = '';
+            }
+        };
+
+        // Отправка по Enter
+        messageInput.onkeypress = function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendBtn.click();
+            }
+        };
+    </script>
+</body>
+</html>

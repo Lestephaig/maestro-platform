@@ -140,6 +140,12 @@ celerybeat.pid
 .venv
 env/
 venv/
+__pycache__/
+*.pyc
+db.sqlite3
+*.log
+.env
+.DS_Store
 ENV/
 env.bak/
 venv.bak/

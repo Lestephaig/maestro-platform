@@ -1,0 +1,19 @@
+<div id="profile-section">
+    <h2>Редактирование профиля</h2>
+    <form hx-post="{% url 'profile_edit' %}" hx-target="#profile-content" hx-swap="innerHTML">
+        {% csrf_token %}
+
+        {% for field in form %}
+            <div class="form-group" style="margin-bottom: 15px;">
+                <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
+                {{ field }}
+                {% if field.errors %}
+                    <div style="color: red; font-size: 0.9em;">{{ field.errors }}</div>
+                {% endif %}
+            </div>
+        {% endfor %}
+
+        <button type="submit">Сохранить</button>
+        <button type="button" hx-get="{% url 'profile' %}" hx-target="#profile-content">Отмена</button>
+    </form>
+</div>
