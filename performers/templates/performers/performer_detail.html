@@ -1,0 +1,247 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}{{ performer.full_name }} - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        min-height: 100vh;
+        font-family: 'Georgia', serif;
+    }
+    
+    .performer-container {
+        background: rgba(30, 30, 50, 0.95);
+        border-radius: 20px;
+        margin: 2rem auto;
+        max-width: 1200px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+    }
+    
+    
+    .performer-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        min-height: 600px;
+    }
+    
+    .performer-image {
+        background: linear-gradient(135deg, #f4d03f 0%, #f7dc6f 50%, #2c3e50 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .performer-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+    }
+    
+    .performer-info {
+        padding: 3rem;
+        background: #2c3e50;
+        color: #ecf0f1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .profile-title {
+        font-size: 0.9rem;
+        color: #bdc3c7;
+        margin-bottom: 0.5rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .performer-name {
+        font-size: 3rem;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        color: #f39c12;
+        line-height: 1.1;
+    }
+    
+    .performer-details {
+        font-size: 1.1rem;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    .detail-item {
+        margin-bottom: 0.8rem;
+    }
+    
+    .detail-label {
+        color: #bdc3c7;
+        font-weight: 500;
+    }
+    
+    .detail-value {
+        color: #ecf0f1;
+        margin-left: 0.5rem;
+    }
+    
+    .achievements {
+        background: rgba(52, 73, 94, 0.3);
+        padding: 1.5rem;
+        border-radius: 10px;
+        border-left: 4px solid #f39c12;
+    }
+    
+    .achievements-title {
+        color: #f39c12;
+        font-weight: bold;
+        margin-bottom: 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .achievements-text {
+        color: #ecf0f1;
+        line-height: 1.5;
+    }
+    
+    .calendar-section {
+        grid-column: 1 / -1;
+        background: #34495e;
+        padding: 2rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .calendar-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .calendar-title {
+        color: #f39c12;
+        font-size: 1.3rem;
+        font-weight: bold;
+    }
+    
+    .calendar-nav {
+        display: flex;
+        gap: 1rem;
+        align-items: center;
+    }
+    
+    .calendar-nav button {
+        background: none;
+        border: none;
+        color: #ecf0f1;
+        font-size: 1.2rem;
+        cursor: pointer;
+        padding: 0.5rem;
+        border-radius: 5px;
+        transition: background 0.3s ease;
+    }
+    
+    .calendar-nav button:hover {
+        background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .calendar-placeholder {
+        background: rgba(52, 73, 94, 0.5);
+        border-radius: 10px;
+        padding: 2rem;
+        text-align: center;
+        color: #bdc3c7;
+        font-style: italic;
+    }
+    
+    @media (max-width: 768px) {
+        .performer-content {
+            grid-template-columns: 1fr;
+        }
+        
+        .performer-name {
+            font-size: 2rem;
+        }
+        
+        .performer-info {
+            padding: 2rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="performer-container">
+    
+    <!-- Main Content -->
+    <div class="performer-content">
+        <!-- Performer Image -->
+        <div class="performer-image">
+            {% if performer.photo %}
+                <img src="{{ performer.photo.url }}" alt="{{ performer.full_name }}" class="performer-photo">
+            {% else %}
+                <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: #2c3e50; font-size: 4rem;">
+                    <i class="bi bi-person-circle"></i>
+                </div>
+            {% endif %}
+        </div>
+        
+        <!-- Performer Information -->
+        <div class="performer-info">
+            <div class="profile-title">Russian Profiles</div>
+            <h1 class="performer-name">{{ performer.full_name }}</h1>
+            
+            <div class="performer-details">
+                {% if performer.birth_year %}
+                <div class="detail-item">
+                    <span class="detail-label">Родился:</span>
+                    <span class="detail-value">{{ performer.birth_year }}</span>
+                </div>
+                {% endif %}
+                
+                {% if performer.education %}
+                <div class="detail-item">
+                    <span class="detail-label">Образование:</span>
+                    <span class="detail-value">{{ performer.education }}</span>
+                </div>
+                {% endif %}
+                
+                {% if performer.voice_type %}
+                <div class="detail-item">
+                    <span class="detail-label">Тип голоса:</span>
+                    <span class="detail-value">{{ performer.voice_type }}</span>
+                </div>
+                {% endif %}
+            </div>
+            
+            {% if performer.achievements %}
+            <div class="achievements">
+                <div class="achievements-title">Достижения</div>
+                <div class="achievements-text">{{ performer.achievements }}</div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Calendar Section -->
+    <div class="calendar-section">
+        <div class="calendar-header">
+            <div class="calendar-title">2025.04.12 - Романсы 'Снегурочка' - Московский оперный</div>
+            <div class="calendar-nav">
+                <button><i class="bi bi-chevron-left"></i></button>
+                <button><i class="bi bi-gear"></i></button>
+                <button><i class="bi bi-chevron-right"></i></button>
+            </div>
+        </div>
+        
+        <div class="calendar-placeholder">
+            <i class="bi bi-calendar3" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
+            <p>Календарь выступлений будет добавлен позже</p>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -29,6 +29,11 @@ def register(request):
 @login_required
 def profile(request):
     return render(request, 'accounts/profile.html')
+
+@login_required
+def profile_view(request):
+    """Возвращает только содержимое профиля для HTMX"""
+    return render(request, 'accounts/_profile_content.html')
 @login_required
 def profile_edit(request):
     if hasattr(request.user, 'performer_profile'):
@@ -41,10 +46,10 @@ def profile_edit(request):
         return redirect('profile')
 
     if request.method == 'POST':
-        form = form_class(request.POST, instance=profile)
+        form = form_class(request.POST, request.FILES, instance=profile)
         if form.is_valid():
             form.save()
-            # Возвращаем только частичный шаблон просмотра
+            # Возвращаем только содержимое профиля для HTMX
             return render(request, 'accounts/_profile_content.html')
     else:
         form = form_class(instance=profile)

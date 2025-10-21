@@ -1,50 +1,76 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Чаты</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-        .chat-item { padding: 10px; border-bottom: 1px solid #eee; }
-        .chat-link { text-decoration: none; color: #007bff; }
-        .chat-link:hover { text-decoration: underline; }
-        .actions a { display: inline-block; margin-right: 15px; color: #007bff; text-decoration: none; }
-        .actions a:hover { text-decoration: underline; }
-    </style>
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-</head>
-<body>
-    <h1>Ваши чаты</h1>
+{% extends 'base.html' %}
 
-    {% if chats %}
-        <ul style="list-style: none; padding: 0;">
-            {% for chat in chats %}
-                <li class="chat-item">
-                    {% if user == chat.performer %}
-                        <a href="{% url 'chat_room' chat.id %}" class="chat-link">
-                            Чат с {{ chat.client.username }} ({{ chat.client.get_full_name|default:chat.client.username }})
-                        </a>
-                    {% elif user == chat.client %}
-                        <a href="{% url 'chat_room' chat.id %}" class="chat-link">
-                            Чат с {{ chat.performer.username }} ({{ chat.performer.get_full_name|default:chat.performer.username }})
-                        </a>
-                    {% endif %}
-                    <small>— {{ chat.created_at|date:"d.m.Y H:i" }}</small>
-                </li>
-            {% endfor %}
-        </ul>
-    {% else %}
-        <p>У вас пока нет чатов.</p>
-    {% endif %}
+{% block title %}Чаты - Maestro Platform{% endblock %}
 
-    <div class="actions">
-        <a href="{% url 'profile' %}">Личный кабинет</a>
-        <form method="post" action="{% url 'logout' %}" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">
-                Выйти
-            </button>
-        </form>
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-chat-dots text-primary me-3" style="font-size: 3rem;"></i>
+                <div>
+                    <h1 class="mb-0">Ваши чаты</h1>
+                    <p class="text-muted">Общайтесь с партнерами по проектам</p>
+                </div>
+            </div>
+
+            {% if chats %}
+                <div class="row">
+                    {% for chat in chats %}
+                        <div class="col-12 mb-3">
+                            <div class="card">
+                                <div class="card-body">
+                                    <div class="d-flex align-items-center">
+                                        <div class="me-3">
+                                            <i class="bi bi-person-circle text-muted" style="font-size: 2.5rem;"></i>
+                                        </div>
+                                        <div class="flex-grow-1">
+                                            {% if user == chat.performer %}
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'chat_room' chat.id %}" class="text-decoration-none">
+                                                        {{ chat.client.username }}
+                                                    </a>
+                                                </h6>
+                                                <p class="text-muted mb-1">
+                                                    {{ chat.client.get_full_name|default:chat.client.username }}
+                                                </p>
+                                            {% elif user == chat.client %}
+                                                <h6 class="mb-1">
+                                                    <a href="{% url 'chat_room' chat.id %}" class="text-decoration-none">
+                                                        {{ chat.performer.username }}
+                                                    </a>
+                                                </h6>
+                                                <p class="text-muted mb-1">
+                                                    {{ chat.performer.get_full_name|default:chat.performer.username }}
+                                                </p>
+                                            {% endif %}
+                                            <small class="text-muted">
+                                                <i class="bi bi-clock me-1"></i>
+                                                {{ chat.created_at|date:"d.m.Y H:i" }}
+                                            </small>
+                                        </div>
+                                        <div>
+                                            <a href="{% url 'chat_room' chat.id %}" class="btn btn-primary">
+                                                <i class="bi bi-chat me-1"></i>Открыть чат
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-chat-dots text-muted" style="font-size: 5rem;"></i>
+                    <h4 class="mt-3 text-muted">У вас пока нет чатов</h4>
+                    <p class="text-muted">Начните общение с партнерами по проектам</p>
+                    <a href="{% url 'home' %}" class="btn btn-primary">
+                        <i class="bi bi-house me-2"></i>На главную
+                    </a>
+                </div>
+            {% endif %}
+        </div>
     </div>
-</body>
-</html>
+</div>
+{% endblock %}

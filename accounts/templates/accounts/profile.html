@@ -1,56 +1,98 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="utf-8">
-    <title>Личный кабинет</title>
-    <style>
-        body { font-family: Arial, sans-serif; max-width: 600px; margin: 40px auto; padding: 20px; }
-        .info { background: #f8f9fa; padding: 15px; border-radius: 5px; margin-bottom: 20px; }
-        .status { font-weight: bold; }
-        .verified { color: green; }
-        .not-verified { color: orange; }
-        .actions a { display: inline-block; margin-right: 15px; color: #007bff; text-decoration: none; }
-        .actions a:hover { text-decoration: underline; }
-    </style>
-    <!-- HTMX -->
-    <script src="https://unpkg.com/htmx.org@1.9.10"></script>
-</head>
-<body>
-    <h1>Личный кабинет</h1>
+{% extends 'base.html' %}
 
-    <div class="info">
-        <p><strong>Имя пользователя:</strong> {{ user.username }}</p>
-        <p><strong>Email:</strong> {{ user.email }}</p>
+{% block title %}Личный кабинет - Maestro Platform{% endblock %}
 
-        {% if user.performer_profile %}
-            <p><strong>Тип аккаунта:</strong> Исполнитель</p>
-        {% elif user.client_profile %}
-            <p><strong>Тип аккаунта:</strong> Заказчик</p>
-        {% endif %}
+{% block content %}
+<div class="container">
+    <div class="row">
+        <div class="col-lg-8 mx-auto">
+            <div class="d-flex align-items-center mb-4">
+                <i class="bi bi-person-circle text-primary me-3" style="font-size: 3rem;"></i>
+                <div>
+                    <h1 class="mb-0">Личный кабинет</h1>
+                    <p class="text-muted">Управляйте своим профилем и настройками</p>
+                </div>
+            </div>
 
-        <p class="status">
-            Статус верификации:
-            {% if user.is_verified %}
-                <span class="verified">✅ Одобрен</span>
-            {% else %}
-                <span class="not-verified">⏳ Ожидает модерации</span>
-            {% endif %}
-        </p>
+            <!-- Основная информация -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-info-circle me-2"></i>Основная информация
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <p><strong><i class="bi bi-person me-2"></i>Имя пользователя:</strong> {{ user.username }}</p>
+                            <p><strong><i class="bi bi-envelope me-2"></i>Email:</strong> {{ user.email }}</p>
+                        </div>
+                        <div class="col-md-6">
+                            {% if user.performer_profile %}
+                                <p><strong><i class="bi bi-music-note me-2"></i>Тип аккаунта:</strong> 
+                                    <span class="badge bg-success">Исполнитель</span>
+                                </p>
+                            {% elif user.client_profile %}
+                                <p><strong><i class="bi bi-building me-2"></i>Тип аккаунта:</strong> 
+                                    <span class="badge bg-info">Заказчик</span>
+                                </p>
+                            {% endif %}
+
+                            <p><strong><i class="bi bi-shield-check me-2"></i>Статус верификации:</strong>
+                                {% if user.is_verified %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>Одобрен
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-warning">
+                                        <i class="bi bi-clock me-1"></i>Ожидает модерации
+                                    </span>
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Динамический контент профиля -->
+            <div class="card">
+                <div class="card-header bg-light">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0">
+                            <i class="bi bi-gear me-2"></i>Детали профиля
+                        </h5>
+                        <button class="btn btn-sm btn-outline-primary" 
+                                hx-get="{% url 'profile_edit' %}" 
+                                hx-target="#profile-content"
+                                hx-swap="innerHTML">
+                            <i class="bi bi-pencil me-1"></i>Редактировать
+                        </button>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div id="profile-content">
+                        {% include 'accounts/_profile_content.html' %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Дополнительные действия -->
+            <div class="card mt-4">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="bi bi-tools me-2"></i>Дополнительные действия
+                    </h6>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{% url 'chat_list' %}" class="btn btn-outline-primary">
+                            <i class="bi bi-chat-dots me-1"></i>Чаты
+                        </a>
+                        <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary" target="_blank">
+                            <i class="bi bi-gear me-1"></i>Админка
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- Динамический контент (просмотр или редактирование) -->
-    <div id="profile-content">
-        {% include 'accounts/_profile_content.html' %}
-    </div>
-
-    <div class="actions">
-        <a href="{% url 'admin:index' %}" target="_blank">Админка (для модераторов)</a>
-        <form method="post" action="{% url 'logout' %}" style="display: inline;">
-            {% csrf_token %}
-            <button type="submit" style="background: none; border: none; color: #007bff; cursor: pointer; text-decoration: underline;">
-                Выйти
-            </button>
-        </form>
-    </div>
-</body>
-</html>
+</div>
+{% endblock %}

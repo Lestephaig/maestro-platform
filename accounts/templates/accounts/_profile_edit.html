@@ -1,19 +1,334 @@
-<div id="profile-section">
-    <h2>Редактирование профиля</h2>
-    <form hx-post="{% url 'profile_edit' %}" hx-target="#profile-content" hx-swap="innerHTML">
-        {% csrf_token %}
+<div class="profile-edit-section">
+    <div class="card">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                <i class="bi bi-pencil-square me-2"></i>
+                {% if user.performer_profile %}Редактирование профиля исполнителя{% else %}Редактирование профиля заказчика{% endif %}
+            </h4>
+        </div>
+        <div class="card-body">
+            <form hx-post="{% url 'profile_edit' %}" hx-target="#profile-content" hx-swap="innerHTML">
+                {% csrf_token %}
 
-        {% for field in form %}
-            <div class="form-group" style="margin-bottom: 15px;">
-                <label for="{{ field.id_for_label }}">{{ field.label }}:</label>
-                {{ field }}
-                {% if field.errors %}
-                    <div style="color: red; font-size: 0.9em;">{{ field.errors }}</div>
+                <div class="row">
+                    <div class="col-md-6">
+                        <!-- Основные поля -->
+                        {% if user.performer_profile %}
+                            <!-- Поле "Полное имя" -->
+                            <div class="mb-3">
+                                <label for="{{ form.full_name.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person me-2"></i>{{ form.full_name.label }}
+                                </label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.full_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Поле "Тип голоса" -->
+                            <div class="mb-3">
+                                <label for="{{ form.voice_type.id_for_label }}" class="form-label">
+                                    <i class="bi bi-mic me-2"></i>{{ form.voice_type.label }}
+                                </label>
+                                {{ form.voice_type }}
+                                <div class="form-text">Например: тенор, сопрано, баритон, меццо-сопрано</div>
+                                {% if form.voice_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.voice_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Поле "Год рождения" -->
+                            <div class="mb-3">
+                                <label for="{{ form.birth_year.id_for_label }}" class="form-label">
+                                    <i class="bi bi-calendar-date me-2"></i>{{ form.birth_year.label }}
+                                </label>
+                                {{ form.birth_year }}
+                                {% if form.birth_year.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.birth_year.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Поле "Фото" -->
+                            <div class="mb-3">
+                                <label for="{{ form.photo.id_for_label }}" class="form-label">
+                                    <i class="bi bi-image me-2"></i>{{ form.photo.label }}
+                                </label>
+                                {{ form.photo }}
+                                <div class="form-text">Загрузите ваше профессиональное фото</div>
+                                {% if form.photo.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.photo.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <!-- Предпросмотр текущего фото -->
+                                {% if user.performer_profile.photo %}
+                                    <div class="mt-2">
+                                        <img src="{{ user.performer_profile.photo.url }}" alt="Текущее фото" class="img-thumbnail" style="max-width: 200px;">
+                                        <small class="text-muted d-block">Текущее фото</small>
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                        {% elif user.client_profile %}
+                            <!-- Поля для заказчика -->
+                            <div class="mb-3">
+                                <label for="{{ form.company_name.id_for_label }}" class="form-label">
+                                    <i class="bi bi-building me-2"></i>{{ form.company_name.label }}
+                                </label>
+                                {{ form.company_name }}
+                                {% if form.company_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.company_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.contact_person.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person me-2"></i>{{ form.contact_person.label }}
+                                </label>
+                                {{ form.contact_person }}
+                                {% if form.contact_person.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.contact_person.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.website.id_for_label }}" class="form-label">
+                                    <i class="bi bi-globe me-2"></i>{{ form.website.label }}
+                                </label>
+                                {{ form.website }}
+                                {% if form.website.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.website.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-6">
+                        {% if user.performer_profile %}
+                            <!-- Поле "Ссылка на видео" -->
+                            <div class="mb-3">
+                                <label for="{{ form.video_url.id_for_label }}" class="form-label">
+                                    <i class="bi bi-play-circle me-2"></i>{{ form.video_url.label }}
+                                </label>
+                                {{ form.video_url }}
+                                <div class="form-text">YouTube или Vimeo ссылка на ваше выступление</div>
+                                {% if form.video_url.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.video_url.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <!-- Предпросмотр видео -->
+                                <div id="video-preview" class="mt-2" style="display: none;">
+                                    <div class="alert alert-info">
+                                        <i class="bi bi-info-circle me-2"></i>
+                                        Предпросмотр видео будет показан после сохранения
+                                    </div>
+                                </div>
+                            </div>
+                        {% endif %}
+
+                        <!-- Поле "Образование" (только для исполнителей) -->
+                        {% if user.performer_profile %}
+                            <div class="mb-3">
+                                <label for="{{ form.education.id_for_label }}" class="form-label">
+                                    <i class="bi bi-mortarboard me-2"></i>{{ form.education.label }}
+                                </label>
+                                {{ form.education }}
+                                <div class="form-text">Укажите ваше музыкальное образование, консерваторию, университет</div>
+                                {% if form.education.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.education.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+
+                        <!-- Поле "Репертуар" (только для исполнителей) -->
+                        {% if user.performer_profile %}
+                            <div class="mb-3">
+                                <label for="{{ form.repertoire.id_for_label }}" class="form-label">
+                                    <i class="bi bi-music-note-list me-2"></i>{{ form.repertoire.label }}
+                                </label>
+                                {{ form.repertoire }}
+                                <div class="form-text">Опишите ваш репертуар, произведения, жанры</div>
+                                {% if form.repertoire.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.repertoire.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- Поле "Биография" (полная ширина) -->
+                {% if user.performer_profile %}
+                    <div class="mb-4">
+                        <label for="{{ form.bio.id_for_label }}" class="form-label">
+                            <i class="bi bi-file-text me-2"></i>{{ form.bio.label }}
+                        </label>
+                        {{ form.bio }}
+                        <div class="form-text">Расскажите о себе, своем опыте, достижениях и образовании</div>
+                        {% if form.bio.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.bio.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Поле "Достижения" (полная ширина) -->
+                    <div class="mb-4">
+                        <label for="{{ form.achievements.id_for_label }}" class="form-label">
+                            <i class="bi bi-trophy me-2"></i>{{ form.achievements.label }}
+                        </label>
+                        {{ form.achievements }}
+                        <div class="form-text">Укажите ваши награды, премии, достижения в музыкальной карьере</div>
+                        {% if form.achievements.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.achievements.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
                 {% endif %}
-            </div>
-        {% endfor %}
 
-        <button type="submit">Сохранить</button>
-        <button type="button" hx-get="{% url 'profile' %}" hx-target="#profile-content">Отмена</button>
-    </form>
+                <!-- Кнопки действий -->
+                <div class="d-flex gap-3 justify-content-end">
+                    <button type="button" class="btn btn-outline-secondary" 
+                            hx-get="{% url 'profile_view' %}" hx-target="#profile-content" hx-swap="innerHTML">
+                        <i class="bi bi-x-circle me-2"></i>Отмена
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-check-circle me-2"></i>Сохранить изменения
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
+
+<style>
+.form-control {
+    border-radius: 0.5rem;
+    border: 1px solid #dee2e6;
+    padding: 0.75rem 1rem;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.form-control:focus {
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.form-label {
+    font-weight: 600;
+    color: #495057;
+}
+
+.form-text {
+    color: #6c757d;
+    font-size: 0.875rem;
+}
+
+.profile-edit-section .card {
+    border: none;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+.btn {
+    border-radius: 0.5rem;
+    font-weight: 500;
+    transition: all 0.2s ease-in-out;
+}
+
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+#photo-preview img {
+    border-radius: 0.5rem;
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+@media (max-width: 768px) {
+    .d-flex.gap-3 {
+        flex-direction: column;
+    }
+    
+    .d-flex.gap-3 .btn {
+        width: 100%;
+    }
+}
+</style>
+
+<script>
+// Предпросмотр фото при вводе URL
+document.addEventListener('DOMContentLoaded', function() {
+    const photoUrlField = document.getElementById('{{ form.photo_url.id_for_label }}');
+    const photoPreview = document.getElementById('photo-preview');
+    const previewImage = document.getElementById('preview-image');
+    
+    if (photoUrlField) {
+        photoUrlField.addEventListener('input', function() {
+            const url = this.value.trim();
+            
+            if (url && isValidImageUrl(url)) {
+                previewImage.src = url;
+                previewImage.onload = function() {
+                    photoPreview.style.display = 'block';
+                };
+                previewImage.onerror = function() {
+                    photoPreview.style.display = 'none';
+                };
+            } else {
+                photoPreview.style.display = 'none';
+            }
+        });
+    }
+});
+
+// Проверка валидности URL изображения
+function isValidImageUrl(url) {
+    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
+    return imageExtensions.some(ext => url.toLowerCase().includes(ext)) || 
+           url.includes('imgur.com') || 
+           url.includes('cloudinary.com') ||
+           url.includes('unsplash.com');
+}
+
+// Предпросмотр видео при вводе URL
+document.addEventListener('DOMContentLoaded', function() {
+    const videoUrlField = document.getElementById('{{ form.video_url.id_for_label }}');
+    const videoPreview = document.getElementById('video-preview');
+    
+    if (videoUrlField) {
+        videoUrlField.addEventListener('input', function() {
+            const url = this.value.trim();
+            
+            if (url && isValidVideoUrl(url)) {
+                videoPreview.style.display = 'block';
+            } else {
+                videoPreview.style.display = 'none';
+            }
+        });
+    }
+});
+
+// Проверка валидности URL видео
+function isValidVideoUrl(url) {
+    return url.includes('youtube.com') || 
+           url.includes('youtu.be') || 
+           url.includes('vimeo.com');
+}
+</script>
