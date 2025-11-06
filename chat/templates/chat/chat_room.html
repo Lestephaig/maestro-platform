@@ -2,78 +2,357 @@
 
 {% block title %}Чат - Maestro Platform{% endblock %}
 
-{% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <!-- Header -->
-            <div class="d-flex align-items-center mb-4">
-                <a href="{% url 'chat_list' %}" class="btn btn-outline-secondary me-3">
-                    <i class="bi bi-arrow-left"></i>
-                </a>
-                <div class="me-3">
-                    <i class="bi bi-person-circle text-primary" style="font-size: 2.5rem;"></i>
-                </div>
-                <div>
-                    <h4 class="mb-0">Чат с 
-                        {% if user == room.performer %}
-                            {{ room.client.username }}
-                        {% elif user == room.client %}
-                            {{ room.performer.username }}
-                        {% endif %}
-                    </h4>
-                    <small class="text-muted">
-                        <i class="bi bi-clock me-1"></i>
-                        Чат создан {{ room.created_at|date:"d.m.Y" }}
-                    </small>
-                </div>
-            </div>
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+    }
+    
+    .chat-room-container {
+        max-width: 900px;
+        margin: 1rem auto;
+        padding: 0 1rem;
+        height: calc(100vh - 120px);
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .chat-room-header {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 20px 20px 0 0;
+        padding: 1.25rem 1.5rem;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-shrink: 0;
+        border: 1px solid var(--gold);
+        border-bottom: none;
+    }
+    
+    .chat-room-header h5 {
+        color: var(--gold);
+        margin: 0;
+        font-weight: 700;
+        font-size: 1.2rem;
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+    }
+    
+    .chat-room-header h5 a {
+        color: var(--gold);
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .chat-room-header h5 a:hover {
+        color: var(--gold-light);
+        text-shadow: 0 0 15px rgba(212, 175, 55, 0.6);
+        text-decoration: underline;
+    }
+    
+    .chat-room-header small {
+        color: var(--silver);
+        font-size: 0.85rem;
+    }
+    
+    .chat-room-header .avatar {
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--black);
+        font-size: 1.4rem;
+        flex-shrink: 0;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+    }
+    
+    .btn-back {
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        color: var(--gold);
+        padding: 0.5rem 0.75rem;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+        background: rgba(212, 175, 55, 0.2);
+        border-color: var(--gold);
+        color: var(--gold-light);
+        transform: translateX(-2px);
+    }
+    
+    .messages-card {
+        background: var(--white);
+        border-radius: 0 0 20px 20px;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--gold);
+        border-top: none;
+    }
+    
+    .messages-area {
+        background: linear-gradient(135deg, #fafafa 0%, #f5f5f5 100%);
+        padding: 1.5rem;
+        overflow-y: auto;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    /* Scrollbar styling */
+    .messages-area::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    .messages-area::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+    }
+    
+    .messages-area::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--gold-dark), var(--gold-light));
+        border-radius: 5px;
+    }
+    
+    .messages-area::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--gold), var(--gold-light));
+    }
+    
+    .message {
+        display: flex;
+        align-items: flex-end;
+        gap: 0.5rem;
+        animation: slideIn 0.3s ease;
+    }
+    
+    @keyframes slideIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .message.sent {
+        flex-direction: row-reverse;
+    }
+    
+    .message-content {
+        max-width: 65%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .message.sent .message-content {
+        align-items: flex-end;
+    }
+    
+    .message.received .message-content {
+        align-items: flex-start;
+    }
+    
+    .message-text {
+        padding: 0.875rem 1.125rem;
+        border-radius: 18px;
+        word-wrap: break-word;
+        line-height: 1.5;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+    }
+    
+    .message.sent .message-text {
+        background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold-light) 100%);
+        color: var(--black);
+        border-bottom-right-radius: 4px;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        font-weight: 500;
+    }
+    
+    .message.received .message-text {
+        background: white;
+        color: var(--gray-dark);
+        border: 1px solid var(--silver-dark);
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .message-time {
+        font-size: 0.75rem;
+        color: var(--silver-dark);
+        margin-top: 0.25rem;
+        padding: 0 0.5rem;
+    }
+    
+    .message-input-area {
+        background: linear-gradient(135deg, #f8f8f8 0%, var(--white) 100%);
+        border-top: 1px solid var(--gold);
+        padding: 1.25rem 1.5rem;
+        flex-shrink: 0;
+    }
+    
+    .message-input-wrapper {
+        display: flex;
+        gap: 0.75rem;
+        align-items: flex-end;
+    }
+    
+    .message-input {
+        flex: 1;
+        background: var(--white);
+        border: 2px solid var(--silver-dark);
+        color: var(--black);
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        resize: none;
+        transition: all 0.3s ease;
+        font-family: inherit;
+        font-size: 0.95rem;
+    }
+    
+    .message-input:focus {
+        background: white;
+        border-color: var(--gold);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15);
+    }
+    
+    .message-input::placeholder {
+        color: var(--silver-dark);
+    }
+    
+    .btn-send {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 700;
+        border: none;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+    }
+    
+    .btn-send:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+        color: var(--black);
+    }
+    
+    .btn-send:active {
+        transform: translateY(0);
+    }
+    
+    .btn-send:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    @media (max-width: 768px) {
+        .chat-room-container {
+            height: calc(100vh - 80px);
+            margin: 0;
+        }
+        
+        .chat-room-header {
+            border-radius: 0;
+            padding: 1rem;
+        }
+        
+        .messages-card {
+            border-radius: 0;
+        }
+        
+        .messages-area {
+            padding: 1rem;
+        }
+        
+        .message-content {
+            max-width: 80%;
+        }
+        
+        .message-input-area {
+            padding: 1rem;
+        }
+        
+        .btn-send {
+            padding: 0.75rem 1rem;
+        }
+    }
+</style>
+{% endblock %}
 
-            <!-- Chat Messages -->
-            <div class="card">
-                <div class="card-body p-0">
-                    <div id="messages" style="height: 400px; overflow-y: auto; padding: 1rem;">
-                        {% for message in messages %}
-                            <div class="message {% if message.sender == user %}sent{% else %}received{% endif %} mb-3">
-                                <div class="message-text p-3 rounded {% if message.sender == user %}bg-primary text-white{% else %}bg-light{% endif %}">
-                                    {{ message.text }}
-                                </div>
-                                <div class="message-time text-muted small mt-1 {% if message.sender == user %}text-end{% endif %}">
-                                    {{ message.timestamp|date:"H:i" }}
-                                </div>
-                            </div>
-                        {% endfor %}
+{% block content %}
+<div class="chat-room-container">
+    <!-- Header -->
+    <div class="chat-room-header">
+        <a href="{% url 'chat_list' %}" class="btn btn-back">
+            <i class="bi bi-arrow-left"></i>
+        </a>
+        <div class="avatar">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <div class="flex-grow-1">
+            <h5 class="mb-0">
+                {% if user == room.performer %}
+                    {# Артист смотрит на клиента - ссылка на публичный профиль клиента #}
+                    <a href="{% url 'client_public_profile' room.client.id %}">{{ room.client.username }}</a>
+                {% elif user == room.client %}
+                    {# Клиент смотрит на артиста - ссылка на профиль артиста #}
+                    {% if room.performer.performer_profile %}
+                        <a href="{% url 'performers:performer_detail' room.performer.performer_profile.id %}">{{ room.performer.username }}</a>
+                    {% else %}
+                        <a href="{% url 'client_public_profile' room.performer.id %}">{{ room.performer.username }}</a>
+                    {% endif %}
+                {% endif %}
+            </h5>
+            <small>
+                <i class="bi bi-circle-fill" style="font-size: 0.5rem; color: #48bb78;"></i>
+                Онлайн
+            </small>
+        </div>
+    </div>
+
+    <!-- Chat Messages -->
+    <div class="messages-card">
+        <div id="messages" class="messages-area">
+            {% for message in chat_messages %}
+                <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
+                    <div class="message-content">
+                        <div class="message-text">
+                            {{ message.text }}
+                        </div>
+                        <div class="message-time">
+                            {{ message.timestamp|date:"H:i" }}
+                        </div>
                     </div>
                 </div>
-                
-                <!-- Message Input -->
-                <div class="card-footer">
-                    <div class="input-group">
-                        <textarea id="messageInput" class="form-control" placeholder="Введите сообщение..." rows="2"></textarea>
-                        <button id="sendBtn" class="btn btn-primary">
-                            <i class="bi bi-send"></i>
-                        </button>
-                    </div>
-                </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Message Input -->
+        <div class="message-input-area">
+            <div class="message-input-wrapper">
+                <textarea id="messageInput" class="message-input" placeholder="Введите сообщение..." rows="2"></textarea>
+                <button id="sendBtn" class="btn btn-send">
+                    <i class="bi bi-send-fill"></i>
+                    <span>Отправить</span>
+                </button>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .message.sent {
-        text-align: right;
-    }
-    
-    .message.received {
-        text-align: left;
-    }
-    
-    #messages {
-        scroll-behavior: smooth;
-    }
-</style>
-
 {% endblock %}
 
 {% block extra_js %}
@@ -81,74 +360,129 @@
     const room_id = {{ room.id }};
     const user_id = {{ user.id }};
     const messageInput = document.getElementById('messageInput');
-        const sendBtn = document.getElementById('sendBtn');
-        const messagesContainer = document.getElementById('messages');
+    const sendBtn = document.getElementById('sendBtn');
+    const messagesContainer = document.getElementById('messages');
 
-        // Подключаемся к WebSocket
-        const chatSocket = new WebSocket(
-            'ws://' + window.location.host + '/ws/chat/' + room_id + '/'
-        );
+    // Прокручиваем в конец при загрузке
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-        chatSocket.onmessage = function(e) {
-            const data = JSON.parse(e.data);
-            const message = data['message'];
-            const sender_id = data['sender_id'];
+    // Подключаемся к WebSocket
+    const chatSocket = new WebSocket(
+        'ws://' + window.location.host + '/ws/chat/' + room_id + '/'
+    );
 
-            // Создаём элемент сообщения
-            const messageElement = document.createElement('div');
-            messageElement.classList.add('message', 'mb-3');
-            if (sender_id == user_id) {
-                messageElement.classList.add('sent');
-            } else {
-                messageElement.classList.add('received');
+    chatSocket.onopen = function(e) {
+        console.log('WebSocket connection established');
+    };
+
+    chatSocket.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        const message = data['message'];
+        const sender_id = data['sender_id'];
+
+        // Создаём элемент сообщения
+        const messageDiv = document.createElement('div');
+        messageDiv.classList.add('message');
+        if (sender_id == user_id) {
+            messageDiv.classList.add('sent');
+        } else {
+            messageDiv.classList.add('received');
+        }
+
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add('message-content');
+
+        const textDiv = document.createElement('div');
+        textDiv.classList.add('message-text');
+        textDiv.textContent = message;
+
+        const timeDiv = document.createElement('div');
+        timeDiv.classList.add('message-time');
+        const now = new Date();
+        timeDiv.textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+
+        contentDiv.appendChild(textDiv);
+        contentDiv.appendChild(timeDiv);
+        messageDiv.appendChild(contentDiv);
+        messagesContainer.appendChild(messageDiv);
+
+        // Плавная прокрутка вниз
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    };
+
+    chatSocket.onclose = function(e) {
+        console.log('WebSocket closed - working without Redis/Daphne');
+        // При работе без WebSocket можно добавить периодическое обновление страницы
+    };
+
+    chatSocket.onerror = function(e) {
+        console.log('WebSocket not available - working without Redis/Daphne');
+    };
+
+    // Отправка сообщения
+    function sendMessage() {
+        const message = messageInput.value.trim();
+        if (!message) return;
+
+        // Если WebSocket работает, используем его
+        if (chatSocket.readyState === WebSocket.OPEN) {
+            chatSocket.send(JSON.stringify({
+                'message': message
+            }));
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+        } else {
+            // Иначе используем обычный POST запрос (fallback без Redis)
+            const formData = new FormData();
+            formData.append('text', message);
+            
+            fetch(`/chat/${room_id}/send/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: formData
+            }).then(response => {
+                if (response.ok) {
+                    messageInput.value = '';
+                    messageInput.style.height = 'auto';
+                    // Перезагружаем страницу чтобы увидеть новое сообщение
+                    window.location.reload();
+                }
+            });
+        }
+    }
+
+    // Функция для получения CSRF токена
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
             }
+        }
+        return cookieValue;
+    }
 
-            const textElement = document.createElement('div');
-            textElement.classList.add('message-text', 'p-3', 'rounded');
-            if (sender_id == user_id) {
-                textElement.classList.add('bg-primary', 'text-white');
-            } else {
-                textElement.classList.add('bg-light');
-            }
-            textElement.textContent = message;
+    sendBtn.addEventListener('click', sendMessage);
 
-            const timeElement = document.createElement('div');
-            timeElement.classList.add('message-time', 'text-muted', 'small', 'mt-1');
-            if (sender_id == user_id) {
-                timeElement.classList.add('text-end');
-            }
-            const now = new Date();
-            timeElement.textContent = now.getHours() + ':' + String(now.getMinutes()).padStart(2, '0');
+    // Отправка по Enter (без Shift)
+    messageInput.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 
-            messageElement.appendChild(textElement);
-            messageElement.appendChild(timeElement);
-            messagesContainer.appendChild(messageElement);
-
-            // Прокручиваем вниз
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        };
-
-        chatSocket.onclose = function(e) {
-            console.error('Chat socket closed unexpectedly');
-        };
-
-        // Отправка сообщения
-        sendBtn.onclick = function(e) {
-            const message = messageInput.value.trim();
-            if (message) {
-                chatSocket.send(JSON.stringify({
-                    'message': message
-                }));
-                messageInput.value = '';
-            }
-        };
-
-        // Отправка по Enter
-        messageInput.onkeypress = function(e) {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                sendBtn.click();
-            }
-        };
-    </script>
+    // Авто-ресайз textarea
+    messageInput.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = (this.scrollHeight) + 'px';
+    });
+</script>
 {% endblock %}

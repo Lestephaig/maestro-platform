@@ -2,74 +2,310 @@
 
 {% block title %}Вход - Maestro Platform{% endblock %}
 
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: 100vh;
+    }
+    
+    .login-page-content {
+        display: flex;
+        align-items: center;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+    }
+    
+    .login-container {
+        width: 100%;
+        max-width: 480px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    .login-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+        border: 2px solid var(--gold);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .login-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+    }
+    
+    .login-header {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%);
+        padding: 3rem 2rem;
+        text-align: center;
+        border-bottom: 2px solid var(--gold);
+        position: relative;
+    }
+    
+    .login-icon {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        display: block;
+        filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+    }
+    
+    .login-title {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    
+    .login-subtitle {
+        color: var(--silver-light);
+        margin: 0.75rem 0 0 0;
+        font-weight: 300;
+    }
+    
+    .login-body {
+        padding: 2.5rem 2rem;
+        width: 100%;
+    }
+    
+    .login-body form {
+        width: 100%;
+    }
+    
+    .form-group {
+        margin-bottom: 1.75rem;
+        width: 100%;
+    }
+    
+    .form-group:last-of-type {
+        margin-bottom: 2rem;
+    }
+    
+    .form-group label {
+        display: block;
+        width: 100%;
+        margin-bottom: 0.75rem;
+    }
+    
+    .form-group input {
+        display: block;
+        width: 100%;
+    }
+    
+    .form-label {
+        color: var(--gold);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-label i {
+        color: var(--gold);
+    }
+    
+    .form-control {
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--white);
+        border: 2px solid var(--silver-dark);
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        background: rgba(255, 255, 255, 0.08);
+        color: var(--white);
+        border-color: var(--gold);
+        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
+    }
+    
+    .form-control::placeholder {
+        color: var(--silver-dark);
+    }
+    
+    .btn-login {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 800;
+        border: none;
+        padding: 1.125rem;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-login::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn-login:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-login:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(212, 175, 55, 0.6);
+    }
+    
+    .btn-login:active {
+        transform: translateY(-1px);
+    }
+    
+    .login-footer {
+        text-align: center;
+        padding: 1.75rem 2rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid var(--gold);
+        color: var(--silver-light);
+    }
+    
+    .login-footer a {
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .login-footer a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+        transition: width 0.3s ease;
+    }
+    
+    .login-footer a:hover::after {
+        width: 100%;
+    }
+    
+    .login-footer a:hover {
+        color: var(--gold-light);
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+    
+    .invalid-feedback {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.15);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-top: 0.75rem;
+        width: 100%;
+        display: block;
+        border-left: 3px solid #ff6b6b;
+    }
+    
+    /* Дополнительные стили для выравнивания */
+    .form-control, .form-control:focus {
+        margin: 0;
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        line-height: 1.5;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    
+    @media (max-width: 576px) {
+        .login-card {
+            border-radius: 20px;
+        }
+        
+        .login-header {
+            padding: 2rem 1.5rem;
+        }
+        
+        .login-title {
+            font-size: 1.8rem;
+        }
+        
+        .login-body {
+            padding: 2rem 1.5rem;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-box-arrow-in-right text-primary" style="font-size: 3rem;"></i>
-                        <h2 class="mt-3">Вход в систему</h2>
-                        <p class="text-muted">Войдите в свой аккаунт</p>
-                    </div>
+<div class="login-page-content">
+    <div class="login-container">
+        <div class="login-card">
+        <div class="login-header">
+            <i class="bi bi-music-note-beamed login-icon" style="font-size: 3.5rem;"></i>
+            <h2 class="login-title">Вход в систему</h2>
+            <p class="login-subtitle">Maestro Platform</p>
+        </div>
 
-                    <form method="post">
-                        {% csrf_token %}
+        <div class="login-body">
+            <form method="post">
+                {% csrf_token %}
 
-                        <div class="mb-3">
-                            <label for="{{ form.username.id_for_label }}" class="form-label">
-                                <i class="bi bi-person me-2"></i>Логин или email
-                            </label>
-                            {{ form.username }}
-                            {% if form.username.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.username.errors.0 }}
-                                </div>
-                            {% endif %}
+                <div class="form-group">
+                    <label for="{{ form.username.id_for_label }}" class="form-label">
+                        <i class="bi bi-person me-2"></i>Логин или email
+                    </label>
+                    {{ form.username }}
+                    {% if form.username.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.username.errors.0 }}
                         </div>
-
-                        <div class="mb-4">
-                            <label for="{{ form.password.id_for_label }}" class="form-label">
-                                <i class="bi bi-lock me-2"></i>Пароль
-                            </label>
-                            {{ form.password }}
-                            {% if form.password.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.password.errors.0 }}
-                                </div>
-                            {% endif %}
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 btn-lg">
-                            <i class="bi bi-box-arrow-in-right me-2"></i>Войти
-                        </button>
-                    </form>
-
-                    <div class="text-center mt-4">
-                        <p class="text-muted">
-                            Нет аккаунта? 
-                            <a href="{% url 'register' %}" class="text-decoration-none">
-                                Зарегистрироваться
-                            </a>
-                        </p>
-                    </div>
+                    {% endif %}
                 </div>
+
+                <div class="form-group">
+                    <label for="{{ form.password.id_for_label }}" class="form-label">
+                        <i class="bi bi-lock me-2"></i>Пароль
+                    </label>
+                    {{ form.password }}
+                    {% if form.password.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.password.errors.0 }}
+                        </div>
+                    {% endif %}
+                </div>
+
+                <button type="submit" class="btn btn-login w-100">
+                    <i class="bi bi-box-arrow-in-right me-2"></i>Войти
+                </button>
+            </form>
+        </div>
+        
+            <div class="login-footer">
+                Нет аккаунта? 
+                <a href="{% url 'register' %}">Зарегистрироваться</a>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .form-control {
-        border-radius: 0.5rem;
-        border: 1px solid #dee2e6;
-        padding: 0.75rem 1rem;
-    }
-    
-    .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    }
-</style>
 {% endblock %}

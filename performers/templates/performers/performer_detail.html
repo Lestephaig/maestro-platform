@@ -6,30 +6,32 @@
 {% block extra_css %}
 <style>
     body {
-        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
         min-height: 100vh;
-        font-family: 'Georgia', serif;
+        font-family: 'Segoe UI', 'Georgia', serif;
     }
     
     .performer-container {
-        background: rgba(30, 30, 50, 0.95);
-        border-radius: 20px;
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
         margin: 2rem auto;
-        max-width: 1200px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        max-width: 1600px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
         overflow: hidden;
+        border: 2px solid var(--gold);
     }
     
     
     .performer-content {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 2fr;
         gap: 0;
-        min-height: 600px;
+        height: 600px;
+        max-height: 600px;
     }
     
     .performer-image {
-        background: linear-gradient(135deg, #f4d03f 0%, #f7dc6f 50%, #2c3e50 100%);
+        background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gray-dark) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -46,129 +48,833 @@
     
     .performer-info {
         padding: 3rem;
-        background: #2c3e50;
-        color: #ecf0f1;
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        color: var(--white);
         display: flex;
         flex-direction: column;
-        justify-content: center;
-    }
-    
-    .profile-title {
-        font-size: 0.9rem;
-        color: #bdc3c7;
-        margin-bottom: 0.5rem;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        overflow: hidden;
     }
     
     .performer-name {
         font-size: 3rem;
-        font-weight: bold;
+        font-weight: 800;
         margin-bottom: 1rem;
-        color: #f39c12;
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
         line-height: 1.1;
+        flex-shrink: 0;
+        text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
     }
     
-    .performer-details {
+    .performer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        margin-bottom: 2rem;
+        flex-shrink: 0;
+        gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .chat-button {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        border: none;
+        padding: 0.75rem 2rem;
         font-size: 1.1rem;
-        line-height: 1.6;
-        margin-bottom: 1.5rem;
+        font-weight: 700;
+        border-radius: 12px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+    }
+    
+    .chat-button:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.6);
+        color: var(--black);
+    }
+    
+    .chat-button:active {
+        transform: translateY(-1px);
+    }
+    
+    .chat-button.disabled {
+        background: linear-gradient(135deg, var(--silver-dark) 0%, var(--silver) 100%);
+        cursor: not-allowed;
+        opacity: 0.5;
+        box-shadow: none;
+    }
+    
+    .chat-button.disabled:hover {
+        transform: none;
+    }
+    
+    .verification-hint {
+        font-size: 0.85rem;
+        color: var(--silver);
+        margin-top: 0.5rem;
+        font-style: italic;
+    }
+    
+    /* Tabs Styles */
+    .info-tabs {
+        display: flex;
+        gap: 0.5rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--gold);
+        padding-bottom: 0;
+        flex-shrink: 0;
+    }
+    
+    .tab-btn {
+        background: none;
+        border: none;
+        color: var(--silver);
+        padding: 0.75rem 1.5rem;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+        position: relative;
+        bottom: -2px;
+    }
+    
+    .tab-btn:hover {
+        color: var(--gold);
+        background: rgba(212, 175, 55, 0.15);
+    }
+    
+    .tab-btn.active {
+        color: var(--gold);
+        border-bottom-color: var(--gold);
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+    
+    /* Tab Content */
+    .tab-content-area {
+        flex: 1;
+        overflow-y: auto;
+        padding: 1rem 0;
+    }
+    
+    /* Scrollbar styling */
+    .tab-content-area::-webkit-scrollbar {
+        width: 10px;
+    }
+    
+    .tab-content-area::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 5px;
+    }
+    
+    .tab-content-area::-webkit-scrollbar-thumb {
+        background: linear-gradient(180deg, var(--gold-dark), var(--gold-light));
+        border-radius: 5px;
+    }
+    
+    .tab-content-area::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(180deg, var(--gold), var(--gold-light));
+    }
+    
+    .tab-pane {
+        display: none;
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    .tab-pane.active {
+        display: block;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
     
     .detail-item {
-        margin-bottom: 0.8rem;
+        margin-bottom: 1.5rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid rgba(189, 195, 199, 0.2);
+    }
+    
+    .detail-item:last-child {
+        border-bottom: none;
     }
     
     .detail-label {
-        color: #bdc3c7;
-        font-weight: 500;
+        color: var(--gold);
+        font-weight: 600;
+        display: block;
+        margin-bottom: 0.5rem;
+        font-size: 0.95rem;
     }
     
     .detail-value {
-        color: #ecf0f1;
-        margin-left: 0.5rem;
+        color: var(--white);
+        font-size: 1.1rem;
+        line-height: 1.6;
     }
     
-    .achievements {
-        background: rgba(52, 73, 94, 0.3);
-        padding: 1.5rem;
-        border-radius: 10px;
-        border-left: 4px solid #f39c12;
+    .content-text {
+        color: var(--silver-light);
+        font-size: 1.05rem;
+        line-height: 1.8;
     }
     
-    .achievements-title {
-        color: #f39c12;
-        font-weight: bold;
+    .empty-state {
+        text-align: center;
+        padding: 3rem 1rem;
+        color: var(--silver-dark);
+    }
+    
+    .empty-state i {
+        font-size: 3rem;
         margin-bottom: 1rem;
+        display: block;
+        opacity: 0.5;
+        color: var(--gold);
+    }
+    
+    .empty-state p {
+        margin: 0;
         font-size: 1.1rem;
     }
     
-    .achievements-text {
-        color: #ecf0f1;
-        line-height: 1.5;
+    /* Calendar in tab */
+    .calendar-wrapper {
+        padding: 0;
     }
     
-    .calendar-section {
-        grid-column: 1 / -1;
-        background: #34495e;
-        padding: 2rem;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .calendar-header {
+    .calendar-controls {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+        gap: 1rem;
     }
     
-    .calendar-title {
-        color: #f39c12;
-        font-size: 1.3rem;
-        font-weight: bold;
-    }
-    
-    .calendar-nav {
+    .calendar-mode-selector-inline {
         display: flex;
         gap: 1rem;
+        flex-wrap: wrap;
+    }
+    
+    .calendar-mode-selector-inline label {
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .calendar-nav-inline {
+        display: flex;
+        gap: 0.5rem;
         align-items: center;
     }
     
-    .calendar-nav button {
+    .calendar-nav-inline button {
+        background: rgba(212, 175, 55, 0.15);
+        border: 1px solid var(--gold);
+        color: var(--gold);
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        padding: 0.5rem 0.75rem;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+    }
+    
+    .calendar-nav-inline button:hover {
+        background: rgba(212, 175, 55, 0.25);
+        border-color: var(--gold-light);
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    }
+    
+    .calendar-grid-inline {
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border: 1px solid var(--silver-dark);
+    }
+    
+    .calendar-hint-inline {
+        padding: 0.75rem 1rem;
+        background: rgba(74, 144, 226, 0.15);
+        border-left: 4px solid var(--blue-accent);
+        border-radius: 8px;
+        color: var(--silver-light);
+        font-size: 0.85rem;
+        line-height: 1.5;
+    }
+    
+    /* Media Gallery Section */
+    .media-gallery-section {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%);
+        padding: 2rem;
+        border-top: 2px solid var(--gold);
+    }
+    
+    .gallery-tabs {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 2rem;
+        border-bottom: 2px solid var(--gold);
+        padding-bottom: 0;
+    }
+    
+    .gallery-tab {
         background: none;
         border: none;
-        color: #ecf0f1;
-        font-size: 1.2rem;
+        color: var(--silver);
+        padding: 1rem 2rem;
+        font-size: 1.1rem;
+        font-weight: 700;
         cursor: pointer;
-        padding: 0.5rem;
-        border-radius: 5px;
+        transition: all 0.3s ease;
+        border-bottom: 3px solid transparent;
+        position: relative;
+        bottom: -2px;
+    }
+    
+    .gallery-tab:hover {
+        color: var(--gold);
+        background: rgba(212, 175, 55, 0.15);
+    }
+    
+    .gallery-tab.active {
+        color: var(--gold);
+        border-bottom-color: var(--gold);
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+    
+    .gallery-content {
+        min-height: 300px;
+    }
+    
+    .gallery-pane {
+        display: none;
+        animation: fadeIn 0.3s ease-in;
+    }
+    
+    .gallery-pane.active {
+        display: block;
+    }
+    
+    .photo-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .photo-item {
+        position: relative;
+        border-radius: 12px;
+        overflow: hidden;
+        background: var(--gray);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        cursor: pointer;
+        border: 1px solid var(--silver-dark);
+        aspect-ratio: 1;
+    }
+    
+    .photo-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4);
+        border-color: var(--gold);
+    }
+    
+    .gallery-photo {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+    }
+    
+    .photo-caption {
+        padding: 1rem;
+        background: rgba(0, 0, 0, 0.8);
+        color: var(--silver-light);
+        font-size: 0.9rem;
+        text-align: center;
+    }
+    
+    .video-grid {
+        display: grid;
+        grid-template-columns: repeat(5, 1fr);
+        gap: 1.5rem;
+    }
+    
+    .video-item {
+        background: var(--gray);
+        border-radius: 12px;
+        overflow: hidden;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: 1px solid var(--silver-dark);
+    }
+    
+    .video-item:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4);
+        border-color: var(--gold);
+    }
+    
+    .video-embed {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: #1a1a2e;
+    }
+    
+    .video-embed iframe {
+        width: 100%;
+        height: 100%;
+        border: 0;
+        display: block;
+    }
+    
+    .video-placeholder {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(26, 26, 46, 0.8);
+        cursor: pointer;
         transition: background 0.3s ease;
     }
     
-    .calendar-nav button:hover {
-        background: rgba(255, 255, 255, 0.1);
+    .video-placeholder:hover {
+        background: rgba(26, 26, 46, 0.6);
     }
     
-    .calendar-placeholder {
-        background: rgba(52, 73, 94, 0.5);
-        border-radius: 10px;
-        padding: 2rem;
+    .video-placeholder i {
+        font-size: 4rem;
+        color: #f39c12;
+        transition: transform 0.3s ease;
+    }
+    
+    .video-placeholder:hover i {
+        transform: scale(1.2);
+    }
+    
+    .video-title {
+        padding: 1rem 1rem 0.5rem;
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 1.1rem;
+    }
+    
+    .video-description {
+        padding: 0 1rem 1rem;
+        color: var(--silver-light);
+        font-size: 0.9rem;
+        line-height: 1.5;
+    }
+    
+    .gallery-empty {
         text-align: center;
-        color: #bdc3c7;
-        font-style: italic;
+        padding: 4rem 2rem;
+        color: var(--silver-dark);
     }
     
-    @media (max-width: 768px) {
+    .gallery-empty i {
+        font-size: 4rem;
+        margin-bottom: 1rem;
+        display: block;
+        opacity: 0.5;
+        color: var(--gold);
+    }
+    
+    .gallery-empty p {
+        margin: 0;
+        font-size: 1.2rem;
+    }
+    
+    
+    .calendar-legend {
+        display: flex;
+        gap: 2rem;
+        margin-bottom: 1.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: #ecf0f1;
+        font-size: 0.9rem;
+    }
+    
+    .legend-color {
+        width: 20px;
+        height: 20px;
+        border-radius: 4px;
+        border: 2px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .legend-color.available {
+        background: #27ae60;
+        box-shadow: 0 0 10px rgba(39, 174, 96, 0.5);
+    }
+    
+    .legend-color.unavailable {
+        background: #e74c3c;
+        box-shadow: 0 0 10px rgba(231, 76, 60, 0.5);
+    }
+    
+    .legend-color.maybe {
+        background: var(--gold);
+        box-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+    
+    
+    .calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .weekday {
+        text-align: center;
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 0.9rem;
+        padding: 0.5rem;
+    }
+    
+    .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 0.5rem;
+    }
+    
+    .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid var(--silver-dark);
+        border-radius: 8px;
+        color: var(--white);
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        background: rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Режим "отмечать занятые" - по умолчанию свободен (светлый) */
+    .calendar-days.mode-mark-unavailable .calendar-day:not(.available):not(.unavailable):not(.maybe):not(.other-month) {
+        background: rgba(236, 240, 241, 0.2) !important;
+        border-color: rgba(236, 240, 241, 0.3) !important;
+        color: #ecf0f1;
+    }
+    
+    /* Режим "отмечать доступные" - по умолчанию занят (темный/серый) */
+    .calendar-days.mode-mark-available .calendar-day:not(.available):not(.unavailable):not(.maybe):not(.other-month) {
+        background: rgba(52, 73, 94, 0.7) !important;
+        border-color: rgba(127, 140, 141, 0.4) !important;
+        color: #95a5a6;
+    }
+    
+    .calendar-day:not(.other-month):hover {
+        transform: scale(1.05);
+        filter: brightness(1.2);
+    }
+    
+    .calendar-day.other-month {
+        color: #7f8c8d;
+        opacity: 0.4;
+        cursor: default;
+        background: rgba(52, 73, 94, 0.3) !important;
+        border-color: rgba(127, 140, 141, 0.2) !important;
+    }
+    
+    .calendar-day.other-month:hover {
+        transform: none;
+        filter: none;
+    }
+    
+    .calendar-day.today {
+        border-color: var(--blue-accent) !important;
+        font-weight: bold;
+        box-shadow: 0 0 0 2px rgba(74, 144, 226, 0.4);
+    }
+    
+    /* Статусы - работают в обоих режимах */
+    .calendar-day.available {
+        background: rgba(39, 174, 96, 0.5) !important;
+        border-color: #27ae60 !important;
+        color: #ecf0f1 !important;
+    }
+    
+    .calendar-day.unavailable {
+        background: rgba(231, 76, 60, 0.5) !important;
+        border-color: #e74c3c !important;
+        color: #ecf0f1 !important;
+    }
+    
+    .calendar-day.maybe {
+        background: rgba(243, 156, 18, 0.5) !important;
+        border-color: #f39c12 !important;
+        color: #ecf0f1 !important;
+    }
+    
+    .calendar-day.read-only {
+        cursor: default;
+    }
+    
+    .calendar-day.read-only:hover {
+        transform: none;
+        filter: none;
+    }
+    
+    /* Repertoire Public View Styles */
+    .repertoire-public-list {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 1.5rem;
+    }
+    
+    .repertoire-public-card {
+        background: rgba(0, 0, 0, 0.3);
+        border: 2px solid var(--silver-dark);
+        border-radius: 15px;
+        padding: 1.5rem;
+        transition: all 0.3s ease;
+        position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .repertoire-public-card:hover {
+        border-color: var(--gold);
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+        transform: translateY(-2px);
+    }
+    
+    .featured-badge {
+        position: absolute;
+        top: 1rem;
+        right: 1rem;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.2rem;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+    }
+    
+    .repertoire-composer {
+        color: var(--gold);
+        font-size: 1.2rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .repertoire-work {
+        color: var(--white);
+        font-size: 1rem;
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+    }
+    
+    .repertoire-role {
+        color: var(--silver);
+        font-weight: 400;
+        font-size: 1rem;
+    }
+    
+    .repertoire-meta {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+        margin-top: auto;
+    }
+    
+    .badge-category {
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(74, 144, 226, 0.3);
+        color: var(--blue-accent);
+        border: 1px solid var(--blue-accent);
+    }
+    
+    .badge-epoch {
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(192, 192, 192, 0.2);
+        color: var(--silver-light);
+        border: 1px solid var(--silver);
+    }
+    
+    .badge-year {
+        padding: 0.375rem 0.875rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+        background: rgba(212, 175, 55, 0.2);
+        color: var(--gold);
+        border: 1px solid var(--gold);
+    }
+    
+    .repertoire-notes {
+        color: var(--silver-light);
+        font-size: 0.85rem;
+        line-height: 1.4;
+        margin-bottom: 0.75rem;
+        flex: 1;
+    }
+    
+    .repertoire-video-link {
+        color: var(--blue-accent);
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+    }
+    
+    .repertoire-video-link:hover {
+        color: var(--gold);
+        text-decoration: underline;
+    }
+    
+    
+    /* Tablet (планшет): 3 колонки */
+    @media (max-width: 1200px) {
+        .photo-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+        
+        .video-grid {
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.25rem;
+        }
+    }
+    
+    /* Mobile (мобильный): адаптивный дизайн */
+    @media (max-width: 992px) {
         .performer-content {
             grid-template-columns: 1fr;
+        }
+        
+        .performer-header {
+            flex-direction: column;
+            align-items: stretch;
         }
         
         .performer-name {
             font-size: 2rem;
         }
         
+        .chat-button {
+            width: 100%;
+            justify-content: center;
+            padding: 1rem 2rem;
+        }
+        
         .performer-info {
             padding: 2rem;
+        }
+        
+        .repertoire-public-list {
+            grid-template-columns: 1fr;
+            gap: 1rem;
+        }
+        
+        .repertoire-public-card {
+            padding: 1.25rem;
+        }
+        
+        .repertoire-composer {
+            font-size: 1.1rem;
+        }
+        
+        .repertoire-work {
+            font-size: 0.95rem;
+        }
+        
+        .info-tabs {
+            flex-wrap: wrap;
+            gap: 0.25rem;
+        }
+        
+        .tab-btn {
+            padding: 0.5rem 1rem;
+            font-size: 0.9rem;
+        }
+        
+        .calendar-controls {
+            flex-direction: column;
+            align-items: flex-start;
+        }
+        
+        .calendar-nav-inline {
+            width: 100%;
+            justify-content: center;
+        }
+        
+        .calendar-legend {
+            gap: 1rem;
+        }
+        
+        .weekday {
+            font-size: 0.75rem;
+            padding: 0.25rem;
+        }
+        
+        .calendar-day {
+            font-size: 0.9rem;
+        }
+        
+        .photo-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .video-grid {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1rem;
+        }
+        
+        .gallery-tab {
+            padding: 0.75rem 1rem;
+            font-size: 1rem;
         }
     }
 </style>
@@ -192,56 +898,599 @@
         
         <!-- Performer Information -->
         <div class="performer-info">
-            <div class="profile-title">Russian Profiles</div>
-            <h1 class="performer-name">{{ performer.full_name }}</h1>
-            
-            <div class="performer-details">
-                {% if performer.birth_year %}
-                <div class="detail-item">
-                    <span class="detail-label">Родился:</span>
-                    <span class="detail-value">{{ performer.birth_year }}</span>
-                </div>
-                {% endif %}
+            <div class="performer-header">
+                <h1 class="performer-name">{{ performer.full_name }}</h1>
                 
-                {% if performer.education %}
-                <div class="detail-item">
-                    <span class="detail-label">Образование:</span>
-                    <span class="detail-value">{{ performer.education }}</span>
-                </div>
-                {% endif %}
-                
-                {% if performer.voice_type %}
-                <div class="detail-item">
-                    <span class="detail-label">Тип голоса:</span>
-                    <span class="detail-value">{{ performer.voice_type }}</span>
-                </div>
+                {% if user.is_authenticated and user != performer.user %}
+                    {% if user.is_verified %}
+                        <a href="{% url 'start_chat_with_performer' performer.id %}" class="chat-button">
+                            <i class="bi bi-chat-dots"></i>
+                            <span>Чат</span>
+                        </a>
+                    {% else %}
+                        <div>
+                            <button class="chat-button disabled" disabled title="Доступно только верифицированным пользователям">
+                                <i class="bi bi-chat-dots"></i>
+                                <span>Чат</span>
+                            </button>
+                            <div class="verification-hint">
+                                <i class="bi bi-lock-fill"></i> Только для верифицированных
+                            </div>
+                        </div>
+                    {% endif %}
                 {% endif %}
             </div>
             
-            {% if performer.achievements %}
-            <div class="achievements">
-                <div class="achievements-title">Достижения</div>
-                <div class="achievements-text">{{ performer.achievements }}</div>
+            <!-- Tabs Navigation -->
+            <div class="info-tabs">
+                <button class="tab-btn active" data-tab="info">Информация</button>
+                <button class="tab-btn" data-tab="repertoire">Репертуар</button>
+                <button class="tab-btn" data-tab="achievements">Достижения</button>
+                <button class="tab-btn" data-tab="about">О себе</button>
+                {% if user.is_authenticated %}
+                <button class="tab-btn" data-tab="calendar">Календарь</button>
+                {% endif %}
             </div>
-            {% endif %}
+            
+            <!-- Tab Content -->
+            <div class="tab-content-area">
+                <!-- Информация -->
+                <div class="tab-pane active" id="info-tab">
+                    {% if performer.voice_type %}
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="bi bi-mic me-2"></i>Тип голоса:</span>
+                        <span class="detail-value">{{ performer.voice_type }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if performer.birth_year %}
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="bi bi-calendar-date me-2"></i>Год рождения:</span>
+                        <span class="detail-value">{{ performer.birth_year }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if performer.education %}
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="bi bi-mortarboard me-2"></i>Образование:</span>
+                        <div class="detail-value">{{ performer.education }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Репертуар -->
+                <div class="tab-pane" id="repertoire-tab">
+                    {% if performer.repertoire_items.all %}
+                        <div class="repertoire-public-list">
+                            {% for item in performer.repertoire_items.all %}
+                                <div class="repertoire-public-card">
+                                    <h5 class="repertoire-composer">
+                                        {{ item.work_title }}
+                                        {% if item.role_or_part %}
+                                            <span class="repertoire-role">({{ item.role_or_part }})</span>
+                                        {% endif %}
+                                    </h5>
+                                    <h6 class="repertoire-work">{{ item.composer }}</h6>
+                                    <div class="repertoire-meta">
+                                        <span class="badge-category">{{ item.get_category_display }}</span>
+                                    </div>
+                                    {% if item.notes %}
+                                        <p class="repertoire-notes">
+                                            <i class="bi bi-info-circle me-1"></i>{{ item.notes }}
+                                        </p>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-music-note-list"></i>
+                            <p>Репертуар не указан</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Достижения -->
+                <div class="tab-pane" id="achievements-tab">
+                    {% if performer.achievements %}
+                        <div class="content-text">{{ performer.achievements|linebreaks }}</div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-trophy"></i>
+                            <p>Достижения не указаны</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- О себе -->
+                <div class="tab-pane" id="about-tab">
+                    {% if performer.bio %}
+                        <div class="content-text">{{ performer.bio|linebreaks }}</div>
+                    {% else %}
+                        <div class="empty-state">
+                            <i class="bi bi-person"></i>
+                            <p>Биография не указана</p>
+                        </div>
+                    {% endif %}
+                </div>
+                
+                <!-- Календарь -->
+                {% if user.is_authenticated %}
+                <div class="tab-pane" id="calendar-tab">
+                    <div class="calendar-wrapper">
+                        <div class="calendar-controls">
+                            {% if user == performer.user %}
+                            <div class="calendar-mode-selector-inline">
+                                <label style="color: #bdc3c7; margin-right: 1rem; font-size: 0.9rem;">
+                                    <input type="radio" name="calendar_mode" value="mark_unavailable" {% if performer.calendar_mode == 'mark_unavailable' %}checked{% endif %}>
+                                    Отмечать занятые даты
+                                </label>
+                                <label style="color: #bdc3c7; font-size: 0.9rem;">
+                                    <input type="radio" name="calendar_mode" value="mark_available" {% if performer.calendar_mode == 'mark_available' %}checked{% endif %}>
+                                    Отмечать доступные даты
+                                </label>
+                            </div>
+                            {% endif %}
+                            
+                            <div class="calendar-nav-inline">
+                                <button id="prev-month"><i class="bi bi-chevron-left"></i></button>
+                                <span id="calendar-month-year" style="color: #f39c12; font-weight: 600; font-size: 1.1rem;">Календарь</span>
+                                <button id="today-btn">Сегодня</button>
+                                <button id="next-month"><i class="bi bi-chevron-right"></i></button>
+                            </div>
+                        </div>
+                        
+                        <div class="calendar-legend">
+                            <div class="legend-item"><span class="legend-color available"></span> Доступен</div>
+                            <div class="legend-item"><span class="legend-color unavailable"></span> Занят</div>
+                            <div class="legend-item"><span class="legend-color maybe"></span> Готов подумать</div>
+                        </div>
+                        
+                        <div class="calendar-grid-inline">
+                            <div class="calendar-weekdays">
+                                <div class="weekday">Пн</div>
+                                <div class="weekday">Вт</div>
+                                <div class="weekday">Ср</div>
+                                <div class="weekday">Чт</div>
+                                <div class="weekday">Пт</div>
+                                <div class="weekday">Сб</div>
+                                <div class="weekday">Вс</div>
+                            </div>
+                            <div class="calendar-days" id="calendar-days">
+                                <!-- Дни будут добавлены JavaScript -->
+                            </div>
+                        </div>
+                        
+                        {% if user == performer.user %}
+                        <div class="calendar-hint-inline">
+                            <i class="bi bi-info-circle me-2"></i>
+                            <span id="calendar-hint-text">
+                                {% if performer.calendar_mode == 'mark_unavailable' %}
+                                    Режим: даты по умолчанию свободны (светлые). Отмечайте красным занятые даты, оранжевым - "готов подумать".
+                                {% else %}
+                                    Режим: даты по умолчанию заняты (серые). Отмечайте зеленым свободные даты, оранжевым - "готов подумать".
+                                {% endif %}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
         </div>
     </div>
     
-    <!-- Calendar Section -->
-    <div class="calendar-section">
-        <div class="calendar-header">
-            <div class="calendar-title">2025.04.12 - Романсы 'Снегурочка' - Московский оперный</div>
-            <div class="calendar-nav">
-                <button><i class="bi bi-chevron-left"></i></button>
-                <button><i class="bi bi-gear"></i></button>
-                <button><i class="bi bi-chevron-right"></i></button>
-            </div>
+    <!-- Media Gallery Section -->
+    <div class="media-gallery-section">
+        <div class="gallery-tabs">
+            <button class="gallery-tab active" data-gallery-tab="photos">
+                <i class="bi bi-images me-2"></i>Фотогалерея
+            </button>
+            <button class="gallery-tab" data-gallery-tab="videos">
+                <i class="bi bi-play-btn me-2"></i>Видео
+            </button>
         </div>
         
-        <div class="calendar-placeholder">
-            <i class="bi bi-calendar3" style="font-size: 3rem; margin-bottom: 1rem; display: block;"></i>
-            <p>Календарь выступлений будет добавлен позже</p>
+        <div class="gallery-content">
+            <!-- Photos Tab -->
+            <div class="gallery-pane active" id="photos-pane">
+                {% if performer.photos.all %}
+                    <div class="photo-grid">
+                        {% for photo in performer.photos.all %}
+                            <div class="photo-item">
+                                <img src="{{ photo.photo.url }}" alt="{{ photo.caption }}" class="gallery-photo">
+                                {% if photo.caption %}
+                                    <div class="photo-caption">{{ photo.caption }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="gallery-empty">
+                        <i class="bi bi-images"></i>
+                        <p>Фотографии не добавлены</p>
+                    </div>
+                {% endif %}
+            </div>
+            
+            <!-- Videos Tab -->
+            <div class="gallery-pane" id="videos-pane">
+                {% if performer.videos.all %}
+                    <div class="video-grid">
+                        {% for video in performer.videos.all %}
+                            <div class="video-item">
+                                <div class="video-embed" data-video-url="{{ video.video_url }}">
+                                    <div class="video-placeholder">
+                                        <i class="bi bi-play-circle"></i>
+                                    </div>
+                                </div>
+                                {% if video.title %}
+                                    <div class="video-title">{{ video.title }}</div>
+                                {% endif %}
+                                {% if video.description %}
+                                    <div class="video-description">{{ video.description }}</div>
+                                {% endif %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="gallery-empty">
+                        <i class="bi bi-play-btn"></i>
+                        <p>Видео не добавлены</p>
+                    </div>
+                {% endif %}
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+// Tab switching functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanes = document.querySelectorAll('.tab-pane');
+    
+    tabButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-tab');
+            
+            // Remove active class from all buttons and panes
+            tabButtons.forEach(btn => btn.classList.remove('active'));
+            tabPanes.forEach(pane => pane.classList.remove('active'));
+            
+            // Add active class to clicked button
+            this.classList.add('active');
+            
+            // Show corresponding tab pane
+            const targetPane = document.getElementById(tabName + '-tab');
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+        });
+    });
+});
+
+// Calendar functionality
+const Calendar = {
+    performerId: {{ performer.id }},
+    currentYear: new Date().getFullYear(),
+    currentMonth: new Date().getMonth() + 1,
+    calendarData: {},
+    calendarMode: '{{ performer.calendar_mode }}',
+        isOwner: {% if user.is_authenticated and user == performer.user %}true{% else %}false{% endif %},
+    
+    init() {
+        this.loadCalendar();
+        this.setupEventListeners();
+    },
+    
+    setupEventListeners() {
+        // Navigation buttons
+        document.getElementById('prev-month')?.addEventListener('click', () => {
+            this.changeMonth(-1);
+        });
+        
+        document.getElementById('next-month')?.addEventListener('click', () => {
+            this.changeMonth(1);
+        });
+        
+        document.getElementById('today-btn')?.addEventListener('click', () => {
+            const today = new Date();
+            this.currentYear = today.getFullYear();
+            this.currentMonth = today.getMonth() + 1;
+            this.loadCalendar();
+        });
+        
+        // Calendar mode selector
+        document.querySelectorAll('input[name="calendar_mode"]').forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                this.updateCalendarMode(e.target.value);
+            });
+        });
+    },
+    
+    changeMonth(delta) {
+        this.currentMonth += delta;
+        if (this.currentMonth > 12) {
+            this.currentMonth = 1;
+            this.currentYear++;
+        } else if (this.currentMonth < 1) {
+            this.currentMonth = 12;
+            this.currentYear--;
+        }
+        this.loadCalendar();
+    },
+    
+    async loadCalendar() {
+        try {
+            const response = await fetch(`/performers/api/performer/${this.performerId}/calendar/?year=${this.currentYear}&month=${this.currentMonth}`, {
+                credentials: 'same-origin'
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                
+                this.calendarData = {};
+                data.availabilities.forEach(avail => {
+                    this.calendarData[avail.date] = avail.status;
+                });
+            } else {
+                // Если нет доступа, просто показываем пустой календарь
+                this.calendarData = {};
+            }
+            
+            this.renderCalendar();
+        } catch (error) {
+            console.error('Error loading calendar:', error);
+            // Показываем календарь даже при ошибке
+            this.calendarData = {};
+            this.renderCalendar();
+        }
+    },
+    
+    renderCalendar() {
+        const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
+                           'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+        
+        // Update title
+        document.getElementById('calendar-month-year').textContent = 
+            `${monthNames[this.currentMonth - 1]} ${this.currentYear}`;
+        
+        // Calculate calendar grid
+        const firstDay = new Date(this.currentYear, this.currentMonth - 1, 1);
+        const lastDay = new Date(this.currentYear, this.currentMonth, 0);
+        const daysInMonth = lastDay.getDate();
+        
+        // Get first day of week (0 = Sunday, 1 = Monday, etc.)
+        // Convert to Monday = 0
+        let firstDayOfWeek = firstDay.getDay() - 1;
+        if (firstDayOfWeek < 0) firstDayOfWeek = 6;
+        
+        const daysContainer = document.getElementById('calendar-days');
+        daysContainer.innerHTML = '';
+        
+        // Apply mode class to container
+        daysContainer.className = 'calendar-days mode-' + this.calendarMode;
+        
+        // Add empty cells for days before month starts
+        for (let i = 0; i < firstDayOfWeek; i++) {
+            const emptyDay = document.createElement('div');
+            emptyDay.className = 'calendar-day other-month';
+            daysContainer.appendChild(emptyDay);
+        }
+        
+        // Add days of month
+        const today = new Date();
+        const todayStr = today.toISOString().split('T')[0];
+        
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dateStr = `${this.currentYear}-${String(this.currentMonth).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+            const dayElement = document.createElement('div');
+            dayElement.className = 'calendar-day';
+            dayElement.textContent = day;
+            dayElement.dataset.date = dateStr;
+            
+            // Mark today
+            if (dateStr === todayStr) {
+                dayElement.classList.add('today');
+            }
+            
+            // Apply status if exists
+            if (this.calendarData[dateStr]) {
+                dayElement.classList.add(this.calendarData[dateStr]);
+            }
+            
+            // Add click handler for owner
+            if (this.isOwner) {
+                dayElement.addEventListener('click', (e) => {
+                    this.handleDayClick(e.target);
+                });
+            } else {
+                dayElement.classList.add('read-only');
+            }
+            
+            daysContainer.appendChild(dayElement);
+        }
+    },
+    
+    async handleDayClick(dayElement) {
+        // Проверка что это не "другой месяц"
+        if (dayElement.classList.contains('other-month')) {
+            return;
+        }
+        
+        const date = dayElement.dataset.date;
+        const currentStatus = this.calendarData[date];
+        
+        // Cycle through statuses based on calendar mode
+        let nextStatus;
+        if (this.calendarMode === 'mark_unavailable') {
+            // Цикл: none -> unavailable -> maybe -> none
+            if (!currentStatus) nextStatus = 'unavailable';
+            else if (currentStatus === 'unavailable') nextStatus = 'maybe';
+            else nextStatus = null;
+        } else {
+            // Цикл: none -> available -> maybe -> none
+            if (!currentStatus) nextStatus = 'available';
+            else if (currentStatus === 'available') nextStatus = 'maybe';
+            else nextStatus = null;
+        }
+        
+        console.log('Updating date:', date, 'from', currentStatus, 'to', nextStatus);
+        
+        try {
+            const response = await fetch(`/performers/api/performer/${this.performerId}/availability/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                body: JSON.stringify({
+                    date: date,
+                    status: nextStatus || 'none',
+                    notes: ''
+                })
+            });
+            
+            if (response.ok) {
+                const result = await response.json();
+                console.log('Server response:', result);
+                
+                // Update local data
+                if (nextStatus) {
+                    this.calendarData[date] = nextStatus;
+                } else {
+                    delete this.calendarData[date];
+                }
+                
+                // Update UI - remove all status classes first
+                dayElement.classList.remove('available', 'unavailable', 'maybe');
+                
+                // Re-add today if needed
+                const todayStr = new Date().toISOString().split('T')[0];
+                if (date === todayStr && !dayElement.classList.contains('today')) {
+                    dayElement.classList.add('today');
+                }
+                
+                // Add new status class
+                if (nextStatus) {
+                    dayElement.classList.add(nextStatus);
+                    console.log('Added class:', nextStatus);
+                }
+            } else {
+                console.error('Server error:', response.status);
+            }
+        } catch (error) {
+            console.error('Error updating availability:', error);
+        }
+    },
+    
+    async updateCalendarMode(mode) {
+        try {
+            const response = await fetch(`/performers/api/performer/${this.performerId}/calendar-mode/`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                body: JSON.stringify({ mode: mode })
+            });
+            
+            if (response.ok) {
+                this.calendarMode = mode;
+                
+                // Update hint text
+                const hintText = mode === 'mark_unavailable' 
+                    ? 'Режим: даты по умолчанию свободны (светлые). Отмечайте красным занятые даты, оранжевым - "готов подумать".'
+                    : 'Режим: даты по умолчанию заняты (серые). Отмечайте зеленым свободные даты, оранжевым - "готов подумать".';
+                document.getElementById('calendar-hint-text').textContent = hintText;
+                
+                // Re-render calendar with new mode
+                this.renderCalendar();
+            }
+        } catch (error) {
+            console.error('Error updating calendar mode:', error);
+        }
+    },
+    
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+};
+
+// Initialize calendar when page loads
+document.addEventListener('DOMContentLoaded', () => {
+    Calendar.init();
+});
+
+// Gallery tabs functionality
+document.addEventListener('DOMContentLoaded', function() {
+    const galleryTabs = document.querySelectorAll('.gallery-tab');
+    const galleryPanes = document.querySelectorAll('.gallery-pane');
+    
+    galleryTabs.forEach(tab => {
+        tab.addEventListener('click', function() {
+            const tabName = this.getAttribute('data-gallery-tab');
+            
+            // Remove active class from all tabs and panes
+            galleryTabs.forEach(t => t.classList.remove('active'));
+            galleryPanes.forEach(pane => pane.classList.remove('active'));
+            
+            // Add active class to clicked tab
+            this.classList.add('active');
+            
+            // Show corresponding pane
+            const targetPane = document.getElementById(tabName + '-pane');
+            if (targetPane) {
+                targetPane.classList.add('active');
+            }
+        });
+    });
+    
+    // Video loading functionality
+    const videoPlaceholders = document.querySelectorAll('.video-placeholder');
+    videoPlaceholders.forEach(placeholder => {
+        placeholder.addEventListener('click', function() {
+            const videoEmbed = this.parentElement;
+            const videoUrl = videoEmbed.getAttribute('data-video-url');
+            
+            if (videoUrl) {
+                let videoId = '';
+                
+                // Parse different YouTube URL formats
+                if (videoUrl.includes('youtube.com/watch?v=')) {
+                    videoId = videoUrl.split('v=')[1].split('&')[0];
+                } else if (videoUrl.includes('youtu.be/')) {
+                    videoId = videoUrl.split('youtu.be/')[1].split('?')[0];
+                } else if (videoUrl.includes('youtube.com/embed/')) {
+                    videoId = videoUrl.split('embed/')[1].split('?')[0];
+                }
+                
+                if (videoId) {
+                    const embedUrl = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+                    videoEmbed.innerHTML = `
+                        <iframe src="${embedUrl}" 
+                                title="YouTube video player" 
+                                frameborder="0" 
+                                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                allowfullscreen>
+                        </iframe>
+                    `;
+                }
+            }
+        });
+    });
+});
+</script>
 {% endblock %}

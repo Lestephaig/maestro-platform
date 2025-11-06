@@ -15,29 +15,291 @@
     {% block extra_css %}{% endblock %}
     
     <style>
+        :root {
+            --gold: #d4af37;
+            --gold-dark: #b8941f;
+            --gold-light: #f0d878;
+            --silver: #c0c0c0;
+            --silver-dark: #a8a8a8;
+            --silver-light: #e8e8e8;
+            --black: #0a0a0a;
+            --white: #ffffff;
+            --gray-dark: #1a1a1a;
+            --gray: #2a2a2a;
+            --gray-light: #f5f5f5;
+            --blue-accent: #4a90e2;
+        }
+        
+        html, body {
+            height: 100%;
+            margin: 0;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+            color: var(--white);
+        }
+        
+        main {
+            flex: 1 0 auto;
+        }
+        
+        /* Metallic effects */
+        .gold-gradient {
+            background: linear-gradient(135deg, 
+                var(--gold-dark) 0%, 
+                var(--gold) 50%, 
+                var(--gold-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .silver-gradient {
+            background: linear-gradient(135deg, 
+                var(--silver-dark) 0%, 
+                var(--silver) 50%, 
+                var(--silver-light) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        /* Navbar */
+        .navbar {
+            background: linear-gradient(180deg, var(--black) 0%, var(--gray-dark) 100%) !important;
+            border-bottom: 1px solid var(--gold);
+            box-shadow: 0 2px 20px rgba(212, 175, 55, 0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            z-index: 1040;
+        }
+        
         .navbar-brand {
-            font-weight: bold;
+            font-weight: 700;
             font-size: 1.5rem;
+            color: var(--gold) !important;
+            text-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+            letter-spacing: 1px;
         }
-        .hero-section {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 4rem 0;
+        
+        .navbar-brand:hover {
+            color: var(--gold-light) !important;
+            text-shadow: 0 0 30px rgba(212, 175, 55, 0.8);
         }
+        
+        .music-icon {
+            color: var(--gold);
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6));
+        }
+        
+        .nav-link {
+            color: var(--silver-light) !important;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+            transition: all 0.3s ease;
+            transform: translateX(-50%);
+        }
+        
+        .nav-link:hover {
+            color: var(--gold) !important;
+        }
+        
+        .nav-link:hover::after {
+            width: 80%;
+        }
+        
+        .dropdown-menu {
+            background: linear-gradient(180deg, var(--gray-dark) 0%, var(--gray) 100%) !important;
+            border: 2px solid var(--gold) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9) !important;
+            z-index: 9999 !important;
+            min-width: 220px;
+            margin-top: 0 !important;
+            position: absolute !important;
+        }
+        
+        .dropdown-menu.show {
+            display: block !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+        }
+        
+        .navbar .dropdown-menu {
+            right: 0 !important;
+            left: auto !important;
+            top: 100% !important;
+        }
+        
+        .nav-item.dropdown {
+            position: relative;
+        }
+        
+        .dropdown-item {
+            color: var(--silver-light) !important;
+            transition: all 0.3s ease;
+            padding: 0.75rem 1.5rem;
+        }
+        
+        .dropdown-item:hover {
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.2)) !important;
+            color: var(--gold) !important;
+        }
+        
+        .dropdown-item:focus {
+            background: linear-gradient(90deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.2)) !important;
+            color: var(--gold) !important;
+        }
+        
+        .dropdown-item button {
+            background: none;
+            border: none;
+            color: inherit;
+            width: 100%;
+            text-align: left;
+            padding: 0;
+        }
+        
+        .dropdown-divider {
+            border-color: var(--silver-dark) !important;
+            opacity: 0.3;
+            margin: 0.5rem 0;
+        }
+        
+        .dropdown-toggle::after {
+            margin-left: 0.5rem;
+        }
+        
+        .btn-outline-light {
+            border: 2px solid var(--gold);
+            color: var(--gold);
+            font-weight: 600;
+            background: transparent;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-light::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+            transition: all 0.4s ease;
+            z-index: -1;
+        }
+        
+        .btn-outline-light:hover {
+            color: var(--black);
+            border-color: var(--gold-light);
+            box-shadow: 0 0 20px rgba(212, 175, 55, 0.6);
+        }
+        
+        .btn-outline-light:hover::before {
+            left: 0;
+        }
+        
+        /* Alerts with metallic style */
+        .alert {
+            border-radius: 12px;
+            border: none;
+            backdrop-filter: blur(10px);
+        }
+        
+        .alert-success {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.2), rgba(74, 144, 226, 0.1));
+            color: var(--blue-accent);
+            border-left: 4px solid var(--blue-accent);
+        }
+        
+        .alert-danger {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.2), rgba(255, 107, 107, 0.1));
+            color: #ff6b6b;
+            border-left: 4px solid #ff6b6b;
+        }
+        
+        .alert-warning {
+            background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+            color: var(--gold);
+            border-left: 4px solid var(--gold);
+        }
+        
+        .alert-info {
+            background: linear-gradient(135deg, rgba(192, 192, 192, 0.2), rgba(192, 192, 192, 0.1));
+            color: var(--silver-light);
+            border-left: 4px solid var(--silver);
+        }
+        
+        /* Footer */
+        .footer {
+            background: linear-gradient(180deg, var(--gray-dark) 0%, var(--black) 100%);
+            color: var(--silver-light);
+            padding: 2rem 0;
+            flex-shrink: 0;
+            border-top: 1px solid var(--gold);
+            box-shadow: 0 -2px 20px rgba(212, 175, 55, 0.2);
+        }
+        
+        .footer h5 {
+            color: var(--gold);
+            font-weight: 700;
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+        
+        .footer a {
+            color: var(--silver);
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+        
+        .footer a:hover {
+            color: var(--gold);
+            text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+        }
+        
+        /* Utility classes */
         .feature-card {
             transition: transform 0.3s ease;
             height: 100%;
         }
+        
         .feature-card:hover {
             transform: translateY(-5px);
         }
-        .footer {
-            background-color: #343a40;
-            color: white;
-            padding: 2rem 0;
+        
+        /* Scrollbar styling */
+        ::-webkit-scrollbar {
+            width: 10px;
         }
-        .music-icon {
-            color: #ffc107;
+        
+        ::-webkit-scrollbar-track {
+            background: var(--gray-dark);
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--gold-dark), var(--gold-light));
+            border-radius: 5px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--gold), var(--gold-light));
         }
     </style>
 </head>
@@ -59,35 +321,35 @@
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'home' %}">Главная</a>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'performers:specialists' %}">Наши специалисты</a>
+                    </li>
                     {% if user.is_authenticated %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'profile' %}">Личный кабинет</a>
-                        </li>
                         {% if user.performer_profile %}
                             <li class="nav-item">
                                 <a class="nav-link" href="{% url 'performers:performer_detail' user.performer_profile.id %}">Мой профиль артиста</a>
                             </li>
                         {% endif %}
-                        <li class="nav-item">
-                            <a class="nav-link" href="{% url 'chat_list' %}">Чаты</a>
-                        </li>
                     {% endif %}
                 </ul>
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="userDropdown">
                                 <i class="bi bi-person-circle me-1"></i>
                                 {{ user.username }}
                             </a>
-                            <ul class="dropdown-menu">
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{% url 'profile' %}">
                                     <i class="bi bi-person me-2"></i>Профиль
                                 </a></li>
+                                <li><a class="dropdown-item" href="{% url 'chat_list' %}">
+                                    <i class="bi bi-chat-dots me-2"></i>Чаты
+                                </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
-                                    <form method="post" action="{% url 'logout' %}" class="d-inline">
+                                    <form method="post" action="{% url 'logout' %}" class="d-inline w-100">
                                         {% csrf_token %}
                                         <button type="submit" class="dropdown-item">
                                             <i class="bi bi-box-arrow-right me-2"></i>Выйти
@@ -148,6 +410,36 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <script>
+        // Ensure dropdown works properly
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('Initializing dropdowns...');
+            
+            // Check if Bootstrap is loaded
+            if (typeof bootstrap === 'undefined') {
+                console.error('Bootstrap is not loaded!');
+                return;
+            }
+            
+            // Initialize all dropdowns
+            var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
+            console.log('Found dropdowns:', dropdownElementList.length);
+            
+            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
+                // Initialize Bootstrap dropdown with autoClose on click outside
+                var dropdown = new bootstrap.Dropdown(dropdownToggleEl, {
+                    boundary: 'viewport',
+                    offset: [0, 2],
+                    autoClose: true  // Close only on click outside or on item
+                });
+                
+                return dropdown;
+            });
+            
+            console.log('Dropdowns initialized:', dropdownList.length);
+        });
+    </script>
     
     {% block extra_js %}{% endblock %}
 </body>

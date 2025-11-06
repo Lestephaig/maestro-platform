@@ -1,0 +1,389 @@
+{% extends 'base.html' %}
+
+{% block title %}Наши специалисты - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        margin: 0;
+        padding: 0;
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+    }
+    
+    .page-title {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.8rem;
+        font-weight: 800;
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-top: 2rem;
+        text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
+        letter-spacing: -1px;
+    }
+    
+    .page-title i {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+    }
+    
+    .specialists-content {
+        padding: 0;
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: calc(100vh - 200px);
+    }
+    
+    .container {
+        padding-bottom: 3rem;
+    }
+    
+    .specialists-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+        gap: 2rem;
+        margin-bottom: 3rem;
+    }
+    
+    .specialist-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+        border: 2px solid var(--silver-dark);
+        transition: all 0.4s ease;
+        text-decoration: none;
+        color: inherit;
+        height: 420px;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    .specialist-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+        transition: left 0.6s ease;
+    }
+    
+    .specialist-card:hover::before {
+        left: 100%;
+    }
+    
+    .specialist-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 50px rgba(212, 175, 55, 0.4);
+        border-color: var(--gold);
+        text-decoration: none;
+        color: inherit;
+    }
+    
+    .specialist-photo {
+        width: 100%;
+        height: 200px;
+        object-fit: cover;
+        background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gray-dark) 100%);
+        flex-shrink: 0;
+    }
+    
+    .specialist-info {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.2), transparent);
+    }
+    
+    .specialist-name {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.4rem;
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .verification-badge {
+        font-size: 1.1rem;
+    }
+    
+    .verification-badge.unverified {
+        color: var(--silver-dark);
+        opacity: 0.5;
+    }
+    
+    .verification-badge.verified {
+        color: #27ae60;
+        filter: drop-shadow(0 0 8px rgba(39, 174, 96, 0.6));
+    }
+    
+    .specialist-voice {
+        color: var(--white);
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        font-weight: 500;
+    }
+    
+    .specialist-voice i {
+        color: var(--gold);
+    }
+    
+    .specialist-bio {
+        color: var(--silver-light);
+        font-size: 0.95rem;
+        line-height: 1.5;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        flex: 1;
+        margin-bottom: 1rem;
+    }
+    
+    .specialist-meta {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: auto;
+        padding-top: 1rem;
+        border-top: 1px solid var(--gold);
+    }
+    
+    .specialist-year {
+        color: var(--silver);
+        font-size: 0.85rem;
+        font-weight: 500;
+    }
+    
+    .specialist-year i {
+        color: var(--gold);
+    }
+    
+    .specialist-link {
+        color: var(--gold);
+        font-size: 0.95rem;
+        font-weight: 700;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .specialist-link:hover {
+        color: var(--gold-light);
+        text-decoration: none;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 5rem 2rem;
+        color: var(--silver-light);
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        border: 2px solid var(--gold);
+    }
+    
+    .empty-state i {
+        font-size: 5rem;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1.5rem;
+        filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+    }
+    
+    .empty-state h3 {
+        color: var(--gold);
+        margin-bottom: 1rem;
+        font-weight: 700;
+    }
+    
+    .pagination-wrapper {
+        display: flex;
+        justify-content: center;
+        margin-top: 3rem;
+    }
+    
+    .pagination {
+        display: flex;
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        gap: 0.5rem;
+    }
+    
+    .page-item {
+        margin: 0;
+    }
+    
+    .page-link {
+        display: block;
+        padding: 0.75rem 1rem;
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        color: var(--silver-light);
+        text-decoration: none;
+        border-radius: 10px;
+        border: 1px solid var(--silver-dark);
+        transition: all 0.3s ease;
+        font-weight: 600;
+    }
+    
+    .page-link:hover {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        border-color: var(--gold);
+        text-decoration: none;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+    }
+    
+    .page-item.active .page-link {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        border-color: var(--gold);
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+    }
+    
+    .page-item.disabled .page-link {
+        background: rgba(42, 42, 42, 0.5);
+        color: var(--silver-dark);
+        border-color: var(--silver-dark);
+        cursor: not-allowed;
+        opacity: 0.5;
+    }
+    
+    @media (max-width: 768px) {
+        .page-title {
+            font-size: 2rem;
+            padding-top: 1rem;
+        }
+        
+        .specialists-grid {
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+        }
+        
+        .specialist-card {
+            margin: 0 1rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Specialists Content -->
+<div class="specialists-content">
+    <div class="container">
+        <h1 class="page-title"><i class="bi bi-music-note-beamed me-3"></i>Наши специалисты</h1>
+        {% if performers %}
+            <div class="specialists-grid">
+                {% for performer in performers %}
+                    <a href="{% url 'performers:performer_detail' performer.id %}" class="specialist-card">
+                        {% if performer.photo %}
+                            <img src="{{ performer.photo.url }}" alt="{{ performer.full_name }}" class="specialist-photo">
+                        {% else %}
+                            <div class="specialist-photo d-flex align-items-center justify-content-center">
+                                <i class="bi bi-person-circle" style="font-size: 4.5rem; background: linear-gradient(135deg, var(--gold-dark), var(--gold-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"></i>
+                            </div>
+                        {% endif %}
+                        
+                        <div class="specialist-info">
+                            <h3 class="specialist-name">
+                                {{ performer.full_name }}
+                                <span class="verification-badge {% if performer.is_verified %}verified{% else %}unverified{% endif %}">
+                                    <i class="bi bi-check-circle-fill"></i>
+                                </span>
+                            </h3>
+                            
+                            {% if performer.voice_type %}
+                                <p class="specialist-voice">
+                                    <i class="bi bi-mic me-2"></i>{{ performer.voice_type }}
+                                </p>
+                            {% endif %}
+                            
+                            {% if performer.bio %}
+                                <p class="specialist-bio">{{ performer.bio|truncatewords:20 }}</p>
+                            {% else %}
+                                <p class="specialist-bio">Профессиональный классический музыкант</p>
+                            {% endif %}
+                            
+                            <div class="specialist-meta">
+                                {% if performer.birth_year %}
+                                    <span class="specialist-year">
+                                        <i class="bi bi-calendar3 me-1"></i>{{ performer.birth_year }} г.р.
+                                    </span>
+                                {% endif %}
+                                <span class="specialist-link">
+                                    Подробнее <i class="bi bi-arrow-right ms-1"></i>
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination -->
+            {% if page_obj.has_other_pages %}
+                <div class="pagination-wrapper">
+                    <ul class="pagination">
+                        {% if page_obj.has_previous %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page=1">
+                                    <i class="bi bi-chevron-double-left"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% for num in page_obj.paginator.page_range %}
+                            {% if page_obj.number == num %}
+                                <li class="page-item active">
+                                    <span class="page-link">{{ num }}</span>
+                                </li>
+                            {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                </li>
+                            {% endif %}
+                        {% endfor %}
+                        
+                        {% if page_obj.has_next %}
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                            <li class="page-item">
+                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                    <i class="bi bi-chevron-double-right"></i>
+                                </a>
+                            </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="empty-state">
+                <i class="bi bi-music-note-beamed"></i>
+                <h3>Пока нет зарегистрированных артистов</h3>
+                <p>Скоро здесь появятся талантливые музыканты!</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

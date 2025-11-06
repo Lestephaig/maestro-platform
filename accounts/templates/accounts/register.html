@@ -2,23 +2,294 @@
 
 {% block title %}Регистрация - Maestro Platform{% endblock %}
 
-{% block content %}
-<div class="container">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-6">
-            <div class="card shadow">
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-person-plus text-primary" style="font-size: 3rem;"></i>
-                        <h2 class="mt-3">Регистрация</h2>
-                        <p class="text-muted">Создайте аккаунт исполнителя или заказчика</p>
-                    </div>
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: 100vh;
+    }
+    
+    .register-page-content {
+        display: flex;
+        align-items: center;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+    }
+    
+    .register-container {
+        width: 100%;
+        max-width: 650px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+    
+    .register-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+        border: 2px solid var(--gold);
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .register-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+    }
+    
+    .register-header {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%);
+        padding: 2.5rem 2rem;
+        text-align: center;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .register-icon {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        display: block;
+        filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+    }
+    
+    .register-title {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+        font-size: 2.2rem;
+        font-weight: 800;
+        letter-spacing: -0.5px;
+    }
+    
+    .register-subtitle {
+        color: var(--silver-light);
+        margin: 0.75rem 0 0 0;
+        font-weight: 300;
+    }
+    
+    .register-body {
+        padding: 2rem 2rem;
+    }
+    
+    .form-group {
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-group:last-of-type {
+        margin-bottom: 2rem;
+    }
+    
+    .form-row {
+        display: flex;
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .form-row .form-group {
+        flex: 1;
+        margin-bottom: 0;
+    }
+    
+    .form-label {
+        color: var(--gold);
+        font-weight: 600;
+        margin-bottom: 0.75rem;
+        display: flex;
+        align-items: center;
+    }
+    
+    .form-label i {
+        color: var(--gold);
+    }
+    
+    .form-control, .form-select {
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid var(--silver-dark);
+        color: var(--white);
+        padding: 1rem 1.25rem;
+        border-radius: 12px;
+        font-size: 1rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus, .form-select:focus {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--gold);
+        color: var(--white);
+        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
+        outline: none;
+    }
+    
+    .form-control::placeholder {
+        color: var(--silver-dark);
+    }
+    
+    .form-select option {
+        background: var(--gray-dark);
+        color: var(--white);
+    }
+    
+    .btn-register {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 800;
+        border: none;
+        padding: 1.125rem;
+        border-radius: 12px;
+        font-size: 1.1rem;
+        transition: all 0.3s ease;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.4);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .btn-register::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transform: translate(-50%, -50%);
+        transition: width 0.6s, height 0.6s;
+    }
+    
+    .btn-register:hover::before {
+        width: 300px;
+        height: 300px;
+    }
+    
+    .btn-register:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(212, 175, 55, 0.6);
+    }
+    
+    .register-footer {
+        text-align: center;
+        padding: 1.75rem 2rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid var(--gold);
+        color: var(--silver-light);
+    }
+    
+    .register-footer a {
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 700;
+        transition: all 0.3s ease;
+        position: relative;
+    }
+    
+    .register-footer a::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, var(--gold-dark), var(--gold-light));
+        transition: width 0.3s ease;
+    }
+    
+    .register-footer a:hover::after {
+        width: 100%;
+    }
+    
+    .register-footer a:hover {
+        color: var(--gold-light);
+        text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+    
+    .invalid-feedback {
+        color: #ff6b6b;
+        background: rgba(255, 107, 107, 0.15);
+        padding: 0.75rem 1rem;
+        border-radius: 8px;
+        margin-top: 0.75rem;
+        border-left: 3px solid #ff6b6b;
+    }
+    
+    .form-text {
+        color: var(--silver-light);
+        font-size: 0.85rem;
+    }
+    
+    .form-check {
+        background: rgba(255, 255, 255, 0.03);
+        padding: 1rem;
+        border-radius: 12px;
+        border: 2px solid var(--silver-dark);
+        transition: all 0.3s ease;
+    }
+    
+    .form-check:has(.form-check-input:checked) {
+        background: rgba(212, 175, 55, 0.15);
+        border-color: var(--gold);
+    }
+    
+    .form-check-label {
+        color: var(--white);
+        font-weight: 500;
+        cursor: pointer;
+        width: 100%;
+    }
+    
+    .form-check-input {
+        background-color: rgba(255, 255, 255, 0.05);
+        border-color: var(--silver-dark);
+        cursor: pointer;
+        width: 1.2rem;
+        height: 1.2rem;
+    }
+    
+    .form-check-input:checked {
+        background-color: var(--gold);
+        border-color: var(--gold);
+    }
+    
+    .form-check-input:focus {
+        border-color: var(--gold);
+        box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.15);
+    }
+    
+    .role-section {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1.5rem;
+        border-radius: 12px;
+        border: 1px solid var(--gold);
+    }
+</style>
+{% endblock %}
 
-                    <form method="post">
+{% block content %}
+<div class="register-page-content">
+    <div class="register-container">
+        <div class="register-card">
+        <div class="register-header">
+            <i class="bi bi-music-note-beamed register-icon" style="font-size: 3.5rem;"></i>
+            <h2 class="register-title">Регистрация</h2>
+            <p class="register-subtitle">Maestro Platform</p>
+        </div>
+
+        <div class="register-body">
+            <form method="post">
                         {% csrf_token %}
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label for="{{ form.username.id_for_label }}" class="form-label">
                                     <i class="bi bi-person me-2"></i>Логин
                                 </label>
@@ -30,7 +301,7 @@
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-6 mb-3">
+                            <div class="form-group">
                                 <label for="{{ form.email.id_for_label }}" class="form-label">
                                     <i class="bi bi-envelope me-2"></i>Email
                                 </label>
@@ -43,8 +314,8 @@
                             </div>
                         </div>
 
-                        <div class="row">
-                            <div class="col-md-6 mb-3">
+                        <div class="form-row">
+                            <div class="form-group">
                                 <label for="{{ form.password1.id_for_label }}" class="form-label">
                                     <i class="bi bi-lock me-2"></i>Пароль
                                 </label>
@@ -56,7 +327,7 @@
                                 {% endif %}
                             </div>
 
-                            <div class="col-md-6 mb-3">
+                            <div class="form-group">
                                 <label for="{{ form.password2.id_for_label }}" class="form-label">
                                     <i class="bi bi-lock-fill me-2"></i>Подтверждение пароля
                                 </label>
@@ -69,63 +340,45 @@
                             </div>
                         </div>
 
-                        <div class="mb-4">
-                            <label class="form-label">
-                                <i class="bi bi-person-badge me-2"></i>Тип аккаунта
-                            </label>
-                            <div class="row">
-                                {% for radio in form.role %}
-                                    <div class="col-md-6">
-                                        <div class="form-check">
-                                            {{ radio.tag }}
-                                            <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                                {{ radio.choice_label }}
-                                            </label>
-                                        </div>
-                                    </div>
-                                {% endfor %}
-                            </div>
-                            {% if form.role.errors %}
-                                <div class="invalid-feedback d-block">
-                                    {{ form.role.errors.0 }}
+                <div class="mb-4 role-section">
+                    <label class="form-label mb-3">
+                        <i class="bi bi-person-badge me-2"></i>Тип аккаунта
+                    </label>
+                    <div class="row g-3">
+                        {% for radio in form.role %}
+                            <div class="col-md-6">
+                                <div class="form-check">
+                                    {{ radio.tag }}
+                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                                        {% if 'performer' in radio.choice_label|lower %}
+                                            <i class="bi bi-music-note me-2"></i>
+                                        {% else %}
+                                            <i class="bi bi-building me-2"></i>
+                                        {% endif %}
+                                        {{ radio.choice_label }}
+                                    </label>
                                 </div>
-                            {% endif %}
-                        </div>
-
-                        <button type="submit" class="btn btn-primary w-100 btn-lg">
-                            <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
-                        </button>
-                    </form>
-
-                    <div class="text-center mt-4">
-                        <p class="text-muted">
-                            Уже есть аккаунт? 
-                            <a href="{% url 'login' %}" class="text-decoration-none">
-                                Войти
-                            </a>
-                        </p>
+                            </div>
+                        {% endfor %}
                     </div>
+                    {% if form.role.errors %}
+                        <div class="invalid-feedback d-block">
+                            {{ form.role.errors.0 }}
+                        </div>
+                    {% endif %}
                 </div>
+
+                <button type="submit" class="btn btn-register w-100">
+                    <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
+                </button>
+            </form>
+        </div>
+        
+            <div class="register-footer">
+                Уже есть аккаунт? 
+                <a href="{% url 'login' %}">Войти</a>
             </div>
         </div>
     </div>
 </div>
-
-<style>
-    .form-control {
-        border-radius: 0.5rem;
-        border: 1px solid #dee2e6;
-        padding: 0.75rem 1rem;
-    }
-    
-    .form-control:focus {
-        border-color: #0d6efd;
-        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
-    }
-    
-    .form-check-input:checked {
-        background-color: #0d6efd;
-        border-color: #0d6efd;
-    }
-</style>
 {% endblock %}

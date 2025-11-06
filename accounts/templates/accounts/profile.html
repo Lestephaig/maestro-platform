@@ -2,95 +2,369 @@
 
 {% block title %}Личный кабинет - Maestro Platform{% endblock %}
 
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: 100vh;
+    }
+    
+    .profile-container {
+        max-width: 1400px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .profile-header {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.5);
+        border: 2px solid var(--gold);
+    }
+    
+    .profile-header h1 {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.8rem;
+        margin-bottom: 0.75rem;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+    
+    .profile-info-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+    }
+    
+    .info-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+        border: 2px solid var(--silver-dark);
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .info-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .info-card:hover::before {
+        left: 100%;
+    }
+    
+    .info-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 35px rgba(212, 175, 55, 0.3);
+        border-color: var(--gold);
+    }
+    
+    .info-card-icon {
+        font-size: 3rem;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin-bottom: 1rem;
+        filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.4));
+    }
+    
+    .info-card-title {
+        color: var(--silver);
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 1.5px;
+        margin-bottom: 0.5rem;
+        font-weight: 600;
+    }
+    
+    .info-card-value {
+        color: var(--white);
+        font-size: 1.4rem;
+        font-weight: 700;
+    }
+    
+    .profile-main-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        padding: 0;
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+        overflow: hidden;
+        border: 2px solid var(--gold);
+    }
+    
+    .profile-main-header {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%);
+        padding: 1.75rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .profile-main-header h2 {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        margin: 0;
+        font-size: 1.8rem;
+        font-weight: 800;
+    }
+    
+    .edit-btn {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        border: none;
+        padding: 0.75rem 1.75rem;
+        border-radius: 12px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-block;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+    }
+    
+    .edit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+        color: var(--black);
+    }
+    
+    .profile-content-wrapper {
+        padding: 2rem;
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        color: var(--white);
+    }
+    
+    .badge {
+        padding: 0.5rem 1.125rem;
+        border-radius: 20px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+    }
+    
+    .badge-performer {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+    }
+    
+    .badge-client {
+        background: linear-gradient(135deg, var(--blue-accent), #5ba3f5);
+        color: white;
+    }
+    
+    .badge-verified {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+    }
+    
+    .badge-pending {
+        background: linear-gradient(135deg, var(--silver-dark), var(--silver-light));
+        color: var(--black);
+    }
+    
+    /* Стили для вложенных компонентов профиля */
+    .performer-hero {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%) !important;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .performer-avatar {
+        border: 4px solid var(--gold) !important;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.5) !important;
+    }
+    
+    .performer-hero h2 {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+    }
+    
+    .nav-tabs {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%) !important;
+        border-bottom: 2px solid var(--gold) !important;
+    }
+    
+    .nav-tabs .nav-link {
+        color: var(--silver) !important;
+        border: none !important;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .nav-tabs .nav-link:hover {
+        color: var(--gold) !important;
+        background: rgba(212, 175, 55, 0.1) !important;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: var(--gold) !important;
+        background: rgba(212, 175, 55, 0.2) !important;
+        border-bottom: 3px solid var(--gold) !important;
+    }
+    
+    .card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%) !important;
+        border: 1px solid var(--silver-dark) !important;
+    }
+    
+    .card:hover {
+        border-color: var(--gold) !important;
+    }
+    
+    .card-header {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%) !important;
+        border-bottom: 2px solid var(--gold) !important;
+        color: var(--gold) !important;
+    }
+    
+    .card-header h5, .card-header h6 {
+        color: var(--gold) !important;
+        font-weight: 700 !important;
+    }
+    
+    .card-body {
+        background: transparent !important;
+        color: var(--white) !important;
+    }
+    
+    .card-body h6 {
+        color: var(--gold) !important;
+        font-weight: 600 !important;
+    }
+    
+    .card-body .text-muted {
+        color: var(--silver-light) !important;
+    }
+    
+    .card-body .badge.bg-primary {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light)) !important;
+        color: var(--black) !important;
+    }
+    
+    @media (max-width: 768px) {
+        .profile-header h1 {
+            font-size: 2rem;
+        }
+        
+        .profile-info-cards {
+            grid-template-columns: 1fr;
+        }
+        
+        .profile-main-header {
+            flex-direction: column;
+            gap: 1rem;
+            text-align: center;
+        }
+    }
+</style>
+{% endblock %}
+
 {% block content %}
-<div class="container">
-    <div class="row">
-        <div class="col-lg-8 mx-auto">
-            <div class="d-flex align-items-center mb-4">
-                <i class="bi bi-person-circle text-primary me-3" style="font-size: 3rem;"></i>
-                <div>
-                    <h1 class="mb-0">Личный кабинет</h1>
-                    <p class="text-muted">Управляйте своим профилем и настройками</p>
-                </div>
+<div class="profile-container">
+    <!-- Header -->
+    <div class="profile-header">
+        <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div>
+                <h1><i class="bi bi-person-circle me-3"></i>Личный кабинет</h1>
+                <p class="mb-0" style="color: #bdc3c7; font-size: 1.1rem;">Управляйте своим профилем и настройками</p>
             </div>
-
-            <!-- Основная информация -->
-            <div class="card mb-4">
-                <div class="card-header bg-primary text-white">
-                    <h5 class="mb-0">
-                        <i class="bi bi-info-circle me-2"></i>Основная информация
-                    </h5>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6">
-                            <p><strong><i class="bi bi-person me-2"></i>Имя пользователя:</strong> {{ user.username }}</p>
-                            <p><strong><i class="bi bi-envelope me-2"></i>Email:</strong> {{ user.email }}</p>
-                        </div>
-                        <div class="col-md-6">
-                            {% if user.performer_profile %}
-                                <p><strong><i class="bi bi-music-note me-2"></i>Тип аккаунта:</strong> 
-                                    <span class="badge bg-success">Исполнитель</span>
-                                </p>
-                            {% elif user.client_profile %}
-                                <p><strong><i class="bi bi-building me-2"></i>Тип аккаунта:</strong> 
-                                    <span class="badge bg-info">Заказчик</span>
-                                </p>
-                            {% endif %}
-
-                            <p><strong><i class="bi bi-shield-check me-2"></i>Статус верификации:</strong>
-                                {% if user.is_verified %}
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle me-1"></i>Одобрен
-                                    </span>
-                                {% else %}
-                                    <span class="badge bg-warning">
-                                        <i class="bi bi-clock me-1"></i>Ожидает модерации
-                                    </span>
-                                {% endif %}
-                            </p>
-                        </div>
-                    </div>
-                </div>
+            <div>
+                <a href="{% url 'chat_list' %}" class="btn btn-outline-light">
+                    <i class="bi bi-chat-dots me-2"></i>Чаты
+                </a>
             </div>
+        </div>
+    </div>
 
-            <!-- Динамический контент профиля -->
-            <div class="card">
-                <div class="card-header bg-light">
-                    <div class="d-flex justify-content-between align-items-center">
-                        <h5 class="mb-0">
-                            <i class="bi bi-gear me-2"></i>Детали профиля
-                        </h5>
-                        <button class="btn btn-sm btn-outline-primary" 
-                                hx-get="{% url 'profile_edit' %}" 
-                                hx-target="#profile-content"
-                                hx-swap="innerHTML">
-                            <i class="bi bi-pencil me-1"></i>Редактировать
-                        </button>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div id="profile-content">
-                        {% include 'accounts/_profile_content.html' %}
-                    </div>
-                </div>
+    <!-- Info Cards -->
+    <div class="profile-info-cards">
+        <div class="info-card">
+            <div class="info-card-icon">
+                <i class="bi bi-person"></i>
             </div>
+            <div class="info-card-title">Имя пользователя</div>
+            <div class="info-card-value">{{ user.username }}</div>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-icon">
+                <i class="bi bi-envelope"></i>
+            </div>
+            <div class="info-card-title">Email</div>
+            <div class="info-card-value" style="font-size: 1.1rem;">{{ user.email }}</div>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-icon">
+                {% if user.performer_profile %}
+                    <i class="bi bi-music-note"></i>
+                {% elif user.client_profile %}
+                    <i class="bi bi-building"></i>
+                {% endif %}
+            </div>
+            <div class="info-card-title">Тип аккаунта</div>
+            <div class="info-card-value">
+                {% if user.performer_profile %}
+                    <span class="badge badge-performer">Исполнитель</span>
+                {% elif user.client_profile %}
+                    <span class="badge badge-client">Заказчик</span>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-icon">
+                <i class="bi bi-shield-check"></i>
+            </div>
+            <div class="info-card-title">Статус верификации</div>
+            <div class="info-card-value">
+                {% if user.is_verified %}
+                    <span class="badge badge-verified">
+                        <i class="bi bi-check-circle me-1"></i>Одобрен
+                    </span>
+                {% else %}
+                    <span class="badge badge-pending">
+                        <i class="bi bi-clock me-1"></i>На модерации
+                    </span>
+                {% endif %}
+            </div>
+        </div>
+    </div>
 
-            <!-- Дополнительные действия -->
-            <div class="card mt-4">
-                <div class="card-body">
-                    <h6 class="card-title">
-                        <i class="bi bi-tools me-2"></i>Дополнительные действия
-                    </h6>
-                    <div class="d-flex gap-2 flex-wrap">
-                        <a href="{% url 'chat_list' %}" class="btn btn-outline-primary">
-                            <i class="bi bi-chat-dots me-1"></i>Чаты
-                        </a>
-                        <a href="{% url 'admin:index' %}" class="btn btn-outline-secondary" target="_blank">
-                            <i class="bi bi-gear me-1"></i>Админка
-                        </a>
-                    </div>
-                </div>
+    <!-- Main Profile Content -->
+    <div class="profile-main-card">
+        <div class="profile-main-header">
+            <h2><i class="bi bi-gear me-2"></i>Детали профиля</h2>
+            <button class="edit-btn" 
+                    hx-get="{% url 'profile_edit' %}" 
+                    hx-target="#profile-content"
+                    hx-swap="innerHTML">
+                <i class="bi bi-pencil me-2"></i>Редактировать
+            </button>
+        </div>
+        <div class="profile-content-wrapper">
+            <div id="profile-content">
+                {% include 'accounts/_profile_content.html' %}
             </div>
         </div>
     </div>

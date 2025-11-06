@@ -1,0 +1,305 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ client_user.username }} - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: 100vh;
+    }
+    
+    .client-profile-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+    
+    .back-link:hover {
+        color: var(--gold-light);
+        transform: translateX(-5px);
+    }
+    
+    .client-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+        border: 2px solid var(--gold);
+        overflow: hidden;
+    }
+    
+    .client-header {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%);
+        padding: 3rem 2rem;
+        text-align: center;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .client-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--blue-accent), #5ba3f5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 4rem;
+        box-shadow: 0 10px 35px rgba(74, 144, 226, 0.5);
+    }
+    
+    .client-username {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .client-role {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 700;
+        background: linear-gradient(135deg, var(--blue-accent), #5ba3f5);
+        color: white;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+        margin-bottom: 1rem;
+    }
+    
+    .verification-badge {
+        display: inline-block;
+        padding: 0.5rem 1.25rem;
+        border-radius: 15px;
+        font-weight: 600;
+        margin-top: 1rem;
+    }
+    
+    .verification-badge.verified {
+        background: linear-gradient(135deg, #27ae60, #2ecc71);
+        color: white;
+        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+    }
+    
+    .verification-badge.unverified {
+        background: linear-gradient(135deg, var(--silver-dark), var(--silver-light));
+        color: var(--black);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    }
+    
+    .client-body {
+        padding: 2.5rem;
+    }
+    
+    .info-section {
+        margin-bottom: 2rem;
+    }
+    
+    .info-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-section h3 {
+        color: var(--gold);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .info-section h3 i {
+        color: var(--gold);
+        font-size: 1.6rem;
+    }
+    
+    .info-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid var(--silver-dark);
+        transition: all 0.3s ease;
+    }
+    
+    .info-item:hover {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.05);
+    }
+    
+    .info-label {
+        color: var(--silver);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-label i {
+        color: var(--gold);
+        font-size: 1rem;
+    }
+    
+    .info-value {
+        color: var(--white);
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .own-profile-notice {
+        background: rgba(74, 144, 226, 0.15);
+        border: 1px solid var(--blue-accent);
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        color: var(--silver-light);
+    }
+    
+    .own-profile-notice a {
+        color: var(--gold);
+        font-weight: 700;
+        text-decoration: none;
+    }
+    
+    .own-profile-notice a:hover {
+        color: var(--gold-light);
+        text-decoration: underline;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="client-profile-container">
+    <a href="javascript:history.back()" class="back-link">
+        <i class="bi bi-arrow-left"></i>
+        Назад к чату
+    </a>
+    
+    <div class="client-card">
+        <div class="client-header">
+            <div class="client-avatar">
+                <i class="bi bi-briefcase"></i>
+            </div>
+            <h1 class="client-username">{{ client_user.username }}</h1>
+            
+            <div class="client-role">
+                <i class="bi bi-briefcase me-2"></i>Заказчик
+            </div>
+            
+            <div class="verification-badge {% if client_user.is_verified %}verified{% else %}unverified{% endif %}">
+                <i class="bi bi-{% if client_user.is_verified %}check-circle-fill{% else %}clock-fill{% endif %} me-2"></i>
+                {% if client_user.is_verified %}Верифицирован{% else %}На проверке{% endif %}
+            </div>
+        </div>
+        
+        <div class="client-body">
+            {% if is_own_profile %}
+                <div class="own-profile-notice">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Это ваш профиль. <a href="{% url 'profile' %}">Перейти в личный кабинет</a> для редактирования.
+                </div>
+            {% endif %}
+            
+            <div class="info-section">
+                <h3>
+                    <i class="bi bi-person-circle"></i>
+                    Основная информация
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-person"></i>
+                        Имя пользователя
+                    </div>
+                    <div class="info-value">{{ client_user.username }}</div>
+                </div>
+                
+                {% if client_user.get_full_name %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-card-text"></i>
+                        Полное имя
+                    </div>
+                    <div class="info-value">{{ client_user.get_full_name }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-calendar-check"></i>
+                        На платформе с
+                    </div>
+                    <div class="info-value">{{ client_user.date_joined|date:"d.m.Y" }}</div>
+                </div>
+            </div>
+            
+            {% if client_user.client_profile %}
+            <div class="info-section">
+                <h3>
+                    <i class="bi bi-briefcase"></i>
+                    О заказчике
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-building"></i>
+                        Компания / Организация
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.company_name|default:"Не указано" }}</div>
+                </div>
+                
+                {% if client_user.client_profile.contact_person %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-person-badge"></i>
+                        Контактное лицо
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.contact_person }}</div>
+                </div>
+                {% endif %}
+                
+                {% if client_user.client_profile.website %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-globe"></i>
+                        Веб-сайт
+                    </div>
+                    <div class="info-value">
+                        <a href="{{ client_user.client_profile.website }}" target="_blank" 
+                           style="color: var(--blue-accent); text-decoration: none; transition: all 0.3s ease;"
+                           onmouseover="this.style.color='var(--gold)'" 
+                           onmouseout="this.style.color='var(--blue-accent)'">
+                            {{ client_user.client_profile.website }}
+                            <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
+

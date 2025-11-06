@@ -39,12 +39,6 @@
                 </button>
             </li>
             <li class="nav-item" role="presentation">
-                <button class="nav-link" id="video-tab" data-bs-toggle="tab" 
-                        data-bs-target="#video" type="button" role="tab">
-                    <i class="bi bi-play-circle me-2"></i>Видео
-                </button>
-            </li>
-            <li class="nav-item" role="presentation">
                 <button class="nav-link" id="achievements-tab" data-bs-toggle="tab" 
                         data-bs-target="#achievements" type="button" role="tab">
                     <i class="bi bi-trophy me-2"></i>Достижения
@@ -56,6 +50,16 @@
                     <i class="bi bi-person-lines-fill me-2"></i>О себе
                 </button>
             </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="media-tab-btn" 
+                        hx-get="{% url 'manage_media' %}" 
+                        hx-target="#media" 
+                        hx-swap="innerHTML"
+                        data-bs-toggle="tab" 
+                        data-bs-target="#media" type="button" role="tab">
+                    <i class="bi bi-images me-2"></i>Фото и видео
+                </button>
+            </li>
         </ul>
 
         <!-- Содержимое табов -->
@@ -65,7 +69,7 @@
                 <div class="row">
                     <div class="col-md-6">
                         <div class="card h-100">
-                            <div class="card-header bg-primary text-white">
+                            <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
                                 <h5 class="mb-0"><i class="bi bi-info-circle me-2"></i>Основная информация</h5>
                             </div>
                             <div class="card-body">
@@ -100,30 +104,30 @@
                     </div>
                     <div class="col-md-6">
                         <div class="card h-100">
-                            <div class="card-header bg-success text-white">
+                            <div class="card-header text-white" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border-bottom: 2px solid #2c3e50;">
                                 <h5 class="mb-0"><i class="bi bi-star me-2"></i>Статистика</h5>
                             </div>
                             <div class="card-body">
                                 <div class="row text-center">
                                     <div class="col-4">
                                         <div class="mb-2">
-                                            <i class="bi bi-chat-dots text-primary" style="font-size: 2rem;"></i>
+                                            <i class="bi bi-chat-dots" style="font-size: 2rem; color: #3498db;"></i>
                                         </div>
-                                        <h6>0</h6>
+                                        <h6 style="color: #ecf0f1;">0</h6>
                                         <small class="text-muted">Чатов</small>
                                     </div>
                                     <div class="col-4">
                                         <div class="mb-2">
-                                            <i class="bi bi-check-circle text-success" style="font-size: 2rem;"></i>
+                                            <i class="bi bi-check-circle" style="font-size: 2rem; color: #27ae60;"></i>
                                         </div>
-                                        <h6>0</h6>
+                                        <h6 style="color: #ecf0f1;">0</h6>
                                         <small class="text-muted">Проектов</small>
                                     </div>
                                     <div class="col-4">
                                         <div class="mb-2">
-                                            <i class="bi bi-star-fill text-warning" style="font-size: 2rem;"></i>
+                                            <i class="bi bi-star-fill" style="font-size: 2rem; color: #f39c12;"></i>
                                         </div>
-                                        <h6>0</h6>
+                                        <h6 style="color: #ecf0f1;">0</h6>
                                         <small class="text-muted">Рейтинг</small>
                                     </div>
                                 </div>
@@ -136,21 +140,134 @@
             <!-- Таб "Репертуар" -->
             <div class="tab-pane fade" id="repertoire" role="tabpanel">
                 <div class="card">
-                    <div class="card-header bg-info text-white">
-                        <h5 class="mb-0"><i class="bi bi-music-note-list me-2"></i>Репертуар</h5>
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="mb-0"><i class="bi bi-music-note-list me-2"></i>Умный репертуар</h5>
+                        <button type="button" class="btn btn-sm" id="add-repertoire-btn" 
+                                style="background: linear-gradient(135deg, var(--gold-dark), var(--gold-light)); color: var(--black); font-weight: 700;">
+                            <i class="bi bi-plus-circle me-1"></i>Добавить произведение
+                        </button>
                     </div>
                     <div class="card-body">
-                        {% if user.performer_profile.repertoire %}
-                            <div class="repertoire-content">
-                                {{ user.performer_profile.repertoire|linebreaks }}
+                        <!-- Форма добавления (скрыта по умолчанию) -->
+                        <div id="repertoire-form" class="mb-4" style="display: none;">
+                            <div class="p-4" style="background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid var(--gold);">
+                                <h6 class="mb-3" style="color: var(--gold); font-weight: 700;">
+                                    <i class="bi bi-plus-circle me-2"></i>Новое произведение
+                                </h6>
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label" style="color: var(--gold); font-weight: 600;">Композитор</label>
+                                        <input type="text" id="rep-composer" class="form-control autocomplete-composer" 
+                                               placeholder="Начните вводить имя..." autocomplete="off">
+                                        <datalist id="composers-datalist"></datalist>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" style="color: var(--gold); font-weight: 600;">Произведение</label>
+                                        <input type="text" id="rep-work" class="form-control autocomplete-work" 
+                                               placeholder="Начните вводить название..." autocomplete="off">
+                                        <datalist id="works-datalist"></datalist>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" style="color: var(--gold); font-weight: 600;">Категория</label>
+                                        <select id="rep-category" class="form-select">
+                                            <option value="opera">Опера</option>
+                                            <option value="operetta">Оперетта</option>
+                                            <option value="aria">Ария</option>
+                                            <option value="romance">Романс</option>
+                                            <option value="song">Песня</option>
+                                            <option value="chamber">Камерная музыка</option>
+                                            <option value="oratorio">Оратория</option>
+                                            <option value="cantata">Кантата</option>
+                                            <option value="mass">Месса/Реквием</option>
+                                            <option value="lieder">Lied</option>
+                                            <option value="other">Другое</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label" style="color: var(--gold); font-weight: 600;">Роль / Партия</label>
+                                        <input type="text" id="rep-role" class="form-control" placeholder="Опционально">
+                                    </div>
+                                    <div class="col-12">
+                                        <label class="form-label" style="color: var(--gold); font-weight: 600;">Заметки</label>
+                                        <textarea id="rep-notes" class="form-control" rows="2" placeholder="Для подтверждения укажите Дату и Место исполнения"></textarea>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="button" class="btn me-2" id="save-repertoire-btn"
+                                                style="background: linear-gradient(135deg, var(--gold-dark), var(--gold-light)); color: var(--black); font-weight: 700;">
+                                            <i class="bi bi-save me-1"></i>Сохранить
+                                        </button>
+                                        <button type="button" class="btn" id="cancel-repertoire-btn"
+                                                style="background: var(--silver-dark); color: var(--white);">
+                                            Отмена
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        {% else %}
-                            <div class="text-center py-5">
-                                <i class="bi bi-music-note-beamed text-muted" style="font-size: 4rem;"></i>
-                                <h5 class="mt-3 text-muted">Репертуар не указан</h5>
-                                <p class="text-muted">Добавьте информацию о своем репертуаре</p>
-                            </div>
-                        {% endif %}
+                        </div>
+                        
+                        <!-- Список произведений -->
+                        <div id="repertoire-list">
+                            {% if user.performer_profile.repertoire_items.all %}
+                                <div class="repertoire-items-container">
+                                    {% for item in user.performer_profile.repertoire_items.all %}
+                                        <div class="repertoire-item-card" 
+                                             data-item-id="{{ item.id }}"
+                                             data-composer="{{ item.composer }}"
+                                             data-work="{{ item.work_title }}"
+                                             data-category="{{ item.category }}"
+                                             data-epoch="{{ item.epoch }}"
+                                             data-role="{{ item.role_or_part }}"
+                                             data-year="{{ item.year_performed|default:'' }}"
+                                             data-video="{{ item.video_link }}"
+                                             data-notes="{{ item.notes }}"
+                                             data-featured="{{ item.is_featured|yesno:'true,false' }}">
+                                            <div class="d-flex align-items-start gap-3">
+                                                <div class="drag-handle" style="cursor: move; color: var(--gold); font-size: 1.5rem;">
+                                                    <i class="bi bi-grip-vertical"></i>
+                                                </div>
+                                                <div class="flex-grow-1">
+                                                    <h5 style="color: var(--gold); font-weight: 700; margin-bottom: 0.5rem;">
+                                                        {{ item.work_title }}
+                                                        {% if item.role_or_part %}
+                                                            <span style="color: var(--silver); font-size: 1rem; font-weight: 500;">({{ item.role_or_part }})</span>
+                                                        {% endif %}
+                                                    </h5>
+                                                    <h6 style="color: var(--white); font-weight: 600; margin-bottom: 0.75rem;">
+                                                        {{ item.composer }}
+                                                    </h6>
+                                                    <div class="d-flex gap-2 flex-wrap mb-2">
+                                                        <span class="badge" style="background: rgba(74, 144, 226, 0.3); color: var(--blue-accent);">
+                                                            {{ item.get_category_display }}
+                                                        </span>
+                                                    </div>
+                                                    {% if item.notes %}
+                                                        <p style="color: var(--silver-light); font-size: 0.9rem; margin-bottom: 0;">
+                                                            <i class="bi bi-info-circle me-1"></i>{{ item.notes }}
+                                                        </p>
+                                                    {% endif %}
+                                                </div>
+                                                <div class="d-flex flex-column gap-2">
+                                                    <button class="btn btn-sm edit-repertoire-btn" data-item-id="{{ item.id }}"
+                                                            style="background: rgba(212, 175, 55, 0.2); color: var(--gold); border: 1px solid var(--gold);">
+                                                        <i class="bi bi-pencil"></i>
+                                                    </button>
+                                                    <button class="btn btn-sm delete-repertoire-btn" data-item-id="{{ item.id }}"
+                                                            style="background: rgba(255, 107, 107, 0.2); color: #ff6b6b; border: 1px solid #ff6b6b;">
+                                                        <i class="bi bi-trash"></i>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5" id="empty-repertoire">
+                                    <i class="bi bi-music-note-beamed" style="font-size: 5rem; background: linear-gradient(135deg, var(--gold-dark), var(--gold-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; opacity: 0.3;"></i>
+                                    <h5 class="mt-3" style="color: var(--gold);">Репертуар пуст</h5>
+                                    <p style="color: var(--silver);">Добавьте произведения, которые вы исполняете</p>
+                                </div>
+                            {% endif %}
+                        </div>
                     </div>
                 </div>
             </div>
@@ -158,7 +275,7 @@
             <!-- Таб "Видео" -->
             <div class="tab-pane fade" id="video" role="tabpanel">
                 <div class="card">
-                    <div class="card-header bg-danger text-white">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
                         <h5 class="mb-0"><i class="bi bi-play-circle me-2"></i>Видео выступления</h5>
                     </div>
                     <div class="card-body">
@@ -182,7 +299,7 @@
             <!-- Таб "Достижения" -->
             <div class="tab-pane fade" id="achievements" role="tabpanel">
                 <div class="card">
-                    <div class="card-header bg-warning text-dark">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%); border-bottom: 2px solid #2c3e50;">
                         <h5 class="mb-0"><i class="bi bi-trophy me-2"></i>Достижения и награды</h5>
                     </div>
                     <div class="card-body">
@@ -204,7 +321,7 @@
             <!-- Таб "О себе" -->
             <div class="tab-pane fade" id="about" role="tabpanel">
                 <div class="card">
-                    <div class="card-header bg-secondary text-white">
+                    <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
                         <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Биография</h5>
                     </div>
                     <div class="card-body">
@@ -219,6 +336,16 @@
                                 <p class="text-muted">Расскажите о себе и своем опыте</p>
                             </div>
         {% endif %}
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Таб "Фото и видео" -->
+            <div class="tab-pane fade" id="media" role="tabpanel">
+                <!-- Контент будет загружен через HTMX -->
+                <div class="text-center py-5">
+                    <div class="spinner-border text-warning" role="status">
+                        <span class="visually-hidden">Загрузка...</span>
                     </div>
                 </div>
             </div>
@@ -240,9 +367,9 @@
     </div>
 
     {% elif user.client_profile %}
-    <!-- Профиль заказчика (без изменений) -->
+    <!-- Профиль заказчика -->
     <div class="card">
-        <div class="card-header bg-info text-white">
+        <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
             <h5 class="mb-0"><i class="bi bi-building me-2"></i>Профиль заказчика</h5>
         </div>
         <div class="card-body">
@@ -283,8 +410,9 @@
 }
 
 .performer-hero {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%);
     border-radius: 15px;
+    border: 2px solid rgba(243, 156, 18, 0.3);
 }
 
 .nav-tabs .nav-link {
@@ -301,9 +429,9 @@
 }
 
 .nav-tabs .nav-link.active {
-    background-color: #fff;
-    color: #495057;
-    border-bottom: 3px solid #667eea;
+    background-color: rgba(52, 73, 94, 0.8);
+    color: #f39c12;
+    border-bottom: 3px solid #f39c12;
 }
 
 .tab-content {
@@ -311,13 +439,15 @@
 }
 
 .card {
-    border: none;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
     transition: transform 0.2s ease-in-out;
+    background: rgba(52, 73, 94, 0.5);
 }
 
 .card:hover {
     transform: translateY(-2px);
+    box-shadow: 0 10px 25px rgba(243, 156, 18, 0.2);
 }
 
 .repertoire-content {
@@ -359,6 +489,60 @@
     border: 0;
 }
 
+/* Repertoire Styles */
+.repertoire-item-card {
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid var(--silver-dark);
+    border-radius: 15px;
+    padding: 1.5rem;
+    margin-bottom: 1rem;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+.repertoire-item-card:hover {
+    border-color: var(--gold);
+    box-shadow: 0 8px 25px rgba(212, 175, 55, 0.3);
+    transform: translateY(-2px);
+}
+
+.repertoire-item-card.dragging {
+    opacity: 0.5;
+    border-color: var(--gold);
+}
+
+.autocomplete-composer,
+.autocomplete-work {
+    position: relative;
+}
+
+.autocomplete-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: var(--gray-dark);
+    border: 2px solid var(--gold);
+    border-top: none;
+    border-radius: 0 0 8px 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 1000;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.autocomplete-suggestion {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    color: var(--silver-light);
+    transition: all 0.2s ease;
+}
+
+.autocomplete-suggestion:hover {
+    background: rgba(212, 175, 55, 0.2);
+    color: var(--gold);
+}
+
 @media (max-width: 768px) {
     .performer-avatar {
         width: 150px;
@@ -368,6 +552,10 @@
     .nav-tabs .nav-link {
         padding: 0.75rem 1rem;
         font-size: 0.9rem;
+    }
+    
+    .repertoire-item-card {
+        padding: 1rem;
     }
 }
 </style>
@@ -413,4 +601,348 @@ function embedYouTubeVideo() {
 
 // Запускаем функцию при загрузке страницы
 document.addEventListener('DOMContentLoaded', embedYouTubeVideo);
+
+// ============= SMART REPERTOIRE SYSTEM =============
+
+const Repertoire = {
+    init() {
+        this.setupEventListeners();
+        this.initDragAndDrop();
+    },
+    
+    setupEventListeners() {
+        // Показать/скрыть форму
+        document.getElementById('add-repertoire-btn')?.addEventListener('click', () => {
+            const form = document.getElementById('repertoire-form');
+            form.style.display = 'block';
+            form.dataset.editingId = ''; // Убираем ID редактирования
+            
+            // Восстанавливаем заголовок для добавления
+            document.querySelector('#repertoire-form h6').innerHTML = '<i class="bi bi-plus-circle me-2"></i>Новое произведение';
+            document.getElementById('save-repertoire-btn').innerHTML = '<i class="bi bi-save me-1"></i>Сохранить';
+            
+            document.getElementById('rep-composer').focus();
+        });
+        
+        document.getElementById('cancel-repertoire-btn')?.addEventListener('click', () => {
+            this.hideForm();
+        });
+        
+        // Сохранить произведение
+        document.getElementById('save-repertoire-btn')?.addEventListener('click', () => {
+            this.saveItem();
+        });
+        
+        // Удаление произведений
+        document.querySelectorAll('.delete-repertoire-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const itemId = e.target.closest('.delete-repertoire-btn').dataset.itemId;
+                this.deleteItem(itemId);
+            });
+        });
+        
+        // Редактирование произведений
+        document.querySelectorAll('.edit-repertoire-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const itemId = e.target.closest('.edit-repertoire-btn').dataset.itemId;
+                this.editItem(itemId);
+            });
+        });
+        
+        // Автодополнение
+        this.setupAutocomplete();
+    },
+    
+    setupAutocomplete() {
+        const composerInput = document.getElementById('rep-composer');
+        const workInput = document.getElementById('rep-work');
+        
+        if (composerInput) {
+            let composerTimeout;
+            composerInput.addEventListener('input', (e) => {
+                clearTimeout(composerTimeout);
+                composerTimeout = setTimeout(() => {
+                    this.fetchComposers(e.target.value);
+                }, 300);
+            });
+        }
+        
+        if (workInput) {
+            let workTimeout;
+            workInput.addEventListener('input', (e) => {
+                clearTimeout(workTimeout);
+                workTimeout = setTimeout(() => {
+                    this.fetchWorks(e.target.value, composerInput?.value || '');
+                }, 300);
+            });
+        }
+    },
+    
+    async fetchComposers(query) {
+        if (query.length < 2) return;
+        
+        try {
+            const response = await fetch(`/performers/api/autocomplete/composers/?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            this.showSuggestions('rep-composer', data.composers);
+        } catch (error) {
+            console.error('Error fetching composers:', error);
+        }
+    },
+    
+    async fetchWorks(query, composer) {
+        if (query.length < 2) return;
+        
+        try {
+            const url = `/performers/api/autocomplete/works/?q=${encodeURIComponent(query)}&composer=${encodeURIComponent(composer)}`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            const titles = data.works.map(w => w.work_title);
+            this.showSuggestions('rep-work', titles);
+        } catch (error) {
+            console.error('Error fetching works:', error);
+        }
+    },
+    
+    showSuggestions(inputId, suggestions) {
+        // Убираем старые подсказки
+        document.querySelectorAll('.autocomplete-suggestions').forEach(el => el.remove());
+        
+        if (!suggestions || suggestions.length === 0) return;
+        
+        const input = document.getElementById(inputId);
+        const wrapper = document.createElement('div');
+        wrapper.className = 'autocomplete-suggestions';
+        
+        suggestions.forEach(suggestion => {
+            const item = document.createElement('div');
+            item.className = 'autocomplete-suggestion';
+            item.textContent = suggestion;
+            item.addEventListener('click', () => {
+                input.value = suggestion;
+                wrapper.remove();
+            });
+            wrapper.appendChild(item);
+        });
+        
+        input.parentElement.style.position = 'relative';
+        input.parentElement.appendChild(wrapper);
+        
+        // Закрыть при клике вне
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !wrapper.contains(e.target)) {
+                wrapper.remove();
+            }
+        }, { once: true });
+    },
+    
+    async saveItem() {
+        const data = {
+            composer: document.getElementById('rep-composer').value.trim(),
+            work_title: document.getElementById('rep-work').value.trim(),
+            category: document.getElementById('rep-category').value,
+            epoch: '',  // Убрано из формы
+            role_or_part: document.getElementById('rep-role').value.trim(),
+            year_performed: null,  // Убрано из формы
+            video_link: '',  // Убрано из формы
+            notes: document.getElementById('rep-notes').value.trim(),
+            is_featured: false,  // Убрано из формы
+        };
+        
+        if (!data.composer || !data.work_title) {
+            alert('Пожалуйста, укажите композитора и название произведения');
+            return;
+        }
+        
+        // Проверяем, это создание или редактирование
+        const editingItemId = document.getElementById('repertoire-form').dataset.editingId;
+        const url = editingItemId 
+            ? `/performers/api/repertoire/${editingItemId}/update/`
+            : '/performers/api/repertoire/add/';
+        
+        try {
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                body: JSON.stringify(data)
+            });
+            
+            if (response.ok) {
+                // Перезагружаем страницу для обновления списка
+                location.reload();
+            } else {
+                alert('Ошибка при сохранении');
+            }
+        } catch (error) {
+            console.error('Error saving item:', error);
+            alert('Ошибка при сохранении');
+        }
+    },
+    
+    async editItem(itemId) {
+        // Получаем данные произведения из data-атрибутов
+        const card = document.querySelector(`[data-item-id="${itemId}"]`);
+        if (!card) return;
+        
+        // Показываем форму
+        const form = document.getElementById('repertoire-form');
+        form.style.display = 'block';
+        form.dataset.editingId = itemId;
+        
+        // Заполняем форму текущими данными (только доступные поля)
+        document.getElementById('rep-composer').value = card.dataset.composer || '';
+        document.getElementById('rep-work').value = card.dataset.work || '';
+        document.getElementById('rep-category').value = card.dataset.category || 'other';
+        document.getElementById('rep-role').value = card.dataset.role || '';
+        document.getElementById('rep-notes').value = card.dataset.notes || '';
+        
+        // Меняем заголовок формы и кнопки
+        document.querySelector('#repertoire-form h6').innerHTML = '<i class="bi bi-pencil me-2"></i>Редактирование произведения';
+        document.getElementById('save-repertoire-btn').innerHTML = '<i class="bi bi-save me-1"></i>Обновить';
+        
+        // Прокручиваем к форме
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        // Фокус на первое поле
+        document.getElementById('rep-composer').focus();
+    },
+    
+    async deleteItem(itemId) {
+        if (!confirm('Удалить это произведение из репертуара?')) return;
+        
+        try {
+            const response = await fetch(`/performers/api/repertoire/${itemId}/delete/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                }
+            });
+            
+            if (response.ok) {
+                // Удаляем карточку из DOM
+                const card = document.querySelector(`[data-item-id="${itemId}"]`);
+                card.style.transition = 'all 0.3s ease';
+                card.style.opacity = '0';
+                card.style.transform = 'translateX(-20px)';
+                setTimeout(() => card.remove(), 300);
+            }
+        } catch (error) {
+            console.error('Error deleting item:', error);
+        }
+    },
+    
+    hideForm() {
+        const form = document.getElementById('repertoire-form');
+        form.style.display = 'none';
+        form.dataset.editingId = '';
+        
+        // Очистить форму (только доступные поля)
+        document.getElementById('rep-composer').value = '';
+        document.getElementById('rep-work').value = '';
+        document.getElementById('rep-role').value = '';
+        document.getElementById('rep-notes').value = '';
+        document.getElementById('rep-category').value = 'opera';
+        
+        // Восстанавливаем текст кнопки
+        document.getElementById('save-repertoire-btn').innerHTML = '<i class="bi bi-save me-1"></i>Сохранить';
+    },
+    
+    initDragAndDrop() {
+        const container = document.querySelector('.repertoire-items-container');
+        if (!container) return;
+        
+        const items = container.querySelectorAll('.repertoire-item-card');
+        
+        items.forEach(item => {
+            item.setAttribute('draggable', 'true');
+            
+            item.addEventListener('dragstart', (e) => {
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/html', item.innerHTML);
+            });
+            
+            item.addEventListener('dragend', () => {
+                item.classList.remove('dragging');
+                this.saveOrder();
+            });
+        });
+        
+        container.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            const afterElement = this.getDragAfterElement(container, e.clientY);
+            const dragging = document.querySelector('.dragging');
+            if (afterElement == null) {
+                container.appendChild(dragging);
+            } else {
+                container.insertBefore(dragging, afterElement);
+            }
+        });
+    },
+    
+    getDragAfterElement(container, y) {
+        const draggableElements = [...container.querySelectorAll('.repertoire-item-card:not(.dragging)')];
+        
+        return draggableElements.reduce((closest, child) => {
+            const box = child.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            
+            if (offset < 0 && offset > closest.offset) {
+                return { offset: offset, element: child };
+            } else {
+                return closest;
+            }
+        }, { offset: Number.NEGATIVE_INFINITY }).element;
+    },
+    
+    async saveOrder() {
+        const items = document.querySelectorAll('.repertoire-item-card');
+        const orders = [];
+        
+        items.forEach((item, index) => {
+            orders.push({
+                id: parseInt(item.dataset.itemId),
+                order: index
+            });
+        });
+        
+        try {
+            await fetch('/performers/api/repertoire/reorder/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': this.getCookie('csrftoken')
+                },
+                body: JSON.stringify({ items: orders })
+            });
+        } catch (error) {
+            console.error('Error saving order:', error);
+        }
+    },
+    
+    getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+};
+
+// Инициализация при загрузке
+document.addEventListener('DOMContentLoaded', () => {
+    Repertoire.init();
+});
 </script>

@@ -2,6 +2,269 @@
 
 {% block title %}Maestro Platform - Платформа для классических музыкантов{% endblock %}
 
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+    }
+    
+    .hero-section {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 50%, var(--gray) 100%);
+        padding: 6rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .hero-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 80% 50%, rgba(192, 192, 192, 0.1) 0%, transparent 50%);
+        pointer-events: none;
+    }
+    
+    .hero-section h1 {
+        background: linear-gradient(135deg, var(--gold-light) 0%, var(--gold) 50%, var(--gold-dark) 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        text-shadow: 0 0 40px rgba(212, 175, 55, 0.3);
+        font-weight: 800;
+        letter-spacing: -1px;
+    }
+    
+    .hero-section .lead {
+        color: var(--silver-light);
+        font-size: 1.3rem;
+        font-weight: 300;
+    }
+    
+    .hero-section .btn-light {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        border: none;
+        color: var(--black);
+        font-weight: 700;
+        padding: 1rem 2.5rem;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .hero-section .btn-light:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(212, 175, 55, 0.6);
+    }
+    
+    .hero-music-icon {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        opacity: 0.15;
+        filter: drop-shadow(0 0 40px rgba(212, 175, 55, 0.3));
+    }
+    
+    .section-dark {
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.95), rgba(42, 42, 42, 0.95));
+        border-radius: 25px;
+        padding: 4rem 2rem;
+        margin: 3rem auto;
+        max-width: 1400px;
+        border: 1px solid var(--gold);
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        position: relative;
+    }
+    
+    .section-dark::before {
+        content: '';
+        position: absolute;
+        top: -2px;
+        left: -2px;
+        right: -2px;
+        bottom: -2px;
+        background: linear-gradient(45deg, var(--gold), var(--silver), var(--gold));
+        border-radius: 25px;
+        z-index: -1;
+        opacity: 0.1;
+    }
+    
+    .section-title {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 800;
+    }
+    
+    .section-subtitle {
+        color: var(--silver-light);
+        font-weight: 300;
+    }
+    
+    .feature-card {
+        background: linear-gradient(135deg, rgba(42, 42, 42, 0.9), rgba(26, 26, 26, 0.9)) !important;
+        border: 1px solid var(--silver-dark) !important;
+        transition: all 0.4s ease !important;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .feature-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .feature-card:hover::before {
+        left: 100%;
+    }
+    
+    .feature-card:hover {
+        transform: translateY(-10px) !important;
+        border-color: var(--gold) !important;
+        box-shadow: 0 20px 50px rgba(212, 175, 55, 0.3) !important;
+    }
+    
+    .feature-card .card-title {
+        color: var(--gold);
+        font-weight: 700;
+    }
+    
+    .feature-card .card-text {
+        color: var(--silver-light) !important;
+    }
+    
+    .feature-card i {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
+    }
+    
+    .step-circle {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+    }
+    
+    .step-circle-2 {
+        background: linear-gradient(135deg, var(--silver-dark), var(--silver-light));
+        box-shadow: 0 10px 30px rgba(192, 192, 192, 0.4);
+    }
+    
+    .step-circle-3 {
+        background: linear-gradient(135deg, var(--blue-accent), #5ba3f5);
+        box-shadow: 0 10px 30px rgba(74, 144, 226, 0.4);
+    }
+    
+    .step-title {
+        color: var(--gold);
+        font-weight: 700;
+    }
+    
+    .step-text {
+        color: var(--silver-light);
+    }
+    
+    .stats-section {
+        background: linear-gradient(135deg, var(--gold-dark) 0%, var(--gold) 50%, var(--gold-light) 100%);
+        padding: 4rem 0;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .stats-section::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 30% 50%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+            radial-gradient(circle at 70% 50%, rgba(0, 0, 0, 0.1) 0%, transparent 50%);
+    }
+    
+    .stat-number {
+        font-size: 3.5rem;
+        font-weight: 900;
+        color: var(--black);
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .stat-label {
+        color: var(--black);
+        font-weight: 600;
+    }
+    
+    .cta-section {
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.98), rgba(42, 42, 42, 0.98));
+        border-radius: 25px;
+        padding: 5rem 2rem;
+        margin: 3rem auto;
+        max-width: 1400px;
+        border: 2px solid var(--gold);
+        box-shadow: 0 15px 50px rgba(212, 175, 55, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .cta-section::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(212, 175, 55, 0.1) 0%, transparent 70%);
+        animation: pulse 4s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% { transform: scale(1); opacity: 0.5; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .cta-section h2 {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-weight: 800;
+    }
+    
+    .cta-section p {
+        color: var(--silver-light);
+        font-weight: 300;
+    }
+    
+    .btn-gold {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 700;
+        border: none;
+        padding: 1rem 2.5rem;
+        box-shadow: 0 10px 30px rgba(212, 175, 55, 0.4);
+        transition: all 0.3s ease;
+    }
+    
+    .btn-gold:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 15px 40px rgba(212, 175, 55, 0.6);
+        color: var(--black);
+    }
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Hero Section -->
 <section class="hero-section">
@@ -34,7 +297,7 @@
                 </div>
             </div>
             <div class="col-lg-6 text-center">
-                <i class="bi bi-music-note-beamed" style="font-size: 15rem; opacity: 0.3;"></i>
+                <i class="bi bi-music-note-beamed hero-music-icon" style="font-size: 15rem;"></i>
             </div>
         </div>
     </div>
@@ -42,11 +305,11 @@
 
 <!-- Features Section -->
 <section class="py-5">
-    <div class="container">
+    <div class="section-dark">
         <div class="row text-center mb-5">
             <div class="col-lg-8 mx-auto">
-                <h2 class="display-5 fw-bold mb-4">Почему выбирают нас?</h2>
-                <p class="lead text-muted">
+                <h2 class="display-5 fw-bold mb-4 section-title">Почему выбирают нас?</h2>
+                <p class="lead section-subtitle">
                     Мы создали платформу специально для классической музыки, 
                     понимая уникальные потребности исполнителей и заказчиков.
                 </p>
@@ -97,12 +360,12 @@
 </section>
 
 <!-- How it Works Section -->
-<section class="py-5 bg-light">
-    <div class="container">
+<section class="py-5">
+    <div class="section-dark">
         <div class="row text-center mb-5">
             <div class="col-lg-8 mx-auto">
-                <h2 class="display-5 fw-bold mb-4">Как это работает?</h2>
-                <p class="lead text-muted">
+                <h2 class="display-5 fw-bold mb-4 section-title">Как это работает?</h2>
+                <p class="lead section-subtitle">
                     Простой процесс в три шага для начала сотрудничества
                 </p>
             </div>
@@ -110,33 +373,36 @@
         
         <div class="row g-4">
             <div class="col-md-4 text-center">
-                <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <span class="fs-3 fw-bold">1</span>
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 step-circle" 
+                     style="width: 90px; height: 90px; color: var(--black);">
+                    <span class="fs-2 fw-bold">1</span>
                 </div>
-                <h5>Регистрация</h5>
-                <p class="text-muted">
+                <h5 class="step-title">Регистрация</h5>
+                <p class="step-text">
                     Создайте профиль как исполнитель или заказчик. 
                     Заполните подробную информацию о своих навыках или потребностях.
                 </p>
             </div>
             
             <div class="col-md-4 text-center">
-                <div class="bg-success text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <span class="fs-3 fw-bold">2</span>
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 step-circle-2" 
+                     style="width: 90px; height: 90px; color: var(--black);">
+                    <span class="fs-2 fw-bold">2</span>
                 </div>
-                <h5>Поиск и связь</h5>
-                <p class="text-muted">
+                <h5 class="step-title">Поиск и связь</h5>
+                <p class="step-text">
                     Найдите подходящих партнеров по проекту. 
                     Начните общение через встроенную систему чатов.
                 </p>
             </div>
             
             <div class="col-md-4 text-center">
-                <div class="bg-warning text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
-                    <span class="fs-3 fw-bold">3</span>
+                <div class="rounded-circle d-inline-flex align-items-center justify-content-center mb-3 step-circle-3" 
+                     style="width: 90px; height: 90px; color: white;">
+                    <span class="fs-2 fw-bold">3</span>
                 </div>
-                <h5>Сотрудничество</h5>
-                <p class="text-muted">
+                <h5 class="step-title">Сотрудничество</h5>
+                <p class="step-text">
                     Обсудите детали проекта, договоритесь об условиях 
                     и создайте прекрасную музыку вместе!
                 </p>
@@ -146,47 +412,47 @@
 </section>
 
 <!-- Statistics Section -->
-<section class="py-5">
+<section class="py-5 stats-section">
     <div class="container">
         <div class="row text-center">
             <div class="col-md-3">
                 <div class="mb-3">
-                    <i class="bi bi-person-check text-primary" style="font-size: 3rem;"></i>
+                    <i class="bi bi-person-check" style="font-size: 3.5rem; color: var(--black); filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"></i>
                 </div>
-                <h3 class="fw-bold">150+</h3>
-                <p class="text-muted">Верифицированных исполнителей</p>
+                <h3 class="stat-number">150+</h3>
+                <p class="stat-label">Верифицированных исполнителей</p>
             </div>
             
             <div class="col-md-3">
                 <div class="mb-3">
-                    <i class="bi bi-building text-success" style="font-size: 3rem;"></i>
+                    <i class="bi bi-building" style="font-size: 3.5rem; color: var(--black); filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"></i>
                 </div>
-                <h3 class="fw-bold">50+</h3>
-                <p class="text-muted">Заказчиков</p>
+                <h3 class="stat-number">50+</h3>
+                <p class="stat-label">Заказчиков</p>
             </div>
             
             <div class="col-md-3">
                 <div class="mb-3">
-                    <i class="bi bi-chat-dots text-warning" style="font-size: 3rem;"></i>
+                    <i class="bi bi-chat-dots" style="font-size: 3.5rem; color: var(--black); filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"></i>
                 </div>
-                <h3 class="fw-bold">300+</h3>
-                <p class="text-muted">Успешных проектов</p>
+                <h3 class="stat-number">300+</h3>
+                <p class="stat-label">Успешных проектов</p>
             </div>
             
             <div class="col-md-3">
                 <div class="mb-3">
-                    <i class="bi bi-star-fill text-info" style="font-size: 3rem;"></i>
+                    <i class="bi bi-star-fill" style="font-size: 3.5rem; color: var(--black); filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.3));"></i>
                 </div>
-                <h3 class="fw-bold">4.9/5</h3>
-                <p class="text-muted">Средняя оценка</p>
+                <h3 class="stat-number">4.9/5</h3>
+                <p class="stat-label">Средняя оценка</p>
             </div>
         </div>
     </div>
 </section>
 
 <!-- CTA Section -->
-<section class="py-5 bg-primary text-white">
-    <div class="container text-center">
+<section class="py-5">
+    <div class="cta-section text-center">
         <div class="row">
             <div class="col-lg-8 mx-auto">
                 <h2 class="display-5 fw-bold mb-4">Готовы начать?</h2>
@@ -195,14 +461,14 @@
                     и найдите идеальных партнеров для ваших проектов.
                 </p>
                 {% if not user.is_authenticated %}
-                    <a href="{% url 'register' %}" class="btn btn-light btn-lg me-3">
+                    <a href="{% url 'register' %}" class="btn btn-gold btn-lg me-3">
                         <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
                     </a>
                     <a href="{% url 'login' %}" class="btn btn-outline-light btn-lg">
                         <i class="bi bi-box-arrow-in-right me-2"></i>Войти
                     </a>
                 {% else %}
-                    <a href="{% url 'profile' %}" class="btn btn-light btn-lg">
+                    <a href="{% url 'profile' %}" class="btn btn-gold btn-lg">
                         <i class="bi bi-person-circle me-2"></i>Перейти в профиль
                     </a>
                 {% endif %}
