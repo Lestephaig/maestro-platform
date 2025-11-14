@@ -1,0 +1,177 @@
+{% extends 'base.html' %}
+
+{% block title %}Отклики на "{{ announcement.title }}" - Доска объявлений{% endblock %}
+
+{% block extra_css %}
+<style>
+    .responses-content {
+        padding: 2rem 0 3rem;
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: calc(100vh - 200px);
+    }
+    
+    .announcement-header-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        margin-bottom: 2rem;
+        border: 2px solid var(--silver-dark);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+    }
+    
+    .announcement-header-card h2 {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .response-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin-bottom: 1.5rem;
+        border: 2px solid var(--silver-dark);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
+    }
+    
+    .response-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1rem;
+        padding-bottom: 1rem;
+        border-bottom: 1px solid var(--silver-dark);
+    }
+    
+    .response-author {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: var(--white);
+        font-weight: 600;
+    }
+    
+    .response-date {
+        color: var(--silver);
+        font-size: 0.9rem;
+    }
+    
+    .response-message {
+        color: var(--silver-light);
+        line-height: 1.6;
+        margin-bottom: 1rem;
+    }
+    
+    .response-status {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        font-weight: 600;
+    }
+    
+    .response-status.new {
+        background: rgba(74, 144, 226, 0.2);
+        color: var(--blue-accent);
+        border: 1px solid var(--blue-accent);
+    }
+    
+    .response-status.viewed {
+        background: rgba(192, 192, 192, 0.2);
+        color: var(--silver);
+        border: 1px solid var(--silver);
+    }
+    
+    .response-status.accepted {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+    
+    .response-status.rejected {
+        background: rgba(231, 76, 60, 0.2);
+        color: #e74c3c;
+        border: 1px solid #e74c3c;
+    }
+    
+    .status-form {
+        display: flex;
+        gap: 0.5rem;
+        align-items: center;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="responses-content">
+    <div class="container">
+        <div class="announcement-header-card">
+            <h2><i class="bi bi-chat-dots"></i> Отклики на объявление</h2>
+            <h3 style="color: var(--white); font-size: 1.3rem; margin-bottom: 0.5rem;">{{ announcement.title }}</h3>
+            <a href="{% url 'announcements:detail' announcement.id %}" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left"></i> Вернуться к объявлению
+            </a>
+        </div>
+        
+        {% if responses %}
+        <div class="mb-3" style="color: var(--silver);">
+            <strong>Всего откликов:</strong> {{ responses|length }}
+        </div>
+        
+        {% for response in responses %}
+        <div class="response-card">
+            <div class="response-header">
+                <div class="response-author">
+                    <i class="bi bi-person-circle" style="font-size: 1.5rem; color: var(--gold);"></i>
+                    <div>
+                        <div>{{ response.responder.username }}</div>
+                        <div class="response-date">
+                            <i class="bi bi-calendar3"></i> {{ response.created_at|date:"d.m.Y H:i" }}
+                        </div>
+                    </div>
+                </div>
+                <span class="response-status {{ response.status }}">
+                    {{ response.get_status_display }}
+                </span>
+            </div>
+            
+            {% if response.message %}
+            <div class="response-message">
+                {{ response.message|linebreaks }}
+            </div>
+            {% else %}
+            <div class="response-message" style="color: var(--silver); font-style: italic;">
+                Сообщение не указано
+            </div>
+            {% endif %}
+            
+            <form method="post" class="status-form">
+                {% csrf_token %}
+                <input type="hidden" name="response_id" value="{{ response.id }}">
+                <select name="status" class="form-select form-select-sm" style="max-width: 200px;">
+                    {% for value, label in response.STATUS_CHOICES %}
+                    <option value="{{ value }}" {% if response.status == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="btn btn-sm btn-outline-light">
+                    <i class="bi bi-check"></i> Обновить статус
+                </button>
+            </form>
+        </div>
+        {% endfor %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: var(--silver);"></i>
+            <h3 class="mt-3" style="color: var(--silver);">Пока нет откликов</h3>
+            <p style="color: var(--silver);">Отклики на ваше объявление появятся здесь</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

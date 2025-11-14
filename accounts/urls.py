@@ -3,6 +3,8 @@ from . import views
 
 urlpatterns = [
     path('register/', views.register, name='register'),
+    path('verify-email/<uidb64>/<token>/', views.verify_email, name='verify_email'),
+    path('email-verification-sent/', views.email_verification_sent, name='email_verification_sent'),
     path('profile/', views.profile, name='profile'),
     path('profile/view/', views.profile_view, name='profile_view'),
     path('profile/edit/', views.profile_edit, name='profile_edit'),

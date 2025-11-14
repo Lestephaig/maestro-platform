@@ -6,7 +6,8 @@ from .models import User
 class CustomUserCreationForm(UserCreationForm):
     ROLE_CHOICES = [
         ('performer', 'Я исполнитель'),
-        ('client', 'Я заказчик'),
+        ('client', 'Я площадка'),
+        ('agent', 'Я организатор'),
     ]
 
     role = forms.ChoiceField(
@@ -23,6 +24,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     def save(self, commit=True):
         user = super().save(commit=False)
+        user.role = self.cleaned_data.get('role', 'performer')
         if commit:
             user.save()
         return user

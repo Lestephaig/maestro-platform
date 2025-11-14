@@ -3,7 +3,13 @@
         <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
             <h4 class="mb-0">
                 <i class="bi bi-pencil-square me-2"></i>
-                {% if user.performer_profile %}Редактирование профиля исполнителя{% else %}Редактирование профиля заказчика{% endif %}
+                {% if user.performer_profile %}
+                    Редактирование профиля исполнителя
+                {% elif user.client_profile %}
+                    Редактирование профиля площадки
+                {% elif user.agent_profile %}
+                    Редактирование профиля организатора
+                {% endif %}
             </h4>
         </div>
         <div class="card-body">
@@ -13,8 +19,8 @@
                   hx-encoding="multipart/form-data">
                 {% csrf_token %}
 
-                <div class="row">
-                    <div class="col-md-6">
+                <div class="row g-4 profile-edit-columns">
+                    <div class="col-md-6 form-column">
                         <!-- Основные поля -->
                         {% if user.performer_profile %}
                             <!-- Поле "Полное имя" -->
@@ -30,13 +36,27 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Поле "Тип голоса" -->
+                            <!-- Тип исполнителя -->
                             <div class="mb-3">
+                                <label for="{{ form.performer_type.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person-badge me-2"></i>{{ form.performer_type.label }}
+                                </label>
+                                {{ form.performer_type }}
+                                <div class="form-text">Выберите, являетесь ли вы вокалистом или инструменталистом</div>
+                                {% if form.performer_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.performer_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Поле "Тип голоса" -->
+                            <div class="mb-3" id="voice-type-field">
                                 <label for="{{ form.voice_type.id_for_label }}" class="form-label">
                                     <i class="bi bi-mic me-2"></i>{{ form.voice_type.label }}
                                 </label>
                                 {{ form.voice_type }}
-                                <div class="form-text">Например: тенор, сопрано, баритон, меццо-сопрано</div>
+                                <div class="form-text">Выберите ваш тип голоса</div>
                                 {% if form.voice_type.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.voice_type.errors.0 }}
@@ -44,15 +64,29 @@
                                 {% endif %}
                             </div>
 
-                            <!-- Поле "Год рождения" -->
-                            <div class="mb-3">
-                                <label for="{{ form.birth_year.id_for_label }}" class="form-label">
-                                    <i class="bi bi-calendar-date me-2"></i>{{ form.birth_year.label }}
+                            <!-- Поле "Инструмент" -->
+                            <div class="mb-3 d-none" id="instrument-field">
+                                <label for="{{ form.instrument.id_for_label }}" class="form-label">
+                                    <i class="bi bi-music-note-beamed me-2"></i>{{ form.instrument.label }}
                                 </label>
-                                {{ form.birth_year }}
-                                {% if form.birth_year.errors %}
+                                {{ form.instrument }}
+                                <div class="form-text">Выберите основной инструмент</div>
+                                {% if form.instrument.errors %}
                                     <div class="invalid-feedback d-block">
-                                        {{ form.birth_year.errors.0 }}
+                                        {{ form.instrument.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Поле "Дата рождения" -->
+                            <div class="mb-3">
+                                <label for="{{ form.birth_date.id_for_label }}" class="form-label">
+                                    <i class="bi bi-calendar-date me-2"></i>{{ form.birth_date.label }}
+                                </label>
+                                {{ form.birth_date }}
+                                {% if form.birth_date.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.birth_date.errors.0 }}
                                     </div>
                                 {% endif %}
                             </div>
@@ -79,7 +113,7 @@
                             </div>
 
                         {% elif user.client_profile %}
-                            <!-- Поля для заказчика -->
+                            <!-- Поля для площадки -->
                             <div class="mb-3">
                                 <label for="{{ form.company_name.id_for_label }}" class="form-label">
                                     <i class="bi bi-building me-2"></i>{{ form.company_name.label }}
@@ -115,34 +149,83 @@
                                     </div>
                                 {% endif %}
                             </div>
+                        {% elif user.agent_profile %}
+                            <!-- Поля для организатора -->
+                            <div class="mb-3">
+                                <label for="{{ form.display_name.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person-badge me-2"></i>{{ form.display_name.label }}
+                                </label>
+                                {{ form.display_name }}
+                                {% if form.display_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.display_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.agency_name.id_for_label }}" class="form-label">
+                                    <i class="bi bi-building me-2"></i>{{ form.agency_name.label }}
+                                </label>
+                                {{ form.agency_name }}
+                                {% if form.agency_name.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.agency_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.specialization.id_for_label }}" class="form-label">
+                                    <i class="bi bi-award me-2"></i>{{ form.specialization.label }}
+                                </label>
+                                {{ form.specialization }}
+                                {% if form.specialization.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.specialization.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.experience_years.id_for_label }}" class="form-label">
+                                    <i class="bi bi-calendar-event me-2"></i>{{ form.experience_years.label }}
+                                </label>
+                                {{ form.experience_years }}
+                                {% if form.experience_years.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.experience_years.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.website.id_for_label }}" class="form-label">
+                                    <i class="bi bi-globe me-2"></i>{{ form.website.label }}
+                                </label>
+                                {{ form.website }}
+                                {% if form.website.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.website.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.bio.id_for_label }}" class="form-label">
+                                    <i class="bi bi-journal-text me-2"></i>{{ form.bio.label }}
+                                </label>
+                                {{ form.bio }}
+                                {% if form.bio.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.bio.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
                         {% endif %}
                     </div>
 
-                    <div class="col-md-6">
-                        {% if user.performer_profile %}
-                            <!-- Поле "Ссылка на видео" -->
-                            <div class="mb-3">
-                                <label for="{{ form.video_url.id_for_label }}" class="form-label">
-                                    <i class="bi bi-play-circle me-2"></i>{{ form.video_url.label }}
-                                </label>
-                                {{ form.video_url }}
-                                <div class="form-text">YouTube или Vimeo ссылка на ваше выступление</div>
-                                {% if form.video_url.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.video_url.errors.0 }}
-                                    </div>
-                                {% endif %}
-                                <!-- Предпросмотр видео -->
-                                <div id="video-preview" class="mt-2" style="display: none;">
-                                    <div class="alert alert-info">
-                                        <i class="bi bi-info-circle me-2"></i>
-                                        Предпросмотр видео будет показан после сохранения
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-
-                        <!-- Поле "Образование" (только для исполнителей) -->
+                    <div class="col-md-6 form-column">
                         {% if user.performer_profile %}
                             <div class="mb-3">
                                 <label for="{{ form.education.id_for_label }}" class="form-label">
@@ -157,28 +240,12 @@
                                 {% endif %}
                             </div>
                         {% endif %}
-
-                        <!-- Поле "Репертуар" (только для исполнителей) -->
-                        {% if user.performer_profile %}
-                            <div class="mb-3">
-                                <label for="{{ form.repertoire.id_for_label }}" class="form-label">
-                                    <i class="bi bi-music-note-list me-2"></i>{{ form.repertoire.label }}
-                                </label>
-                                {{ form.repertoire }}
-                                <div class="form-text">Опишите ваш репертуар, произведения, жанры</div>
-                                {% if form.repertoire.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.repertoire.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        {% endif %}
                     </div>
                 </div>
 
                 <!-- Поле "Биография" (полная ширина) -->
                 {% if user.performer_profile %}
-                    <div class="mb-4">
+                    <div class="mb-4 form-wide-block">
                         <label for="{{ form.bio.id_for_label }}" class="form-label">
                             <i class="bi bi-file-text me-2"></i>{{ form.bio.label }}
                         </label>
@@ -192,7 +259,7 @@
                     </div>
 
                     <!-- Поле "Достижения" (полная ширина) -->
-                    <div class="mb-4">
+                    <div class="mb-4 form-wide-block">
                         <label for="{{ form.achievements.id_for_label }}" class="form-label">
                             <i class="bi bi-trophy me-2"></i>{{ form.achievements.label }}
                         </label>
@@ -222,62 +289,146 @@
 </div>
 
 <style>
-.form-control {
-    border-radius: 0.5rem;
-    border: 1px solid #dee2e6;
-    padding: 0.75rem 1rem;
-    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+.profile-edit-section .card {
+    border: 1px solid rgba(243, 156, 18, 0.35);
+    box-shadow: 0 28px 60px rgba(0, 0, 0, 0.45);
+    background: linear-gradient(145deg, rgba(18, 18, 18, 0.92), rgba(34, 34, 34, 0.9));
+    border-radius: 26px;
 }
 
-.form-control:focus {
-    border-color: #0d6efd;
-    box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+.profile-edit-section .card-header {
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.25), rgba(243, 156, 18, 0.55));
+    border-bottom: 1px solid rgba(243, 156, 18, 0.45);
+    border-radius: 26px 26px 0 0;
+}
+
+.profile-edit-section .card-body {
+    background: transparent;
+    padding: 2.5rem;
+}
+
+.profile-edit-columns {
+    align-items: stretch;
+}
+
+.profile-edit-section .form-column {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.profile-edit-section .form-column > .mb-3,
+.profile-edit-section .form-column > .mb-4,
+.profile-edit-section .form-wide-block {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.05), rgba(255, 255, 255, 0.02));
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 18px;
+    padding: 1.1rem 1.35rem;
+    box-shadow: 0 14px 35px rgba(0, 0, 0, 0.25);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.profile-edit-section .form-column > .mb-3:hover,
+.profile-edit-section .form-column > .mb-4:hover,
+.profile-edit-section .form-wide-block:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 22px 60px rgba(243, 156, 18, 0.25);
+    border-color: rgba(243, 156, 18, 0.5);
 }
 
 .form-label {
     font-weight: 600;
-    color: #ecf0f1;
+    color: rgba(255, 255, 255, 0.92);
+    letter-spacing: 0.015em;
+    text-transform: uppercase;
+    font-size: 0.85rem;
+    margin-bottom: 0.65rem;
+}
+
+.form-control,
+.form-select {
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.18);
+    background: rgba(0, 0, 0, 0.3);
+    color: #ffffff;
+    padding: 0.85rem 1rem;
+    transition: box-shadow 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.form-control::placeholder,
+.form-select::placeholder {
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.form-control:focus,
+.form-select:focus {
+    border-color: rgba(243, 156, 18, 0.65);
+    box-shadow: 0 0 0 0.25rem rgba(243, 156, 18, 0.25);
+    background: rgba(0, 0, 0, 0.45);
 }
 
 .form-text {
-    color: #bdc3c7;
-    font-size: 0.875rem;
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 0.8rem;
+    margin-top: 0.45rem;
 }
 
-.profile-edit-section h6 {
-    color: #ecf0f1;
-}
-
+.profile-edit-section h6,
 .profile-edit-section p {
-    color: #ecf0f1;
-}
-
-.profile-edit-section .card {
-    border: 1px solid rgba(243, 156, 18, 0.2);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-    background: rgba(52, 73, 94, 0.8);
-}
-
-.profile-edit-section .card-body {
-    background: #2c3e50;
-}
-
-.btn {
-    border-radius: 0.5rem;
-    font-weight: 500;
-    transition: all 0.2s ease-in-out;
-}
-
-.btn:hover {
-    transform: translateY(-1px);
+    color: rgba(255, 255, 255, 0.9);
 }
 
 #photo-preview img {
-    border-radius: 0.5rem;
-    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    border-radius: 10px;
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+}
+
+.btn {
+    border-radius: 0.75rem;
+    font-weight: 600;
+    padding: 0.8rem 1.6rem;
+    letter-spacing: 0.02em;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 15px 35px rgba(243, 156, 18, 0.35);
+}
+
+.btn-outline-light {
+    border: 1px solid rgba(255, 255, 255, 0.25);
+    color: rgba(255, 255, 255, 0.85);
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.btn-outline-light:hover {
+    border-color: rgba(243, 156, 18, 0.55);
+    color: #111;
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.8), rgba(243, 156, 18, 1));
+}
+
+.btn[style] {
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.9), rgba(243, 156, 18, 1)) !important;
+    color: #1f1f1f !important;
+}
+
+@media (max-width: 992px) {
+    .profile-edit-section .card-body {
+        padding: 2rem 1.5rem;
+    }
 }
 
 @media (max-width: 768px) {
+    .profile-edit-section .card-body {
+        padding: 1.75rem 1.25rem;
+    }
+
+    .profile-edit-section .form-column > .mb-3,
+    .profile-edit-section .form-column > .mb-4 {
+        padding: 1rem;
+    }
+
     .d-flex.gap-3 {
         flex-direction: column;
     }
@@ -289,62 +440,55 @@
 </style>
 
 <script>
-// Предпросмотр фото при вводе URL
-document.addEventListener('DOMContentLoaded', function() {
-    const photoUrlField = document.getElementById('{{ form.photo_url.id_for_label }}');
-    const photoPreview = document.getElementById('photo-preview');
-    const previewImage = document.getElementById('preview-image');
-    
-    if (photoUrlField) {
-        photoUrlField.addEventListener('input', function() {
-            const url = this.value.trim();
-            
-            if (url && isValidImageUrl(url)) {
-                previewImage.src = url;
-                previewImage.onload = function() {
-                    photoPreview.style.display = 'block';
-                };
-                previewImage.onerror = function() {
-                    photoPreview.style.display = 'none';
-                };
+// Управление полями типа голоса и инструмента
+(function () {
+    function initPerformerTypeControls(root) {
+        const context = root || document;
+        const performerTypeField = context.querySelector('#{{ form.performer_type.id_for_label }}');
+        const voiceField = context.querySelector('#voice-type-field');
+        const instrumentField = context.querySelector('#instrument-field');
+
+        if (!performerTypeField) {
+            return;
+        }
+
+        const togglePerformerFields = () => {
+            const value = performerTypeField.value;
+            if (value === 'instrumentalist') {
+                voiceField?.classList.add('d-none');
+                instrumentField?.classList.remove('d-none');
+            } else if (value === 'vocalist') {
+                voiceField?.classList.remove('d-none');
+                instrumentField?.classList.add('d-none');
             } else {
-                photoPreview.style.display = 'none';
+                voiceField?.classList.remove('d-none');
+                instrumentField?.classList.remove('d-none');
             }
-        });
+        };
+
+        togglePerformerFields();
+
+        if (!performerTypeField.dataset.toggleBound) {
+            performerTypeField.addEventListener('change', togglePerformerFields);
+            performerTypeField.dataset.toggleBound = 'true';
+        }
     }
-});
 
-// Проверка валидности URL изображения
-function isValidImageUrl(url) {
-    const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.svg'];
-    return imageExtensions.some(ext => url.toLowerCase().includes(ext)) || 
-           url.includes('imgur.com') || 
-           url.includes('cloudinary.com') ||
-           url.includes('unsplash.com');
-}
-
-// Предпросмотр видео при вводе URL
-document.addEventListener('DOMContentLoaded', function() {
-    const videoUrlField = document.getElementById('{{ form.video_url.id_for_label }}');
-    const videoPreview = document.getElementById('video-preview');
-    
-    if (videoUrlField) {
-        videoUrlField.addEventListener('input', function() {
-            const url = this.value.trim();
-            
-            if (url && isValidVideoUrl(url)) {
-                videoPreview.style.display = 'block';
-            } else {
-                videoPreview.style.display = 'none';
-            }
-        });
+    if (document.readyState !== 'loading') {
+        initPerformerTypeControls();
+    } else {
+        document.addEventListener('DOMContentLoaded', () => initPerformerTypeControls());
     }
-});
 
-// Проверка валидности URL видео
-function isValidVideoUrl(url) {
-    return url.includes('youtube.com') || 
-           url.includes('youtu.be') || 
-           url.includes('vimeo.com');
-}
+    document.addEventListener('htmx:afterSwap', (event) => {
+        const target = event.target || event.detail?.target;
+        if (!target) {
+            return;
+        }
+        if (target.id === 'profile-content' || target.closest?.('#profile-content')) {
+            initPerformerTypeControls(target);
+        }
+    });
+})();
+
 </script>

@@ -1,3 +1,4 @@
+{% load interaction_extras %}
     {% if user.performer_profile %}
     <div class="performer-profile">
         <!-- Hero секция с фото -->
@@ -14,10 +15,19 @@
                         </div>
                     {% endif %}
                 </div>
-                <h2 class="display-5 fw-bold mb-2">{{ user.performer_profile.full_name }}</h2>
-                {% if user.performer_profile.voice_type %}
-                    <span class="badge bg-primary fs-6 px-3 py-2">{{ user.performer_profile.voice_type }}</span>
-                {% endif %}
+                <h2 class="display-5 fw-bold mb-2 d-inline-flex align-items-center gap-3">
+                    {{ user.performer_profile.full_name }}
+                    <span class="performer-verify-badge {% if user.performer_profile.is_verified %}is-verified{% endif %}">
+                        <svg width="18" height="18" viewBox="0 0 16 16" class="verify-icon" aria-hidden="true">
+                            <path d="M5.97 10.97 3.477 8.477l-.708.708L5.97 12.384l7.292-7.292-.708-.708z"/>
+                        </svg>
+                    </span>
+                </h2>
+                {% with specialization=user.performer_profile.specialization_display %}
+                    {% if specialization %}
+                        <span class="badge bg-primary fs-6 px-3 py-2">{{ specialization }}</span>
+                    {% endif %}
+                {% endwith %}
                 {% if user.performer_profile.bio %}
                     <p class="lead mt-3 opacity-75">{{ user.performer_profile.bio|truncatewords:30 }}</p>
                 {% endif %}
@@ -47,7 +57,7 @@
             <li class="nav-item" role="presentation">
                 <button class="nav-link" id="about-tab" data-bs-toggle="tab" 
                         data-bs-target="#about" type="button" role="tab">
-                    <i class="bi bi-person-lines-fill me-2"></i>О себе
+                    <i class="bi bi-person-lines-fill me-2"></i>Биография
                 </button>
             </li>
             <li class="nav-item" role="presentation">
@@ -77,16 +87,26 @@
                                     <h6><i class="bi bi-person me-2"></i>Полное имя</h6>
                                     <p class="text-muted">{{ user.performer_profile.full_name }}</p>
                                 </div>
-                                {% if user.performer_profile.birth_year %}
+                                {% if user.performer_profile.birth_date %}
                                     <div class="mb-3">
-                                        <h6><i class="bi bi-calendar-date me-2"></i>Год рождения</h6>
-                                        <p class="text-muted">{{ user.performer_profile.birth_year }}</p>
+                                        <h6><i class="bi bi-calendar-date me-2"></i>Дата рождения</h6>
+                                        <p class="text-muted">{{ user.performer_profile.birth_date|date:"d.m.Y" }}</p>
                                     </div>
                                 {% endif %}
-                                {% if user.performer_profile.voice_type %}
+                                <div class="mb-3">
+                                    <h6><i class="bi bi-award me-2"></i>Тип исполнителя</h6>
+                                    <span class="badge bg-info text-dark">{{ user.performer_profile.get_performer_type_display }}</span>
+                                </div>
+                                {% if user.performer_profile.performer_type == 'vocalist' and user.performer_profile.voice_type %}
                                     <div class="mb-3">
                                         <h6><i class="bi bi-mic me-2"></i>Тип голоса</h6>
                                         <span class="badge bg-primary">{{ user.performer_profile.voice_type }}</span>
+                                    </div>
+                                {% endif %}
+                                {% if user.performer_profile.performer_type == 'instrumentalist' and user.performer_profile.instrument %}
+                                    <div class="mb-3">
+                                        <h6><i class="bi bi-music-note-beamed me-2"></i>Инструмент</h6>
+                                        <span class="badge bg-warning text-dark">{{ user.performer_profile.instrument }}</span>
                                     </div>
                                 {% endif %}
                                 {% if user.performer_profile.education %}
@@ -318,7 +338,7 @@
                 </div>
             </div>
 
-            <!-- Таб "О себе" -->
+            <!-- Таб "Биография" -->
             <div class="tab-pane fade" id="about" role="tabpanel">
                 <div class="card">
                     <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
@@ -366,11 +386,261 @@
         </div>
     </div>
 
+    {% elif user.agent_profile %}
+    <div class="agent-profile">
+        <div class="agent-hero bg-dark text-white py-5 mb-4">
+            <div class="container">
+                <div class="text-center">
+                    <div class="agent-avatar mb-3">
+                        <i class="bi bi-person-badge" style="font-size: 4rem;"></i>
+                    </div>
+                    <h2 class="display-6 fw-bold mb-2">{{ user.agent_profile.display_name }}</h2>
+                    {% if user.agent_profile.agency_name %}
+                        <span class="badge bg-warning text-dark px-3 py-2">{{ user.agent_profile.agency_name }}</span>
+                    {% endif %}
+                    {% if user.agent_profile.specialization %}
+                        <p class="lead mt-3 opacity-75">{{ user.agent_profile.specialization }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4 mb-4">
+            <div class="col-md-3">
+                <div class="metric-card h-100">
+                    <div class="metric-icon bg-gradient bg-warning text-dark mb-3">
+                        <i class="bi bi-bar-chart-line"></i>
+                    </div>
+                    <div class="metric-label">Уровень доверия</div>
+                    <div class="metric-value">{{ user.agent_profile.trust_level }}%</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card h-100">
+                    <div class="metric-icon bg-gradient bg-success text-white mb-3">
+                        <i class="bi bi-check2-circle"></i>
+                    </div>
+                    <div class="metric-label">Успешных сделок</div>
+                    <div class="metric-value">{{ user.agent_profile.successful_deals }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card h-100">
+                    <div class="metric-icon bg-gradient bg-info text-white mb-3">
+                        <i class="bi bi-diagram-3"></i>
+                    </div>
+                    <div class="metric-label">Всего сделок</div>
+                    <div class="metric-value">{{ user.agent_profile.total_deals }}</div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="metric-card h-100">
+                    <div class="metric-icon bg-gradient bg-secondary text-white mb-3">
+                        <i class="bi bi-calendar-event"></i>
+                    </div>
+                    <div class="metric-label">Опыт</div>
+                    <div class="metric-value">{{ user.agent_profile.experience_years }} лет</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header" style="background: linear-gradient(135deg, #2c3e50 0%, #1a252f 100%); color: #fff;">
+                <h5 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>О себе</h5>
+            </div>
+            <div class="card-body">
+                {% if user.agent_profile.bio %}
+                    <p class="text-muted">{{ user.agent_profile.bio|linebreaks }}</p>
+                {% else %}
+                    <div class="text-center py-4 text-muted">
+                        <i class="bi bi-journal-text" style="font-size: 2rem;"></i>
+                        <p class="mt-3 mb-1">Расскажите о своём опыте и проектах.</p>
+                        <small>Это поможет площадкам и исполнителям лучше понять вашу экспертизу.</small>
+                    </div>
+                {% endif %}
+                <div class="row mt-4">
+                    {% if user.agent_profile.website %}
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-globe me-2"></i>Сайт/портфолио</h6>
+                            <a href="{{ user.agent_profile.website }}" target="_blank">{{ user.agent_profile.website }}</a>
+                        </div>
+                    {% endif %}
+                    {% if user.agent_profile.agency_name %}
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-building me-2"></i>Агентство</h6>
+                            <p class="text-muted mb-0">{{ user.agent_profile.agency_name }}</p>
+                        </div>
+                    {% endif %}
+                    {% if user.agent_profile.specialization %}
+                        <div class="col-md-4">
+                            <h6><i class="bi bi-award me-2"></i>Специализация</h6>
+                            <p class="text-muted mb-0">{{ user.agent_profile.specialization }}</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header" style="background: linear-gradient(135deg, #1b2735 0%, #27384a 100%); color: #fff;">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0"><i class="bi bi-briefcase me-2"></i>Текущие проекты</h5>
+                            <a href="{% url 'interactions:my_projects' %}" class="btn btn-sm btn-outline-warning">Все</a>
+                        </div>
+                    </div>
+                    <div class="card-body">
+                        {% with active_interactions=agent_active_interactions %}
+                            {% if active_interactions %}
+                                <ul class="list-group list-group-flush">
+                                    {% for interaction in active_interactions|slice:':5' %}
+                                        <li class="list-group-item bg-transparent text-light border-secondary">
+                                            <div class="d-flex justify-content-between">
+                                                <strong>{{ interaction.title }}</strong>
+                                                <span class="badge bg-warning text-dark">{{ interaction.get_status_display }}</span>
+                                            </div>
+                                            <div class="small text-muted mt-2">
+                                                {% with venue_list=interaction.venues.all %}
+                                                    {% if venue_list %}
+                                                        <span class="me-3"><i class="bi bi-building me-1"></i>
+                                                            {% for venue in venue_list %}
+                                                                {{ venue.company_name }}{% if not forloop.last %}, {% endif %}
+                                                            {% endfor %}
+                                                        </span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                                {% with performer_list=interaction.performers.all %}
+                                                    {% if performer_list %}
+                                                        <span><i class="bi bi-mic me-1"></i>
+                                                            {% for performer in performer_list %}
+                                                                {{ performer.full_name }}{% if not forloop.last %}, {% endif %}
+                                                            {% endfor %}
+                                                        </span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                            <div class="mt-2">
+                                                <span class="badge bg-secondary">{{ interaction.get_status_display }}</span>
+                                                {% if interaction.success_flag %}
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Успешно</span>
+                                                {% endif %}
+                                            </div>
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="bi bi-kanban"></i>
+                                    <p class="mt-3 mb-1">Активные проекты пока не запущены.</p>
+                                    <small>Создайте новый проект, чтобы начать работу с площадками и исполнителями.</small>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="card h-100">
+                    <div class="card-header" style="background: linear-gradient(135deg, #1b2735 0%, #27384a 100%); color: #fff;">
+                        <h5 class="mb-0"><i class="bi bi-people me-2"></i>История проектов</h5>
+                    </div>
+                    <div class="card-body">
+                        {% with history_interactions=agent_interactions %}
+                            {% if history_interactions %}
+                                <div class="timeline small text-muted">
+                                    {% for interaction in history_interactions|slice:':5' %}
+                                        <div class="mb-3 pb-3 border-bottom border-secondary">
+                                            <div class="d-flex justify-content-between">
+                                                <strong class="text-light">{{ interaction.title }}</strong>
+                                                <span>{{ interaction.created_at|date:"d.m.Y" }}</span>
+                                            </div>
+                                            <div class="mt-2">
+                                                <span class="badge bg-secondary">{{ interaction.get_status_display }}</span>
+                                                {% if interaction.success_flag %}
+                                                    <span class="badge bg-success"><i class="bi bi-check-circle me-1"></i>Успешно</span>
+                                                {% endif %}
+                                            </div>
+                                            <div class="mt-2 small text-muted">
+                                                {% with agents=interaction|participants_by_role:'agent' %}
+                                                    {% if agents %}
+                                                        <span class="d-block">
+                                                            <i class="bi bi-person-badge me-1"></i>
+                                                            {% for participant in agents %}
+                                                                {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                                            {% endfor %}
+                                                        </span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                                {% with venues=interaction|participants_by_role:'venue' %}
+                                                    {% if venues %}
+                                                        <span class="d-block">
+                                                            <i class="bi bi-building me-1"></i>
+                                                            {% for participant in venues %}
+                                                                {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                                            {% endfor %}
+                                                        </span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                                {% with performers=interaction|participants_by_role:'performer' %}
+                                                    {% if performers %}
+                                                        <span class="d-block">
+                                                            <i class="bi bi-mic me-1"></i>
+                                                            {% for participant in performers %}
+                                                                {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                                            {% endfor %}
+                                                        </span>
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                            <p class="mt-2 mb-0">{{ interaction.description|truncatewords:18 }}</p>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="empty-state">
+                                    <i class="bi bi-clock-history"></i>
+                                    <p class="mt-3 mb-1">История проектов появится после первых сделок.</p>
+                                    <small>Фиксируйте сделки и добавляйте события, чтобы отслеживать прогресс.</small>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card mt-4">
+            <div class="card-header" style="background: linear-gradient(135deg, #1b2735 0%, #27384a 100%); color: #fff;">
+                <h5 class="mb-0"><i class="bi bi-file-earmark-text me-2"></i>Отчёты и аналитика</h5>
+            </div>
+            <div class="card-body">
+                <div class="empty-state">
+                    <i class="bi bi-graph-up"></i>
+                    <p class="mt-3 mb-1">Здесь будут ваши отчёты по завершённым проектам.</p>
+                    <small>Добавляйте результаты, аналитику и выводы по каждому сотрудничеству.</small>
+                </div>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <div class="d-flex gap-3 justify-content-center flex-wrap">
+                <button class="btn btn-primary btn-lg" hx-get="{% url 'profile_edit' %}"
+                        hx-target="#profile-content" hx-swap="innerHTML">
+                    <i class="bi bi-pencil-square me-2"></i>Обновить профиль организатора
+                </button>
+                <a href="#" class="btn btn-outline-warning btn-lg disabled">
+                    <i class="bi bi-bullseye me-2"></i>Создать объявление (скоро)
+                </a>
+            </div>
+        </div>
+    </div>
+
     {% elif user.client_profile %}
-    <!-- Профиль заказчика -->
+    <!-- Профиль площадки -->
     <div class="card">
         <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
-            <h5 class="mb-0"><i class="bi bi-building me-2"></i>Профиль заказчика</h5>
+            <h5 class="mb-0"><i class="bi bi-building me-2"></i>Профиль площадки</h5>
         </div>
         <div class="card-body">
             <div class="row">
@@ -415,6 +685,42 @@
     border: 2px solid rgba(243, 156, 18, 0.3);
 }
 
+.performer-verify-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 1.35rem;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+}
+
+.performer-verify-badge.is-verified {
+    background: linear-gradient(135deg, rgba(46, 204, 113, 0.85), rgba(39, 174, 96, 0.95));
+    border-color: rgba(46, 204, 113, 0.75);
+    color: rgba(0, 0, 0, 0.75);
+    box-shadow: 0 18px 35px rgba(46, 204, 113, 0.35);
+}
+
+.performer-verify-badge.is-verified .verify-icon path {
+    fill: rgba(0, 0, 0, 0.75);
+    filter: drop-shadow(0 0 3px rgba(12, 65, 28, 0.3));
+}
+
+.performer-verify-badge:not(.is-verified):hover {
+    border-color: rgba(255, 255, 255, 0.35);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.performer-verify-badge .verify-icon path {
+    fill: rgba(255, 255, 255, 0.6);
+}
+
 .nav-tabs .nav-link {
     border: none;
     color: #6c757d;
@@ -448,6 +754,72 @@
 .card:hover {
     transform: translateY(-2px);
     box-shadow: 0 10px 25px rgba(243, 156, 18, 0.2);
+}
+
+.agent-hero {
+    border-radius: 18px;
+    border: 2px solid rgba(243, 156, 18, 0.3);
+}
+
+.agent-avatar {
+    width: 120px;
+    height: 120px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, rgba(243, 156, 18, 0.4), rgba(231, 76, 60, 0.4));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.metric-card {
+    background: linear-gradient(135deg, rgba(52, 73, 94, 0.8) 0%, rgba(44, 62, 80, 0.9) 100%);
+    border-radius: 18px;
+    padding: 1.75rem;
+    color: #ecf0f1;
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.metric-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 15px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+}
+
+.metric-label {
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1.5px;
+    margin-bottom: 0.5rem;
+    opacity: 0.7;
+}
+
+.metric-value {
+    font-size: 2rem;
+    font-weight: 700;
+}
+
+.empty-state {
+    text-align: center;
+    color: rgba(236, 240, 241, 0.7);
+    padding: 2.5rem 1.5rem;
+    border: 1px dashed rgba(243, 156, 18, 0.3);
+    border-radius: 15px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.empty-state i {
+    font-size: 2.5rem;
+    color: rgba(243, 156, 18, 0.8);
+}
+
+.timeline .border-bottom:last-child {
+    border-bottom: none !important;
 }
 
 .repertoire-content {

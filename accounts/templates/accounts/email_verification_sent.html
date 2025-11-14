@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+{% block title %}Подтверждение email - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: 100vh;
+    }
+    
+    .verification-page-content {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: calc(100vh - 200px);
+        padding: 2rem 0;
+    }
+    
+    .verification-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        box-shadow: 0 25px 70px rgba(0, 0, 0, 0.7);
+        border: 2px solid var(--gold);
+        max-width: 600px;
+        width: 100%;
+        padding: 3rem;
+        text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .verification-card::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, var(--gold-dark), var(--gold-light), var(--gold-dark));
+    }
+    
+    .verification-icon {
+        font-size: 5rem;
+        color: var(--gold);
+        margin-bottom: 1.5rem;
+        animation: pulse 2s infinite;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            transform: scale(1);
+        }
+        50% {
+            transform: scale(1.1);
+        }
+    }
+    
+    .verification-title {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .verification-message {
+        color: var(--silver-light);
+        font-size: 1.1rem;
+        line-height: 1.8;
+        margin-bottom: 2rem;
+    }
+    
+    .verification-info {
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid var(--gold);
+        border-radius: 12px;
+        padding: 1.5rem;
+        margin: 2rem 0;
+        color: var(--silver-light);
+    }
+    
+    .verification-info i {
+        color: var(--gold);
+        margin-right: 0.5rem;
+    }
+    
+    .btn-home {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 700;
+        border: none;
+        padding: 1rem 2rem;
+        border-radius: 12px;
+        text-decoration: none;
+        display: inline-block;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+    }
+    
+    .btn-home:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+        color: var(--black);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="verification-page-content">
+    <div class="verification-card">
+        <i class="bi bi-envelope-check verification-icon"></i>
+        <h1 class="verification-title">Проверьте вашу почту!</h1>
+        <p class="verification-message">
+            Мы отправили письмо с подтверждением на ваш email адрес.
+            Пожалуйста, проверьте почту и перейдите по ссылке для подтверждения регистрации.
+        </p>
+        
+        <div class="verification-info">
+            <p><i class="bi bi-info-circle"></i>Письмо может прийти в папку "Спам"</p>
+            <p><i class="bi bi-clock"></i>Ссылка действительна в течение 24 часов</p>
+        </div>
+        
+        <a href="{% url 'home' %}" class="btn-home">
+            <i class="bi bi-house me-2"></i>На главную
+        </a>
+    </div>
+</div>
+{% endblock %}
+

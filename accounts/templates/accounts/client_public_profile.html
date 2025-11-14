@@ -75,10 +75,19 @@
         padding: 0.5rem 1.5rem;
         border-radius: 20px;
         font-weight: 700;
-        background: linear-gradient(135deg, var(--blue-accent), #5ba3f5);
         color: white;
-        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
         margin-bottom: 1rem;
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+    }
+
+    .client-role.venue {
+        background: linear-gradient(135deg, var(--blue-accent), #5ba3f5);
+        box-shadow: 0 4px 15px rgba(74, 144, 226, 0.4);
+    }
+
+    .client-role.agent {
+        background: linear-gradient(135deg, #8e44ad, #9b59b6);
+        box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
     }
     
     .verification-badge {
@@ -203,8 +212,12 @@
             </div>
             <h1 class="client-username">{{ client_user.username }}</h1>
             
-            <div class="client-role">
-                <i class="bi bi-briefcase me-2"></i>Заказчик
+            <div class="client-role {% if client_user.agent_profile or client_user.role == 'agent' %}agent{% else %}venue{% endif %}">
+                {% if client_user.agent_profile or client_user.role == 'agent' %}
+                    <i class="bi bi-people me-2"></i>Организатор
+                {% else %}
+                    <i class="bi bi-briefcase me-2"></i>Площадка
+                {% endif %}
             </div>
             
             <div class="verification-badge {% if client_user.is_verified %}verified{% else %}unverified{% endif %}">
@@ -258,7 +271,7 @@
             <div class="info-section">
                 <h3>
                     <i class="bi bi-briefcase"></i>
-                    О заказчике
+                    О площадке
                 </h3>
                 
                 <div class="info-item">

@@ -20,17 +20,144 @@ def performer_detail(request, performer_id):
 
 
 def specialists_list(request):
-    """Страница со списком всех артистов"""
-    performers = PerformerProfile.objects.select_related('user').all().order_by('-created_at')
-    
-    # Пагинация
+    """Страница со списком музыкантов"""
+    performers = PerformerProfile.objects.select_related('user').all()
+
+    search_query = request.GET.get('q', '').strip()
+    voice_type = request.GET.get('voice_type', '').strip()
+    availability_date_str = request.GET.get('availability_date', '').strip()
+    performer_type = request.GET.get('performer_type', '').strip()
+    instrument = request.GET.get('instrument', '').strip()
+    verified = request.GET.get('verified')
+    birth_date_from = request.GET.get('birth_date_from', '').strip()
+    birth_date_to = request.GET.get('birth_date_to', '').strip()
+    sort_option = request.GET.get('sort', 'newest')
+
+    if search_query:
+        performers = performers.filter(
+            Q(full_name__icontains=search_query) |
+            Q(voice_type__icontains=search_query) |
+            Q(instrument__icontains=search_query) |
+            Q(bio__icontains=search_query) |
+            Q(education__icontains=search_query) |
+            Q(repertoire_items__composer__icontains=search_query) |
+            Q(repertoire_items__work_title__icontains=search_query) |
+            Q(repertoire_items__role_or_part__icontains=search_query)
+        ).distinct()
+
+    if performer_type in dict(PerformerProfile.PERFORMER_TYPE_CHOICES):
+        performers = performers.filter(performer_type=performer_type)
+
+    if voice_type:
+        performers = performers.filter(voice_type__iexact=voice_type)
+
+    if instrument:
+        performers = performers.filter(instrument__iexact=instrument)
+
+    if verified in {'true', 'false'}:
+        performers = performers.filter(is_verified=(verified == 'true'))
+
+    selected_availability_date = None
+    if availability_date_str:
+        try:
+            selected_availability_date = datetime.strptime(availability_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            selected_availability_date = None
+
+    if selected_availability_date:
+        unavailable_ids = PerformerAvailability.objects.filter(
+            date=selected_availability_date,
+            status='unavailable'
+        ).values_list('performer_id', flat=True)
+
+        performers = performers.exclude(id__in=unavailable_ids)
+
+        mark_available_ids = PerformerAvailability.objects.filter(
+            performer__calendar_mode='mark_available',
+            date=selected_availability_date,
+            status__in=['available', 'maybe']
+        ).values_list('performer_id', flat=True)
+
+        performers = performers.filter(
+            Q(calendar_mode='mark_unavailable') | Q(id__in=mark_available_ids)
+        )
+
+    def _parse_date(value):
+        try:
+            from datetime import datetime
+            return datetime.strptime(value, '%Y-%m-%d').date()
+        except (TypeError, ValueError):
+            return None
+
+    date_from = _parse_date(birth_date_from)
+    date_to = _parse_date(birth_date_to)
+
+    if date_from is not None:
+        performers = performers.filter(birth_date__gte=date_from)
+
+    if date_to is not None:
+        performers = performers.filter(birth_date__lte=date_to)
+
+    sort_map = {
+        'newest': ['-created_at'],
+        'oldest': ['created_at'],
+        'name_asc': ['full_name', '-created_at'],
+        'name_desc': ['-full_name', '-created_at'],
+        'birth_date_desc': ['-birth_date', 'full_name'],
+        'birth_date_asc': ['birth_date', 'full_name'],
+        'verified_first': ['-is_verified', '-created_at'],
+    }
+    order_by_fields = sort_map.get(sort_option, ['-created_at'])
+    performers = performers.order_by(*order_by_fields)
+
+    def merge_options(default_list, queryset):
+        merged = list(default_list)
+        for value in queryset:
+            if value and value not in merged:
+                merged.append(value)
+        return merged
+
+    voice_types = merge_options(
+        PerformerProfile.DEFAULT_VOICE_TYPES,
+        PerformerProfile.objects.filter(
+            performer_type=PerformerProfile.PERFORMER_TYPE_VOCALIST
+        )
+        .exclude(voice_type__isnull=True)
+        .exclude(voice_type='')
+        .values_list('voice_type', flat=True)
+        .distinct()
+    )
+
+    instrument_choices = merge_options(
+        PerformerProfile.DEFAULT_INSTRUMENTS,
+        PerformerProfile.objects.filter(
+            performer_type=PerformerProfile.PERFORMER_TYPE_INSTRUMENTALIST
+        )
+        .exclude(instrument__isnull=True)
+        .exclude(instrument='')
+        .values_list('instrument', flat=True)
+        .distinct()
+    )
+
     paginator = Paginator(performers, 12)  # 12 артистов на страницу
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
+    query_params = request.GET.copy()
+    if 'page' in query_params:
+        query_params.pop('page')
+
     context = {
         'page_obj': page_obj,
         'performers': page_obj,
+        'voice_types': voice_types,
+        'instrument_choices': instrument_choices,
+        'total_count': paginator.count,
+        'query_params': query_params.urlencode(),
+        'search_query': search_query,
+        'selected_performer_type': performer_type,
+        'selected_instrument': instrument,
+        'availability_date': availability_date_str,
     }
     return render(request, 'performers/specialists_list.html', context)
 

@@ -1,0 +1,473 @@
+{% extends "interactions/base_interactions.html" %}
+{% load interaction_extras %}
+
+{% block interactions_content %}
+<div class="project-header mb-4 d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div>
+        <h1 class="project-title mb-1">{{ interaction.title }}</h1>
+        <div class="project-meta">
+            <span class="project-status"><i class="bi bi-flag me-1"></i>{{ interaction.get_status_display }}</span>
+            <span><i class="bi bi-calendar-event me-1"></i>{{ interaction.created_at|date:"d.m.Y" }}</span>
+            <span><i class="bi bi-diagram-3 me-1"></i>{{ interaction.get_interaction_type_display }}</span>
+        </div>
+    </div>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        <a href="{% url 'interactions:my_projects' %}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left me-2"></i>Назад к проектам
+        </a>
+        {% if can_manage %}
+            <a href="{% url 'interactions:update' interaction.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil-square me-2"></i>Редактировать
+            </a>
+        {% endif %}
+        {% if is_creator and interaction.status != 'cancelled' and interaction.status != 'completed' %}
+            {% if interaction.status == 'in_progress' %}
+                {% if completion_active %}
+                    <span class="project-chip project-chip--info">
+                        <i class="bi bi-hourglass-split me-2"></i>Ожидаем подтверждения завершения от участников
+                    </span>
+                {% else %}
+                    <form method="post" action="{% url 'interactions:complete_project' interaction.pk %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check2-circle me-2"></i>Завершить проект
+                        </button>
+                    </form>
+                {% endif %}
+            {% endif %}
+            <form method="post" action="{% url 'interactions:cancel_project' interaction.pk %}" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-danger">
+                    <i class="bi bi-x-octagon me-2"></i>Отменить проект
+                </button>
+            </form>
+        {% endif %}
+    </div>
+</div>
+
+{% if is_creator and completion_active %}
+    <div class="alert-card mb-4">
+        <div class="alert-card__icon">
+            <i class="bi bi-people"></i>
+        </div>
+        <div class="alert-card__content">
+            <div class="alert-card__title">Проект ожидает подтверждения завершения</div>
+            <div class="alert-card__text">
+                {% if completion_pending %}
+                    Ответ не получен от:
+                    <strong>
+                        {% for link in completion_pending %}
+                            {{ link.display_name }}{% if not forloop.last %}, {% endif %}
+                        {% endfor %}
+                    </strong>
+                {% else %}
+                    Все участники подтвердили завершение. Проект обновится автоматически.
+                {% endif %}
+            </div>
+            {% if completion_declined %}
+                <div class="alert-card__text text-warning mt-2">
+                    <i class="bi bi-exclamation-triangle me-2"></i>
+                    Один или несколько участников отклонили завершение:
+                    {% for link in completion_declined %}
+                        {{ link.display_name }}{% if not forloop.last %}, {% endif %}
+                    {% endfor %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endif %}
+
+<div class="row g-4">
+    <div class="col-lg-8">
+        <div class="detail-card mb-4">
+            <div class="detail-card__header">
+                <h5 class="detail-card__title"><i class="bi bi-file-earmark-richtext me-2"></i>Описание проекта</h5>
+            </div>
+            <div class="detail-card__body">
+                <p class="detail-card__text">{{ interaction.description|default:"Подробное описание ещё не добавлено." }}</p>
+                {% if interaction.result_notes %}
+                    <div class="detail-card__divider"></div>
+                    <h6 class="detail-card__subtitle">Результаты</h6>
+                    <p class="detail-card__text">{{ interaction.result_notes }}</p>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-card__header">
+                <h5 class="detail-card__title mb-0"><i class="bi bi-journal-richtext me-2"></i>Отчёты</h5>
+            </div>
+            <div class="detail-card__body">
+                {% if interaction.reports.all %}
+                    <div class="report-list">
+                        {% for report in interaction.reports.all %}
+                            <div class="report-item">
+                                <div class="report-item__head">
+                                    <span class="report-item__author">{{ report.author.username }}</span>
+                                    <span class="report-item__date">{{ report.created_at|date:"d.m.Y" }}</span>
+                                </div>
+                                <p class="report-item__summary">{{ report.summary|truncatechars:200 }}</p>
+                                <div class="report-item__meta">
+                                    {% if report.audience %}<span><i class="bi bi-people me-1"></i>{{ report.audience }}</span>{% endif %}
+                                    {% if report.media_link %}<a href="{{ report.media_link }}" target="_blank"><i class="bi bi-box-arrow-up-right me-1"></i>Материалы</a>{% endif %}
+                                    {% if report.attachment %}
+                                        <a href="{{ report.attachment.url }}" download><i class="bi bi-paperclip me-1"></i>Файл</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% empty %}
+                            <p class="detail-card__placeholder mb-0">Отчётов пока нет.</p>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <p class="detail-card__placeholder mb-0">Отчётов пока нет.</p>
+                {% endif %}
+            </div>
+            {% if can_manage and report_form %}
+            <div class="detail-card__footer">
+                <form method="post" enctype="multipart/form-data" action="{% url 'interactions:add_report' interaction.pk %}" class="report-form row g-3">
+                    {% csrf_token %}
+                    <div class="col-md-8">
+                        <label class="form-label">{{ report_form.summary.label }}</label>
+                        {{ report_form.summary }}
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">{{ report_form.media_link.label }}</label>
+                        {{ report_form.media_link }}
+                    </div>
+                    <div class="col-md-6">
+                        <label class="form-label">{{ report_form.feedback.label }}</label>
+                        {{ report_form.feedback }}
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">{{ report_form.attachment.label }}</label>
+                        {{ report_form.attachment }}
+                    </div>
+                    <div class="col-md-3 d-grid">
+                        <label class="form-label">&nbsp;</label>
+                        <button type="submit" class="btn btn-warning">
+                            <i class="bi bi-save me-2"></i>Сохранить
+                        </button>
+                    </div>
+                </form>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="detail-card mb-4">
+            <div class="detail-card__header">
+                <h5 class="detail-card__title mb-0"><i class="bi bi-people me-2"></i>Участники</h5>
+            </div>
+            <div class="detail-card__body participants-list">
+                {% with agents=interaction|participants_by_role:'agent' %}
+                    {% if agents %}
+                        <div class="participants-list__section">
+                            <span class="participants-list__label">Организаторы</span>
+                            <div class="participants-list__chips">
+                                {% for participant in agents %}
+                                    <span class="participants-list__chip participants-list__chip--{{ participant.status }} participants-list__chip--agent">
+                                        {{ participant.display_name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                {% with venues=interaction|participants_by_role:'venue' %}
+                    {% if venues %}
+                        <div class="participants-list__section">
+                            <span class="participants-list__label">Площадки</span>
+                            <div class="participants-list__chips">
+                                {% for participant in venues %}
+                                    <span class="participants-list__chip participants-list__chip--{{ participant.status }} participants-list__chip--venue">
+                                        {{ participant.display_name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+                {% with performers=interaction|participants_by_role:'performer' %}
+                    {% if performers %}
+                        <div class="participants-list__section mb-0">
+                            <span class="participants-list__label">Исполнители</span>
+                            <div class="participants-list__chips">
+                                {% for participant in performers %}
+                                    <span class="participants-list__chip participants-list__chip--{{ participant.status }} participants-list__chip--performer">
+                                        {{ participant.display_name }}
+                                    </span>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-card__header">
+                <h5 class="detail-card__title mb-0"><i class="bi bi-cash-coin me-2"></i>Финансы</h5>
+            </div>
+            <div class="detail-card__body finance-card">
+                {% if is_creator %}
+                    <div class="finance-card__row">
+                        <span class="finance-card__label">Бюджет</span>
+                        <span class="finance-card__value">{{ interaction.budget_amount|default:"—" }} {{ interaction.get_budget_currency_display }}</span>
+                    </div>
+                    <div class="detail-card__divider"></div>
+                {% else %}
+                    <div class="finance-card__row">
+                        <span class="finance-card__label">Бюджет</span>
+                        <span class="finance-card__value finance-card__value--muted">Доступно только создателю</span>
+                    </div>
+                    <div class="detail-card__divider"></div>
+                {% endif %}
+                <div class="finance-card__row">
+                    <span class="finance-card__label">Период</span>
+                    <span class="finance-card__value">
+                        {{ interaction.start_date|date:"d.m.Y"|default:"—" }} — {{ interaction.end_date|date:"d.m.Y"|default:"—" }}
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<style>
+    .project-header {
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        padding: 1.5rem;
+    }
+    .project-title {
+        font-size: 1.65rem;
+        font-weight: 700;
+        color: #f6f7fb;
+    }
+    .project-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.95rem;
+    }
+    .project-status {
+        color: #ffc107;
+        font-weight: 600;
+    }
+    .detail-card {
+        background: linear-gradient(135deg, rgba(13, 15, 26, 0.9), rgba(19, 21, 32, 0.9));
+        border: 1px solid rgba(255,255,255,0.06);
+        border-radius: 18px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    }
+    .detail-card__header {
+        padding: 1.25rem 1.5rem;
+        background: rgba(255,255,255,0.02);
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .detail-card__title {
+        color: #f6f7fb;
+        font-size: 1.05rem;
+        font-weight: 700;
+    }
+    .detail-card__body {
+        padding: 1.5rem;
+    }
+    .detail-card__footer {
+        padding: 1.25rem 1.5rem;
+        background: rgba(0,0,0,0.6);
+        border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .detail-card__text {
+        color: rgba(255,255,255,0.82);
+        line-height: 1.65;
+        margin-bottom: 0;
+    }
+    .detail-card__subtitle {
+        color: #ffc107;
+        font-size: 0.95rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        margin-bottom: 0.5rem;
+    }
+    .detail-card__divider {
+        border-bottom: 1px dashed rgba(255,255,255,0.1);
+        margin: 1.25rem 0;
+    }
+    .detail-card__placeholder {
+        color: rgba(255,255,255,0.45);
+    }
+    .report-list {
+        display: flex;
+        flex-direction: column;
+        gap: 1.25rem;
+    }
+    .report-item__head {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: rgba(255,255,255,0.6);
+        font-size: 0.85rem;
+        margin-bottom: 0.35rem;
+    }
+    .report-item__author {
+        font-weight: 600;
+        color: #f6f7fb;
+    }
+    .report-item__summary {
+        color: rgba(255,255,255,0.82);
+        margin-bottom: 0.6rem;
+    }
+    .report-item__meta {
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+        font-size: 0.85rem;
+        color: rgba(255,255,255,0.6);
+    }
+    .report-item__meta a {
+        color: #ffc107;
+        text-decoration: none;
+    }
+    .participants-list__section {
+        margin-bottom: 1.25rem;
+    }
+    .participants-list__label {
+        display: block;
+        font-size: 0.75rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.5);
+        margin-bottom: 0.5rem;
+    }
+    .participants-list__chips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .participants-list__chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        background: rgba(255,255,255,0.08);
+        color: #f6f7fb;
+    }
+    .participants-list__chip--agent {
+        border: 1px solid rgba(255, 193, 7, 0.3);
+    }
+    .participants-list__chip--venue {
+        border: 1px solid rgba(52, 152, 219, 0.3);
+    }
+    .participants-list__chip--performer {
+        border: 1px solid rgba(155, 89, 182, 0.3);
+    }
+    .participants-list__chip--pending {
+        background: rgba(255, 193, 7, 0.18);
+        color: #ffc107;
+    }
+    .participants-list__chip--accepted {
+        background: rgba(46, 204, 113, 0.18);
+        color: #2ecc71;
+    }
+    .participants-list__chip--declined {
+        background: rgba(231, 76, 60, 0.18);
+        color: #e74c3c;
+    }
+    .finance-card__row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.95rem;
+        color: rgba(255,255,255,0.75);
+    }
+    .finance-card__label {
+        font-weight: 600;
+        color: rgba(255,255,255,0.55);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        font-size: 0.75rem;
+    }
+    .finance-card__value {
+        font-weight: 600;
+        color: #f6f7fb;
+    }
+    .finance-card__value--muted {
+        color: rgba(255,255,255,0.45);
+        font-weight: 500;
+        font-style: italic;
+    }
+    .finance-card__row + .finance-card__row {
+        margin-top: 0.85rem;
+    }
+    .project-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.45rem;
+        padding: 0.45rem 1rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.9rem;
+        letter-spacing: 0.03em;
+        background: rgba(74, 144, 226, 0.18);
+        color: #4a90e2;
+        border: 1px solid rgba(74, 144, 226, 0.35);
+    }
+    .project-chip--info {
+        background: rgba(74, 144, 226, 0.2);
+    }
+    .alert-card {
+        display: flex;
+        gap: 1.25rem;
+        padding: 1.25rem 1.5rem;
+        border-radius: 18px;
+        border: 1px solid rgba(74, 144, 226, 0.35);
+        background: linear-gradient(135deg, rgba(12, 26, 45, 0.92), rgba(18, 32, 52, 0.92));
+        box-shadow: 0 16px 36px rgba(0, 0, 0, 0.32);
+        align-items: flex-start;
+    }
+    .alert-card__icon {
+        width: 46px;
+        height: 46px;
+        border-radius: 14px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.4rem;
+        color: #4a90e2;
+        background: rgba(74, 144, 226, 0.2);
+        box-shadow: 0 8px 20px rgba(74, 144, 226, 0.2);
+    }
+    .alert-card__content {
+        flex: 1;
+    }
+    .alert-card__title {
+        font-weight: 700;
+        font-size: 1.05rem;
+        color: #f6f7fb;
+        margin-bottom: 0.35rem;
+    }
+    .alert-card__text {
+        color: rgba(255,255,255,0.75);
+        font-size: 0.95rem;
+    }
+@media (max-width: 991.98px) {
+        .project-header {
+            padding: 1.25rem;
+        }
+        .participants-list__chips {
+            gap: 0.35rem;
+        }
+        .participants-list__chip {
+            font-size: 0.85rem;
+        }
+    }
+</style>
+{% endblock %}
+

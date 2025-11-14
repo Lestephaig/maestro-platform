@@ -1,0 +1,380 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ announcement.title }} - Доска объявлений{% endblock %}
+
+{% block extra_css %}
+<style>
+    .announcement-detail-content {
+        padding: 2rem 0 3rem;
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: calc(100vh - 200px);
+    }
+    
+    .announcement-detail-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 20px;
+        padding: 2.5rem;
+        margin-bottom: 2rem;
+        border: 2px solid var(--silver-dark);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+    }
+    
+    .announcement-detail-header {
+        margin-bottom: 2rem;
+        padding-bottom: 1.5rem;
+        border-bottom: 2px solid var(--silver-dark);
+    }
+    
+    .announcement-type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.2;
+        height: 2.25rem;
+    }
+    
+    .announcement-type-badge.need_performer {
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.3), rgba(74, 144, 226, 0.2));
+        color: var(--blue-accent);
+        border: 1px solid var(--blue-accent);
+    }
+    
+    .announcement-type-badge.need_venue {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.2));
+        color: var(--gold);
+        border: 1px solid var(--gold);
+    }
+    
+    .announcement-type-badge.collaboration {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(46, 204, 113, 0.2));
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+    
+    .announcement-type-badge.audition {
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(155, 89, 182, 0.2));
+        color: #9b59b6;
+        border: 1px solid #9b59b6;
+    }
+    
+    .announcement-type-badge.contest {
+        background: linear-gradient(135deg, rgba(241, 196, 15, 0.3), rgba(241, 196, 15, 0.2));
+        color: #f1c40f;
+        border: 1px solid #f1c40f;
+    }
+    
+    .announcement-type-badge.other {
+        background: linear-gradient(135deg, rgba(192, 192, 192, 0.3), rgba(192, 192, 192, 0.2));
+        color: var(--silver);
+        border: 1px solid var(--silver);
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.5rem 1rem;
+        border-radius: 25px;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1.2;
+        height: 2.25rem;
+    }
+    
+    .status-badge.published {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+    
+    .status-badge.completed {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+    
+    .status-badge.draft {
+        background: rgba(192, 192, 192, 0.2);
+        color: var(--silver);
+        border: 1px solid var(--silver);
+    }
+    
+    .status-badge.archived {
+        background: rgba(149, 165, 166, 0.2);
+        color: #95a5a6;
+        border: 1px solid #95a5a6;
+    }
+    
+    .announcement-detail-title {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .announcement-meta-info {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1.5rem;
+        margin-top: 1rem;
+        color: var(--silver-light);
+    }
+    
+    .announcement-meta-item {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .announcement-meta-item i {
+        color: var(--gold);
+        font-size: 1.2rem;
+    }
+    
+    .announcement-meta-item a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.3s ease;
+    }
+    
+    .announcement-meta-item a:hover {
+        color: var(--gold);
+        text-decoration: underline;
+    }
+    
+    .announcement-description {
+        color: var(--white);
+        font-size: 1.1rem;
+        line-height: 1.8;
+        margin-bottom: 2rem;
+    }
+    
+    .announcement-section {
+        margin-bottom: 2rem;
+    }
+    
+    .announcement-section-title {
+        color: var(--gold);
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .announcement-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+    }
+    
+    .announcement-tag {
+        padding: 0.5rem 1rem;
+        background: rgba(212, 175, 55, 0.1);
+        border: 1px solid rgba(212, 175, 55, 0.3);
+        border-radius: 20px;
+        font-size: 0.9rem;
+        color: var(--gold-light);
+    }
+    
+    .response-form-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 20px;
+        padding: 2rem;
+        border: 2px solid var(--silver-dark);
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+    }
+    
+    .deadline-soon {
+        color: #ff6b6b !important;
+        font-weight: 700;
+    }
+    
+    .btn-respond {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold));
+        border: none;
+        color: var(--black);
+        font-weight: 700;
+        padding: 0.75rem 2rem;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-respond:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(212, 175, 55, 0.5);
+        color: var(--black);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="announcement-detail-content">
+    <div class="container">
+        <div class="announcement-detail-card">
+            <div class="announcement-detail-header">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                    <span class="announcement-type-badge {{ announcement.announcement_type }}">
+                        {{ announcement.get_announcement_type_display }}
+                    </span>
+                    <span class="status-badge {{ announcement.status }}">
+                        {{ announcement.get_status_display }}
+                    </span>
+                </div>
+                <h1 class="announcement-detail-title">{{ announcement.title }}</h1>
+                
+                <div class="announcement-meta-info">
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-person-circle"></i>
+                        <span><strong>Автор:</strong> 
+                            {% if announcement.author.performer_profile %}
+                                <a href="{% url 'performers:performer_detail' announcement.author.performer_profile.id %}">
+                                    {{ announcement.author.username }}
+                                </a>
+                            {% elif announcement.author.agent_profile %}
+                                <a href="{% url 'client_public_profile' announcement.author.id %}">
+                                    {{ announcement.author.username }}
+                                </a>
+                            {% else %}
+                                <a href="{% url 'client_public_profile' announcement.author.id %}">
+                                    {{ announcement.author.username }}
+                                </a>
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-calendar3"></i>
+                        <span>Опубликовано: {{ announcement.published_at|date:"d.m.Y H:i" }}</span>
+                    </div>
+                    {% if announcement.city or announcement.location %}
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-geo-alt"></i>
+                        <span>
+                            {% if announcement.city %}{{ announcement.city }}{% endif %}
+                            {% if announcement.city and announcement.location %}, {% endif %}
+                            {% if announcement.location %}{{ announcement.location }}{% endif %}
+                        </span>
+                    </div>
+                    {% endif %}
+                    {% if announcement.is_online %}
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-wifi"></i>
+                        <span>Онлайн</span>
+                    </div>
+                    {% endif %}
+                    {% if announcement.budget_amount %}
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-cash-coin"></i>
+                        <span><strong>Бюджет:</strong> {{ announcement.budget_amount|floatformat:0 }} {{ announcement.get_budget_currency_display }}</span>
+                    </div>
+                    {% endif %}
+                    {% if announcement.application_deadline %}
+                    <div class="announcement-meta-item {% if announcement.is_deadline_soon %}deadline-soon{% endif %}">
+                        <i class="bi bi-calendar-date"></i>
+                        <span><strong>Дедлайн:</strong> {{ announcement.application_deadline|date:"d.m.Y" }}</span>
+                    </div>
+                    {% endif %}
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-chat-dots"></i>
+                        <span><strong>Откликов:</strong> {{ announcement.response_count }}</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="announcement-description">
+                {{ announcement.description|linebreaks }}
+            </div>
+            
+            {% if announcement.tags.all %}
+            <div class="announcement-section">
+                <h3 class="announcement-section-title">
+                    <i class="bi bi-tags"></i> Теги
+                </h3>
+                <div class="announcement-tags">
+                    {% for tag in announcement.tags.all %}
+                    <span class="announcement-tag">{{ tag.name }}</span>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if announcement.start_date or announcement.end_date %}
+            <div class="announcement-section">
+                <h3 class="announcement-section-title">
+                    <i class="bi bi-calendar-range"></i> Даты
+                </h3>
+                <div class="announcement-meta-info">
+                    {% if announcement.start_date %}
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-play-circle"></i>
+                        <span><strong>Начало:</strong> {{ announcement.start_date|date:"d.m.Y" }}</span>
+                    </div>
+                    {% endif %}
+                    {% if announcement.end_date %}
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-stop-circle"></i>
+                        <span><strong>Окончание:</strong> {{ announcement.end_date|date:"d.m.Y" }}</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if user == announcement.author %}
+            <div class="mt-4">
+                {% if announcement.status != 'completed' %}
+                <a href="{% url 'announcements:edit' announcement.id %}" class="btn btn-outline-light me-2">
+                    <i class="bi bi-pencil"></i> Редактировать
+                </a>
+                <form method="post" action="{% url 'announcements:complete' announcement.id %}" class="d-inline me-2">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-outline-success">
+                        <i class="bi bi-check-circle"></i> Завершить объявление
+                    </button>
+                </form>
+                {% endif %}
+                <a href="{% url 'announcements:responses' announcement.id %}" class="btn btn-outline-light">
+                    <i class="bi bi-chat-dots"></i> Отклики ({{ announcement.response_count }})
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <!-- Форма отклика -->
+        {% if can_respond %}
+        <div class="response-form-card">
+            <h3 class="announcement-section-title mb-3">
+                <i class="bi bi-reply"></i> Откликнуться на объявление
+            </h3>
+            <form method="post">
+                {% csrf_token %}
+                {{ response_form.as_p }}
+                <button type="submit" class="btn btn-respond mt-3">
+                    <i class="bi bi-send"></i> Отправить отклик
+                </button>
+            </form>
+        </div>
+        {% elif user_response %}
+        <div class="response-form-card">
+            <div class="alert alert-info">
+                <i class="bi bi-info-circle"></i> Вы уже откликнулись на это объявление.
+                <strong>Статус:</strong> {{ user_response.get_status_display }}
+            </div>
+        </div>
+        {% elif not user.is_authenticated %}
+        <div class="response-form-card">
+            <div class="alert alert-warning">
+                <i class="bi bi-exclamation-triangle"></i> Для отклика на объявление необходимо <a href="{% url 'login' %}" style="color: var(--gold);">войти в систему</a>.
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

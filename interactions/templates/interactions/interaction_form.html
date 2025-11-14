@@ -1,0 +1,638 @@
+{% extends "interactions/base_interactions.html" %}
+
+{% block interactions_content %}
+<div class="mb-4">
+    <h1 class="h3 text-light">{{ title }}</h1>
+</div>
+
+<form method="post" enctype="multipart/form-data" class="card bg-dark text-light border border-warning-subtle interaction-card" id="project-form">
+    {% csrf_token %}
+    {% if form.non_field_errors %}
+        <div class="alert alert-danger mb-0">
+            {% for error in form.non_field_errors %}
+                <div>{{ error }}</div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <div class="card-body">
+        <div class="step-indicator d-flex justify-content-between mb-4">
+            <div class="step-badge" data-step="1">
+                <span class="badge-number">1</span>
+                <span class="badge-text">Основы</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-badge" data-step="2">
+                <span class="badge-number">2</span>
+                <span class="badge-text">Участники</span>
+            </div>
+            <div class="step-line"></div>
+            <div class="step-badge" data-step="3">
+                <span class="badge-number">3</span>
+                <span class="badge-text">Планирование</span>
+            </div>
+        </div>
+
+        <div class="step-panel" data-step="1">
+            <h5 class="mb-3 text-warning"><i class="bi bi-info-circle me-2"></i>Базовая информация</h5>
+            <div class="mb-3">
+                <label class="form-label">{{ form.title.label }}</label>
+                {{ form.title }}
+                {% for error in form.title.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.interaction_type.label }}</label>
+                    {{ form.interaction_type }}
+                    {% for error in form.interaction_type.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.status.label }}</label>
+                    {{ form.status }}
+                    {% for error in form.status.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="mt-3">
+                <label class="form-label">{{ form.description.label }}</label>
+                {{ form.description }}
+                <div class="form-text text-muted">Опишите цель проекта, формат и ключевые задачи.</div>
+                {% for error in form.description.errors %}
+                    <div class="invalid-feedback d-block">{{ error }}</div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="step-panel d-none" data-step="2">
+            <h5 class="mb-3 text-warning"><i class="bi bi-people me-2"></i>Команда проекта</h5>
+            <p class="text-muted small mb-4">Добавляйте участников, чтобы все ключевые роли были на месте. Можно выбрать несколько профилей каждой категории.</p>
+
+            <div class="participant-grid">
+                <div class="participant-board" data-participant="agents">
+                    <div class="board-header">
+                        <div class="board-title">
+                            <span class="board-icon"><i class="bi bi-person-badge"></i></span>
+                            <div>
+                                <h6 class="mb-0 text-light">Организаторы</h6>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-warning btn-sm rounded-circle btn-add-participant" title="Добавить организатора">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+                    <div class="board-body">
+                        <div class="selected-tags"></div>
+                        <div class="empty-state small text-muted">Организаторы пока не добавлены.</div>
+                    </div>
+                    <div class="participant-select d-none">
+                        {{ form.agents }}
+                    </div>
+                    {% for error in form.agents.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                    <div class="participant-modal d-none">
+                        <div class="participant-modal-card card bg-black text-light shadow-lg">
+                            <div class="card-body">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-transparent text-light"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control participant-search" placeholder="Поиск организатора...">
+                            </div>
+                            <div class="participant-options mt-3"></div>
+                            <button type="button" class="btn btn-outline-light w-100 mt-3 btn-close-modal">
+                                <i class="bi bi-x-lg me-2"></i>Закрыть
+                            </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="participant-board" data-participant="venues">
+                    <div class="board-header">
+                        <div class="board-title">
+                            <span class="board-icon"><i class="bi bi-building"></i></span>
+                            <div>
+                                <h6 class="mb-0 text-light">Площадки</h6>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-warning btn-sm rounded-circle btn-add-participant" title="Добавить площадку">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+                    <div class="board-body">
+                        <div class="selected-tags"></div>
+                        <div class="empty-state small text-muted">Площадки пока не выбраны.</div>
+                    </div>
+                    <div class="participant-select d-none">
+                        {{ form.venues }}
+                    </div>
+                    {% for error in form.venues.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                    <div class="participant-modal d-none">
+                        <div class="participant-modal-card card bg-black text-light shadow-lg">
+                            <div class="card-body">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-transparent text-light"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control participant-search" placeholder="Поиск площадки...">
+                            </div>
+                            <div class="participant-options mt-3"></div>
+                            <button type="button" class="btn btn-outline-light w-100 mt-3 btn-close-modal">
+                                <i class="bi bi-x-lg me-2"></i>Закрыть
+                            </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="participant-board" data-participant="performers">
+                    <div class="board-header">
+                        <div class="board-title">
+                            <span class="board-icon"><i class="bi bi-mic"></i></span>
+                            <div>
+                                <h6 class="mb-0 text-light">Исполнители</h6>
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-outline-warning btn-sm rounded-circle btn-add-participant" title="Добавить исполнителя">
+                            <i class="bi bi-plus-lg"></i>
+                        </button>
+                    </div>
+                    <div class="board-body">
+                        <div class="selected-tags"></div>
+                        <div class="empty-state small text-muted">Исполнители пока не назначены.</div>
+                    </div>
+                    <div class="participant-select d-none">
+                        {{ form.performers }}
+                    </div>
+                    {% for error in form.performers.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                    <div class="participant-modal d-none">
+                        <div class="participant-modal-card card bg-black text-light shadow-lg">
+                            <div class="card-body">
+                            <div class="input-group input-group-sm">
+                                <span class="input-group-text bg-transparent text-light"><i class="bi bi-search"></i></span>
+                                <input type="text" class="form-control participant-search" placeholder="Поиск исполнителя...">
+                            </div>
+                            <div class="participant-options mt-3"></div>
+                            <button type="button" class="btn btn-outline-light w-100 mt-3 btn-close-modal">
+                                <i class="bi bi-x-lg me-2"></i>Закрыть
+                            </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        </div>
+
+        <div class="step-panel d-none" data-step="3">
+            <h5 class="mb-3 text-warning"><i class="bi bi-calendar-event me-2"></i>Планирование и бюджет</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.start_date.label }}</label>
+                    {{ form.start_date }}
+                    {% for error in form.start_date.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.end_date.label }}</label>
+                    {{ form.end_date }}
+                    {% for error in form.end_date.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="row g-3 mt-1">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.budget_amount.label }}</label>
+                    {{ form.budget_amount }}
+                    {% for error in form.budget_amount.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.budget_currency.label }}</label>
+                    {{ form.budget_currency }}
+                    {% for error in form.budget_currency.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div>
+
+        <div class="form-navigation d-flex justify-content-between align-items-center mt-4">
+            <div class="d-flex gap-2">
+                <a href="{% url 'interactions:my_projects' %}" class="btn btn-outline-light">Отмена</a>
+                <button type="button" class="btn btn-outline-light d-none" id="step-prev">
+                    <i class="bi bi-arrow-left"></i>
+                </button>
+            </div>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-warning" id="step-next">
+                    Далее <i class="bi bi-arrow-right ms-2"></i>
+                </button>
+                <button type="submit" class="btn btn-warning d-none" id="submit-project">
+                    <i class="bi bi-save me-2"></i>Сохранить проект
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+</form>
+
+<style>
+    .step-indicator {
+        position: relative;
+    }
+    .step-line {
+        flex: 1;
+        height: 2px;
+        background: rgba(255, 255, 255, 0.1);
+        margin: 18px 12px 0;
+    }
+    .step-badge {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        transition: all 0.3s ease;
+    }
+    .step-badge.active {
+        color: #f1c40f;
+    }
+    .badge-number {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        font-weight: 700;
+    }
+    .step-badge.active .badge-number {
+        background: linear-gradient(135deg, #f39c12, #f1c40f);
+        border-color: #f1c40f;
+        color: #111;
+    }
+    .step-panel {
+        animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    .interaction-card {
+        display: block;
+        overflow: visible;
+    }
+    .interaction-card .card-body {
+        padding-bottom: 1.5rem;
+    }
+    .form-navigation .btn {
+        min-width: 110px;
+    }
+    .participant-grid {
+        display: grid;
+        gap: 1.75rem;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    }
+    .participant-board {
+        position: relative;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 18px;
+        overflow: hidden;
+        background: linear-gradient(135deg, rgba(0,0,0,0.4), rgba(0,0,0,0.25));
+        backdrop-filter: blur(6px);
+        min-height: 340px;
+    }
+    .participant-board .board-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .participant-board .board-title {
+        display: flex;
+        gap: 0.75rem;
+        align-items: center;
+    }
+    .participant-board .board-icon {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f1c40f;
+        font-size: 1.3rem;
+    }
+    .participant-board .board-body {
+        padding: 1.25rem 1.5rem 1.5rem;
+        min-height: 210px;
+    }
+    .participant-board .selected-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .participant-board .tag-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.35rem;
+        padding: 0.4rem 0.75rem;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.08);
+        color: #f1f2f6;
+        font-size: 0.9rem;
+    }
+    .participant-board .tag-chip .tag-remove {
+        border: none;
+        background: transparent;
+        color: rgba(255,255,255,0.6);
+        padding: 0;
+    }
+    .participant-board .tag-chip .tag-remove:hover {
+        color: #f1c40f;
+    }
+    .participant-board .empty-state {
+        display: none;
+        padding: 1rem;
+        border: 1px dashed rgba(255, 255, 255, 0.12);
+        border-radius: 12px;
+        text-align: center;
+        margin-top: 0.5rem;
+        background: rgba(255, 255, 255, 0.02);
+    }
+    .participant-board.empty .empty-state {
+        display: block;
+    }
+    .participant-board.empty .selected-tags {
+        display: none;
+    }
+    .participant-modal {
+        position: absolute;
+        inset: 12px;
+        z-index: 15;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(6px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.5rem;
+    }
+    .participant-modal.d-none {
+        display: none !important;
+    }
+    .participant-modal-card {
+        width: 100%;
+        max-width: 500px;
+        border-radius: 18px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    .participant-modal .participant-options {
+        max-height: 180px;
+        overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+    }
+    .participant-modal .option-item {
+        padding: 0.5rem 0.75rem;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        cursor: pointer;
+        display: block;
+        color: #f1f2f6;
+        text-decoration: none;
+    }
+    .participant-modal .option-item:last-child {
+        border-bottom: none;
+    }
+    .participant-modal .option-item:hover {
+        background: rgba(241, 196, 15, 0.15);
+    }
+    .participant-modal .option-item .option-label {
+        font-weight: 600;
+        margin-bottom: 0.15rem;
+    }
+    .participant-modal .option-item .option-detail {
+        color: rgba(255,255,255,0.55);
+        font-size: 0.8rem;
+    }
+    .participant-board .tag-chip .tag-detail {
+        color: rgba(255,255,255,0.55);
+        font-size: 0.75rem;
+        margin-left: 0.35rem;
+    }
+    .participant-board .btn-add-participant {
+        width: 36px;
+        height: 36px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .step-panel[data-step="3"] .row {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    .step-panel[data-step="3"] .row .col-md-6,
+    .step-panel[data-step="3"] .row .col-md-12 {
+        padding-left: 0.25rem;
+        padding-right: 0.25rem;
+    }
+    .step-panel[data-step="3"] {
+        padding-left: 1.25rem;
+        padding-right: 1.25rem;
+    }
+</style>
+
+<script>
+    (function() {
+        const panels = Array.from(document.querySelectorAll('.step-panel'));
+        const badges = Array.from(document.querySelectorAll('.step-badge'));
+        const nextBtn = document.getElementById('step-next');
+        const prevBtn = document.getElementById('step-prev');
+        const submitBtn = document.getElementById('submit-project');
+        let currentStep = 1;
+
+        const parseOptionLabel = (label) => {
+            if (!label) return { primary: '', detail: '' };
+            const parts = label.split(' — ');
+            const primary = parts.shift().trim();
+            const detail = parts.join(' — ').trim();
+            return { primary, detail };
+        };
+
+        const findErrorStep = () => {
+            for (const panel of panels) {
+                if (panel.querySelector('.invalid-feedback')) {
+                    return parseInt(panel.dataset.step, 10);
+                }
+            }
+            return 1;
+        };
+
+        const updateView = () => {
+            panels.forEach(panel => {
+                panel.classList.toggle('d-none', parseInt(panel.dataset.step, 10) !== currentStep);
+            });
+            badges.forEach(badge => {
+                badge.classList.toggle('active', parseInt(badge.dataset.step, 10) <= currentStep);
+            });
+            prevBtn.classList.toggle('d-none', currentStep === 1);
+            nextBtn.classList.toggle('d-none', currentStep === panels.length);
+            submitBtn.classList.toggle('d-none', currentStep !== panels.length);
+        };
+
+        nextBtn?.addEventListener('click', () => {
+            if (currentStep < panels.length) {
+                currentStep += 1;
+                updateView();
+            }
+        });
+
+        prevBtn?.addEventListener('click', () => {
+            if (currentStep > 1) {
+                currentStep -= 1;
+                updateView();
+            }
+        });
+
+        currentStep = findErrorStep();
+        updateView();
+        const boards = document.querySelectorAll('.participant-board');
+
+        boards.forEach(board => {
+            const select = board.querySelector('select');
+            const tagsContainer = board.querySelector('.selected-tags');
+            const emptyState = board.querySelector('.empty-state');
+            const addButton = board.querySelector('.btn-add-participant');
+            const modal = board.querySelector('.participant-modal');
+            const optionsList = modal.querySelector('.participant-options');
+            const searchInput = modal.querySelector('.participant-search');
+            const closeModalBtn = modal.querySelector('.btn-close-modal');
+
+            const allOptions = Array.from(select.options)
+                .filter(opt => opt.value)
+                .map(opt => ({ value: opt.value, label: opt.text }));
+
+            const ensureEmptyState = () => {
+                const hasSelection = select.selectedOptions.length > 0;
+                board.classList.toggle('empty', !hasSelection);
+            };
+
+            const renderTags = () => {
+                tagsContainer.innerHTML = '';
+                Array.from(select.selectedOptions).forEach(opt => {
+                    const { primary, detail } = parseOptionLabel(opt.text);
+                    const tag = document.createElement('span');
+                    tag.className = 'tag-chip';
+                    tag.dataset.value = opt.value;
+                    tag.innerHTML = `
+                        <span>${primary}</span>
+                        ${detail ? `<span class="tag-detail">${detail}</span>` : ''}
+                        <button type="button" class="tag-remove" data-value="${opt.value}" aria-label="Удалить">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    `;
+                    tagsContainer.appendChild(tag);
+                });
+                ensureEmptyState();
+            };
+
+            const renderOptions = (filter = '') => {
+                const selectedValues = new Set(Array.from(select.selectedOptions).map(opt => opt.value));
+                const normalized = filter.trim().toLowerCase();
+                optionsList.innerHTML = '';
+
+                const filtered = allOptions.filter(({ value, label }) => {
+                    if (selectedValues.has(value)) return false;
+                    if (!normalized) return true;
+                    return label.toLowerCase().includes(normalized);
+                });
+
+                if (!filtered.length) {
+                    optionsList.innerHTML = `
+                        <div class="option-item disabled text-muted" tabindex="-1">
+                            <span class="option-label">Ничего не найдено</span>
+                        </div>
+                    `;
+                    return;
+                }
+
+                filtered.forEach(({ value, label }) => {
+                    const { primary, detail } = parseOptionLabel(label);
+                    const item = document.createElement('div');
+                    item.className = 'option-item';
+                    item.dataset.value = value;
+                    item.innerHTML = `
+                        <div class="option-label">${primary}</div>
+                        ${detail ? `<div class="option-detail">${detail}</div>` : ''}
+                    `;
+                    optionsList.appendChild(item);
+                });
+            };
+
+            const openModal = () => {
+                modal.classList.remove('d-none');
+                searchInput.value = '';
+                renderOptions();
+                setTimeout(() => searchInput.focus(), 10);
+            };
+
+            const closeModal = () => {
+                modal.classList.add('d-none');
+            };
+
+            addButton.addEventListener('click', openModal);
+            closeModalBtn.addEventListener('click', closeModal);
+            modal.addEventListener('click', (event) => {
+                if (event.target === modal) {
+                    closeModal();
+                }
+            });
+
+            optionsList.addEventListener('click', (event) => {
+                const item = event.target.closest('[data-value]');
+                if (!item || item.classList.contains('disabled')) return;
+                const value = item.dataset.value;
+                const option = select.querySelector(`option[value="${value}"]`);
+                if (option) {
+                    option.selected = true;
+                    renderTags();
+                    renderOptions(searchInput.value);
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
+            tagsContainer.addEventListener('click', (event) => {
+                const removeBtn = event.target.closest('.tag-remove');
+                if (!removeBtn) return;
+                const value = removeBtn.dataset.value;
+                const option = select.querySelector(`option[value="${value}"]`);
+                if (option) {
+                    option.selected = false;
+                    renderTags();
+                    renderOptions(searchInput.value);
+                    select.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+
+            searchInput.addEventListener('input', () => renderOptions(searchInput.value));
+
+            renderTags();
+        });
+    })();
+</script>
+{% endblock %}

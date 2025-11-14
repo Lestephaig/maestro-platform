@@ -1,0 +1,13 @@
+Maestro Platform - Изменение статуса проекта
+
+Здравствуйте, {{ user.username }}!
+
+Статус проекта "{{ project_title }}" был изменен:
+
+{{ old_status }} → {{ new_status }}
+
+Откройте проект: {{ site_url }}{{ project_url }}
+
+С уважением,
+Команда Maestro Platform
+

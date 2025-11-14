@@ -171,6 +171,11 @@
         color: white;
     }
     
+.badge-agent {
+    background: linear-gradient(135deg, #8e44ad, #9b59b6);
+    color: white;
+}
+
     .badge-verified {
         background: linear-gradient(135deg, #27ae60, #2ecc71);
         color: white;
@@ -320,6 +325,8 @@
                     <i class="bi bi-music-note"></i>
                 {% elif user.client_profile %}
                     <i class="bi bi-building"></i>
+                {% elif user.agent_profile %}
+                    <i class="bi bi-people"></i>
                 {% endif %}
             </div>
             <div class="info-card-title">Тип аккаунта</div>
@@ -327,7 +334,9 @@
                 {% if user.performer_profile %}
                     <span class="badge badge-performer">Исполнитель</span>
                 {% elif user.client_profile %}
-                    <span class="badge badge-client">Заказчик</span>
+                    <span class="badge badge-client">Площадка</span>
+                {% elif user.agent_profile %}
+                    <span class="badge badge-agent">Организатор</span>
                 {% endif %}
             </div>
         </div>

@@ -3,19 +3,19 @@ from .models import PerformerProfile, PerformerAvailability, PerformerPhoto, Per
 
 @admin.register(PerformerProfile)
 class PerformerProfileAdmin(admin.ModelAdmin):
-    list_display = ('full_name', 'birth_year', 'voice_type', 'is_verified', 'calendar_mode', 'user', 'created_at')
-    search_fields = ('full_name', 'voice_type', 'repertoire', 'education', 'achievements')
-    list_filter = ('voice_type', 'birth_year', 'is_verified', 'calendar_mode', 'created_at')
+    list_display = ('full_name', 'performer_type', 'voice_type', 'instrument', 'birth_date', 'is_verified', 'calendar_mode', 'user', 'created_at')
+    search_fields = ('full_name', 'voice_type', 'instrument', 'repertoire', 'education', 'achievements')
+    list_filter = ('performer_type', 'voice_type', 'instrument', 'birth_date', 'is_verified', 'calendar_mode', 'created_at')
     list_editable = ('is_verified',)
     fieldsets = (
         ('Основная информация', {
-            'fields': ('user', 'full_name', 'birth_year', 'photo')
+            'fields': ('user', 'full_name', 'birth_date', 'photo')
         }),
         ('Образование и достижения', {
             'fields': ('education', 'achievements')
         }),
         ('Музыкальная информация', {
-            'fields': ('voice_type', 'repertoire', 'bio')
+            'fields': ('performer_type', 'voice_type', 'instrument', 'repertoire', 'bio')
         }),
         ('Медиа', {
             'fields': ('video_url',)

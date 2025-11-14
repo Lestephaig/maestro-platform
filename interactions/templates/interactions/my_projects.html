@@ -1,0 +1,296 @@
+{% extends "interactions/base_interactions.html" %}
+{% load interaction_extras %}
+
+{% block interactions_content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-1 text-light">Мои проекты</h1>
+        <p class="mb-0 text-subtle">Здесь собраны проекты, где вы являетесь участником или автором.</p>
+    </div>
+    <a href="{% url 'interactions:create' %}" class="btn btn-warning fw-bold">
+        <i class="bi bi-plus-circle me-2"></i>Новый проект
+    </a>
+</div>
+
+{% if projects %}
+    <div class="project-list">
+        {% for entry in projects %}
+            {% with interaction=entry.interaction status=entry.participant_status participant=entry.participant completion_request=entry.completion_request completion_status=entry.completion_status completion_declined=entry.completion_declined is_creator=entry.is_creator completion_active=entry.completion_active %}
+                <div class="project-card shadow-sm">
+                    <div class="project-card__head d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
+                        <div>
+                            <div class="project-card__title">{{ interaction.title }}</div>
+                            <div class="project-card__meta">
+                                <span><i class="bi bi-calendar-event me-1"></i>{{ interaction.created_at|date:"d.m.Y" }}</span>
+                                <span><i class="bi bi-flag me-1"></i>{{ interaction.get_status_display }}</span>
+                                <span><i class="bi bi-diagram-3 me-1"></i>{{ interaction.get_interaction_type_display }}</span>
+                            </div>
+                        </div>
+                        <div class="project-card__status">
+                            <span class="project-status-pill project-status-pill--{{ interaction.status }}">
+                                {{ interaction.get_status_display }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="project-card__info mt-3">
+                        <div class="info-row">
+                            <span class="info-label">Участие:</span>
+                            {% if is_creator %}
+                                <span class="info-value info-value--success">Создатель проекта</span>
+                            {% elif status == 'pending' %}
+                                <span class="info-value info-value--warning">Ожидает вашего решения</span>
+                            {% elif status == 'accepted' %}
+                                <span class="info-value info-value--success">Участие подтверждено</span>
+                            {% elif status == 'declined' %}
+                                <span class="info-value info-value--danger">Участие отклонено</span>
+                            {% else %}
+                                <span class="info-value">—</span>
+                            {% endif %}
+                        </div>
+                        {% if completion_request and interaction.status == 'in_progress' %}
+                            <div class="info-row">
+                                <span class="info-label">Завершение:</span>
+                                <span class="info-value info-value--warning">
+                                    Ожидается ваше подтверждение завершения
+                                </span>
+                            </div>
+                        {% elif completion_status == 'confirmed' %}
+                            <div class="info-row">
+                                <span class="info-label">Завершение:</span>
+                                <span class="info-value info-value--success">
+                                    Вы подтвердили завершение проекта
+                                </span>
+                            </div>
+                        {% elif completion_declined %}
+                            <div class="info-row">
+                                <span class="info-label">Завершение:</span>
+                                <span class="info-value info-value--danger">
+                                    Вы отклонили завершение проекта
+                                </span>
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <p class="project-card__description mt-3">{{ interaction.description|truncatewords:30 }}</p>
+
+                    <div class="project-card__participants">
+                        {% with agents=interaction|participants_by_role:'agent' %}
+                            {% if agents %}
+                                <div class="participants-row">
+                                    <span class="participants-row__label">Организаторы:</span>
+                                    <span class="participants-row__value">
+                                        {% for participant in agents %}
+                                            {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                        {% with venues=interaction|participants_by_role:'venue' %}
+                            {% if venues %}
+                                <div class="participants-row">
+                                    <span class="participants-row__label">Площадки:</span>
+                                    <span class="participants-row__value">
+                                        {% for participant in venues %}
+                                            {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                        {% with performers=interaction|participants_by_role:'performer' %}
+                            {% if performers %}
+                                <div class="participants-row">
+                                    <span class="participants-row__label">Исполнители:</span>
+                                    <span class="participants-row__value">
+                                        {% for participant in performers %}
+                                            {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                        {% endfor %}
+                                    </span>
+                                </div>
+                            {% endif %}
+                        {% endwith %}
+                    </div>
+
+                    <div class="project-card__footer d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a href="{% url 'interactions:detail' interaction.pk %}" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-eye me-1"></i>Открыть проект
+                            </a>
+                        </div>
+                        {% if status == 'pending' and participant and interaction.status != 'cancelled' and interaction.status != 'completed' %}
+                            <div class="d-flex gap-2">
+                                <form method="post" action="{% url 'interactions:participant_decision' participant.pk 'decline' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-x-lg me-1"></i>Отказаться
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'interactions:participant_decision' participant.pk 'accept' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-lg me-1"></i>Принять
+                                    </button>
+                                </form>
+                            </div>
+                        {% elif completion_request and interaction.status == 'in_progress' %}
+                            <div class="d-flex gap-2">
+                                <form method="post" action="{% url 'interactions:participant_completion_decision' completion_request.pk 'decline' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="bi bi-x-lg me-1"></i>Отказать
+                                    </button>
+                                </form>
+                                <form method="post" action="{% url 'interactions:participant_completion_decision' completion_request.pk 'confirm' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-success btn-sm">
+                                        <i class="bi bi-check-lg me-1"></i>Подтвердить
+                                    </button>
+                                </form>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            {% endwith %}
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="text-center py-5 bg-dark rounded" style="color: rgba(255,255,255,0.75);">
+        <i class="bi bi-kanban" style="font-size: 3rem;"></i>
+        <p class="mt-3 mb-0">У вас пока нет проектов. После приглашения в проект он появится здесь.</p>
+    </div>
+{% endif %}
+
+<style>
+    .text-subtle {
+        color: rgba(255,255,255,0.72);
+    }
+    .project-list {
+        display: grid;
+        gap: 1.5rem;
+    }
+    .project-card {
+        background: linear-gradient(135deg, rgba(13, 15, 26, 0.92), rgba(19, 21, 32, 0.92));
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 18px;
+        padding: 1.75rem;
+    }
+    .project-card__title {
+        font-size: 1.3rem;
+        font-weight: 700;
+        color: #f6f7fb;
+    }
+    .project-card__meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        color: rgba(255,255,255,0.55);
+        font-size: 0.9rem;
+    }
+    .project-card__status {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        margin-top: 1rem;
+    }
+    @media (min-width: 992px) {
+        .project-card__status {
+            margin-top: 0;
+        }
+    }
+    .project-card__description {
+        color: rgba(255,255,255,0.75);
+        margin: 1rem 0;
+    }
+    .project-card__participants {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .participants-row {
+        font-size: 0.9rem;
+        color: rgba(255,255,255,0.75);
+    }
+    .participants-row__label {
+        font-weight: 600;
+        color: rgba(255,255,255,0.55);
+        margin-right: 0.35rem;
+    }
+    .project-card__info {
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .info-row {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        font-size: 0.9rem;
+    }
+    .info-label {
+        color: rgba(255,255,255,0.55);
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        font-size: 0.75rem;
+    }
+    .info-value {
+        font-weight: 600;
+    }
+    .info-value--warning {
+        color: #ffc107;
+    }
+    .info-value--success {
+        color: #2ecc71;
+    }
+    .info-value--danger {
+        color: #e74c3c;
+    }
+    .project-status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+        padding: 0.35rem 0.85rem;
+        border-radius: 999px;
+        font-weight: 600;
+        font-size: 0.85rem;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+    }
+    .project-status-pill--draft {
+        background: rgba(108,117,125,0.18);
+        color: #adb5bd;
+        border: 1px solid rgba(108,117,125,0.3);
+    }
+    .project-status-pill--proposal_sent {
+        background: rgba(52,152,219,0.18);
+        color: #3498db;
+        border: 1px solid rgba(52,152,219,0.3);
+    }
+    .project-status-pill--in_progress {
+        background: rgba(46,204,113,0.18);
+        color: #2ecc71;
+        border: 1px solid rgba(46,204,113,0.3);
+    }
+    .project-status-pill--completed {
+        background: rgba(40,167,69,0.18);
+        color: #28a745;
+        border: 1px solid rgba(40,167,69,0.3);
+    }
+    .project-status-pill--cancelled {
+        background: rgba(231,76,60,0.18);
+        color: #e74c3c;
+        border: 1px solid rgba(231,76,60,0.3);
+    }
+    .project-card__footer .btn {
+        min-width: 130px;
+    }
+    @media (max-width: 576px) {
+        .project-card {
+            padding: 1.25rem;
+        }
+    }
+</style>
+{% endblock %}

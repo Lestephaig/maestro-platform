@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: #d4af37;
+            padding: 30px;
+            text-align: center;
+            border-radius: 10px 10px 0 0;
+        }
+        .content {
+            background: #f9f9f9;
+            padding: 30px;
+            border-radius: 0 0 10px 10px;
+        }
+        .completion-box {
+            background: white;
+            border-left: 4px solid #27ae60;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .button {
+            display: inline-block;
+            background: linear-gradient(135deg, #27ae60 0%, #2ecc71 100%);
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .footer {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Maestro Platform</h1>
+    </div>
+    <div class="content">
+        <h2>Проект завершен</h2>
+        <p>Здравствуйте, {{ user.username }}!</p>
+        <p>Проект <strong>"{{ project_title }}"</strong> был успешно завершен!</p>
+        <div class="completion-box">
+            <p style="margin: 0; font-size: 1.2em;">✓ Проект завершен</p>
+        </div>
+        <p style="text-align: center;">
+            <a href="{{ site_url }}{{ project_url }}" class="button">Открыть проект</a>
+        </p>
+        <p>Или скопируйте и вставьте следующую ссылку в ваш браузер:</p>
+        <p style="word-break: break-all; color: #2c3e50;">{{ site_url }}{{ project_url }}</p>
+        <div class="footer">
+            <p>С уважением,<br>Команда Maestro Platform</p>
+        </div>
+    </div>
+</body>
+</html>
+

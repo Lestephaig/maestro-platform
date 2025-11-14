@@ -101,6 +101,7 @@
             font-weight: 500;
             transition: all 0.3s ease;
             position: relative;
+            padding: 0.65rem 1rem 0.35rem;
         }
         
         .nav-link::after {
@@ -120,6 +121,15 @@
         }
         
         .nav-link:hover::after {
+            width: 80%;
+        }
+        
+        .nav-link.active-nav {
+            color: var(--gold) !important;
+            font-weight: 700;
+        }
+        
+        .nav-link.active-nav::after {
             width: 80%;
         }
         
@@ -319,15 +329,21 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'home' %}">Главная</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'home' %}active-nav{% endif %}" href="{% url 'home' %}">Главная</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{% url 'performers:specialists' %}">Наши специалисты</a>
+                        <a class="nav-link {% if request.resolver_match.url_name == 'specialists' %}active-nav{% endif %}" href="{% url 'performers:specialists' %}">Музыканты</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.app_name == 'announcements' %}active-nav{% endif %}" href="{% url 'announcements:list' %}">Доска объявлений</a>
                     </li>
                     {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'my_projects' %}active-nav{% endif %}" href="{% url 'interactions:my_projects' %}">Мои проекты</a>
+                        </li>
                         {% if user.performer_profile %}
                             <li class="nav-item">
-                                <a class="nav-link" href="{% url 'performers:performer_detail' user.performer_profile.id %}">Мой профиль артиста</a>
+                                <a class="nav-link {% if request.resolver_match.url_name == 'performer_detail' and request.resolver_match.kwargs.performer_id == user.performer_profile.id %}active-nav{% endif %}" href="{% url 'performers:performer_detail' user.performer_profile.id %}">Мой профиль артиста</a>
                             </li>
                         {% endif %}
                     {% endif %}
@@ -343,6 +359,9 @@
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{% url 'profile' %}">
                                     <i class="bi bi-person me-2"></i>Профиль
+                                </a></li>
+                                <li><a class="dropdown-item" href="{% url 'announcements:my_announcements' %}">
+                                    <i class="bi bi-megaphone me-2"></i>Мои объявления
                                 </a></li>
                                 <li><a class="dropdown-item" href="{% url 'chat_list' %}">
                                     <i class="bi bi-chat-dots me-2"></i>Чаты
@@ -371,18 +390,6 @@
         </div>
     </nav>
 
-    <!-- Messages -->
-    {% if messages %}
-        <div class="container mt-3">
-            {% for message in messages %}
-                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-                </div>
-            {% endfor %}
-        </div>
-    {% endif %}
-
     <!-- Main Content -->
     <main>
         {% block content %}{% endblock %}
@@ -394,7 +401,7 @@
             <div class="row">
                 <div class="col-md-6">
                     <h5><i class="bi bi-music-note-beamed music-icon me-2"></i>Maestro Platform</h5>
-                    <p class="mb-0">Платформа для связи классических музыкантов с заказчиками</p>
+                    <p class="mb-0">Платформа для связи классических музыкантов с площадками</p>
                 </div>
                 <div class="col-md-6 text-md-end">
                     <p class="mb-0">&copy; 2024 Maestro Platform. Все права защищены.</p>

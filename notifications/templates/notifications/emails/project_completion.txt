@@ -1,0 +1,11 @@
+Maestro Platform - Проект завершен
+
+Здравствуйте, {{ user.username }}!
+
+Проект "{{ project_title }}" был успешно завершен!
+
+Откройте проект: {{ site_url }}{{ project_url }}
+
+С уважением,
+Команда Maestro Platform
+

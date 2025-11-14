@@ -1,0 +1,19 @@
+Maestro Platform - Приглашение в проект
+
+Здравствуйте, {{ user.username }}!
+
+{{ inviter_name }} пригласил вас участвовать в проекте:
+
+{{ project_title }}
+
+Роль: {{ role }}
+
+{% if project_description %}
+Описание: {{ project_description }}
+{% endif %}
+
+Откройте проект: {{ site_url }}{{ project_url }}
+
+С уважением,
+Команда Maestro Platform
+

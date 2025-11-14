@@ -77,6 +77,42 @@
         gap: 1rem;
         flex-wrap: wrap;
     }
+
+    .performer-verify-badge {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
+        border: 2px solid rgba(255, 255, 255, 0.18);
+        color: rgba(255, 255, 255, 0.5);
+    font-size: 1.5rem;
+        transition: all 0.3s ease;
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+    }
+
+    .performer-verify-badge.is-verified {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.9), rgba(39, 174, 96, 1));
+        border-color: rgba(46, 204, 113, 0.7);
+    color: rgba(0, 0, 0, 0.75);
+        box-shadow: 0 18px 35px rgba(46, 204, 113, 0.35);
+    }
+
+.performer-verify-badge.is-verified .verify-icon path {
+    fill: rgba(0, 0, 0, 0.75);
+    filter: drop-shadow(0 0 3px rgba(46, 204, 113, 0.25));
+    }
+
+    .performer-verify-badge:not(.is-verified):hover {
+        border-color: rgba(255, 255, 255, 0.35);
+        color: rgba(255, 255, 255, 0.65);
+}
+
+.performer-verify-badge .verify-icon path {
+    fill: rgba(255, 255, 255, 0.6);
+    }
     
     .chat-button {
         background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
@@ -899,7 +935,14 @@
         <!-- Performer Information -->
         <div class="performer-info">
             <div class="performer-header">
-                <h1 class="performer-name">{{ performer.full_name }}</h1>
+                <h1 class="performer-name d-flex align-items-center gap-3">
+                    {{ performer.full_name }}
+                    <span class="performer-verify-badge {% if performer.is_verified %}is-verified{% endif %}">
+                        <svg width="20" height="20" viewBox="0 0 16 16" class="verify-icon" aria-hidden="true">
+                            <path d="M5.97 10.97 3.477 8.477l-.708.708L5.97 12.384l7.292-7.292-.708-.708z"/>
+                        </svg>
+                    </span>
+                </h1>
                 
                 {% if user.is_authenticated and user != performer.user %}
                     {% if user.is_verified %}
@@ -926,7 +969,7 @@
                 <button class="tab-btn active" data-tab="info">Информация</button>
                 <button class="tab-btn" data-tab="repertoire">Репертуар</button>
                 <button class="tab-btn" data-tab="achievements">Достижения</button>
-                <button class="tab-btn" data-tab="about">О себе</button>
+                <button class="tab-btn" data-tab="about">Биография</button>
                 {% if user.is_authenticated %}
                 <button class="tab-btn" data-tab="calendar">Календарь</button>
                 {% endif %}
@@ -936,17 +979,27 @@
             <div class="tab-content-area">
                 <!-- Информация -->
                 <div class="tab-pane active" id="info-tab">
-                    {% if performer.voice_type %}
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="bi bi-award me-2"></i>Тип исполнителя:</span>
+                        <span class="detail-value">{{ performer.get_performer_type_display }}</span>
+                    </div>
+                    {% if performer.performer_type == 'vocalist' and performer.voice_type %}
                     <div class="detail-item">
                         <span class="detail-label"><i class="bi bi-mic me-2"></i>Тип голоса:</span>
                         <span class="detail-value">{{ performer.voice_type }}</span>
                     </div>
                     {% endif %}
-                    
-                    {% if performer.birth_year %}
+                    {% if performer.performer_type == 'instrumentalist' and performer.instrument %}
                     <div class="detail-item">
-                        <span class="detail-label"><i class="bi bi-calendar-date me-2"></i>Год рождения:</span>
-                        <span class="detail-value">{{ performer.birth_year }}</span>
+                        <span class="detail-label"><i class="bi bi-music-note-beamed me-2"></i>Инструмент:</span>
+                        <span class="detail-value">{{ performer.instrument }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    {% if performer.birth_date %}
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="bi bi-calendar-date me-2"></i>Дата рождения:</span>
+                        <span class="detail-value">{{ performer.birth_date|date:"d.m.Y" }}</span>
                     </div>
                     {% endif %}
                     
@@ -1002,7 +1055,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- О себе -->
+                <!-- Биография -->
                 <div class="tab-pane" id="about-tab">
                     {% if performer.bio %}
                         <div class="content-text">{{ performer.bio|linebreaks }}</div>

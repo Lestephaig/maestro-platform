@@ -73,4 +73,16 @@ class ChatConsumer(AsyncWebsocketConsumer):
     def save_message(self, room_id, user_id, text):
         room = ChatRoom.objects.get(id=room_id)
         user = User.objects.get(id=user_id)
-        Message.objects.create(room=room, sender=user, text=text)
+        message = Message.objects.create(room=room, sender=user, text=text)
+        
+        # Отмечаем все предыдущие сообщения от другого пользователя как прочитанные
+        # (так как пользователь сейчас онлайн и видит чат)
+        Message.objects.filter(
+            room=room
+        ).exclude(
+            sender=user
+        ).filter(
+            is_read=False
+        ).update(is_read=True)
+        
+        return message

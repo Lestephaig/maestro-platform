@@ -1,0 +1,13 @@
+Maestro Platform - Новое сообщение в чате
+
+Здравствуйте, {{ user.username }}!
+
+У вас новое сообщение от {{ sender_name }}:
+
+{{ message_text }}
+
+Откройте чат: {{ chat_url }}
+
+С уважением,
+Команда Maestro Platform
+

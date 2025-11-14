@@ -350,10 +350,12 @@
                                 <div class="form-check">
                                     {{ radio.tag }}
                                     <label class="form-check-label" for="{{ radio.id_for_label }}">
-                                        {% if 'performer' in radio.choice_label|lower %}
+                                        {% if radio.choice_value == 'performer' %}
                                             <i class="bi bi-music-note me-2"></i>
-                                        {% else %}
+                                        {% elif radio.choice_value == 'client' %}
                                             <i class="bi bi-building me-2"></i>
+                                        {% elif radio.choice_value == 'agent' %}
+                                            <i class="bi bi-people me-2"></i>
                                         {% endif %}
                                         {{ radio.choice_label }}
                                     </label>

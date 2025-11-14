@@ -24,6 +24,15 @@ def chat_room(request, room_id):
         return render(request, 'chat/chat_list.html', {'chats': []})  # или 403
 
     chat_messages = Message.objects.filter(room=room).order_by('timestamp')
+    
+    # Отмечаем все сообщения от другого пользователя как прочитанные
+    Message.objects.filter(
+        room=room
+    ).exclude(
+        sender=request.user
+    ).filter(
+        is_read=False
+    ).update(is_read=True)
 
     return render(request, 'chat/chat_room.html', {
         'room': room,

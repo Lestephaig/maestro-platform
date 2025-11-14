@@ -3,17 +3,51 @@ from django import forms
 from .models import PerformerProfile, PerformerPhoto, PerformerVideo, RepertoireItem
 
 class PerformerProfileForm(forms.ModelForm):
+    PERFORMER_TYPE_CHOICES = PerformerProfile.PERFORMER_TYPE_CHOICES
+    VOICE_TYPE_CHOICES = [(value, value) for value in PerformerProfile.DEFAULT_VOICE_TYPES]
+    INSTRUMENT_CHOICES = [(value, value) for value in PerformerProfile.DEFAULT_INSTRUMENTS]
+
+    performer_type = forms.ChoiceField(
+        choices=PERFORMER_TYPE_CHOICES,
+        label='Тип исполнителя',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    voice_type = forms.ChoiceField(
+        choices=[('', 'Выберите тип голоса')] + VOICE_TYPE_CHOICES,
+        required=False,
+        label='Тип голоса',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    instrument = forms.ChoiceField(
+        choices=[('', 'Выберите инструмент')] + INSTRUMENT_CHOICES,
+        required=False,
+        label='Инструмент',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+
     class Meta:
         model = PerformerProfile
-        fields = ['full_name', 'birth_year', 'education', 'achievements', 'voice_type', 'repertoire', 'bio', 'video_url', 'photo']
+        fields = [
+            'full_name',
+            'performer_type',
+            'voice_type',
+            'instrument',
+            'birth_date',
+            'education',
+            'achievements',
+            'bio',
+            'video_url',
+            'photo',
+        ]
         widgets = {
             'full_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Введите ваше полное имя'
             }),
-            'birth_year': forms.NumberInput(attrs={
+            'birth_date': forms.DateInput(attrs={
                 'class': 'form-control',
-                'placeholder': 'Год рождения'
+                'placeholder': 'дд.мм.гггг',
+                'type': 'date'
             }),
             'education': forms.Textarea(attrs={
                 'class': 'form-control',
@@ -25,29 +59,48 @@ class PerformerProfileForm(forms.ModelForm):
                 'rows': 3,
                 'placeholder': 'Награды, премии, достижения...'
             }),
-            'voice_type': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Например: тенор, сопрано, баритон'
-            }),
-            'repertoire': forms.Textarea(attrs={
-                'class': 'form-control',
-                'rows': 4,
-                'placeholder': 'Опишите ваш репертуар, произведения, жанры...'
-            }),
             'bio': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 6,
                 'placeholder': 'Расскажите о себе, своем опыте, достижениях и образовании...'
-            }),
-            'video_url': forms.URLInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'https://www.youtube.com/watch?v=...'
             }),
             'photo': forms.FileInput(attrs={
                 'class': 'form-control',
                 'accept': 'image/*'
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        
+        self.fields['birth_date'].label = 'Дата рождения'
+
+        if self.instance and self.instance.voice_type:
+            current_voice = (self.instance.voice_type, self.instance.voice_type)
+            if current_voice not in self.fields['voice_type'].choices:
+                self.fields['voice_type'].choices.append(current_voice)
+
+        if self.instance and self.instance.instrument:
+            current_instrument = (self.instance.instrument, self.instance.instrument)
+            if current_instrument not in self.fields['instrument'].choices:
+                self.fields['instrument'].choices.append(current_instrument)
+
+    def clean(self):
+        cleaned = super().clean()
+        performer_type = cleaned.get('performer_type')
+        voice_type = cleaned.get('voice_type')
+        instrument = cleaned.get('instrument')
+
+        if performer_type == PerformerProfile.PERFORMER_TYPE_VOCALIST:
+            if not voice_type:
+                self.add_error('voice_type', 'Выберите тип голоса.')
+            cleaned['instrument'] = ''
+        elif performer_type == PerformerProfile.PERFORMER_TYPE_INSTRUMENTALIST:
+            if not instrument:
+                self.add_error('instrument', 'Выберите основной инструмент.')
+            cleaned['voice_type'] = ''
+
+        return cleaned
 
 
 class PerformerPhotoForm(forms.ModelForm):

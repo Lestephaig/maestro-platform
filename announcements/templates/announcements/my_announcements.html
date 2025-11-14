@@ -1,0 +1,276 @@
+{% extends 'base.html' %}
+
+{% block title %}Мои объявления - Доска объявлений{% endblock %}
+
+{% block extra_css %}
+<style>
+    .my-announcements-content {
+        padding: 2rem 0 3rem;
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: calc(100vh - 200px);
+    }
+    
+    .page-header {
+        text-align: center;
+        margin-bottom: 3rem;
+        padding-top: 2rem;
+    }
+    
+    .page-header h1 {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .announcements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+        gap: 2rem;
+        margin-bottom: 2rem;
+    }
+    
+    .announcement-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 10px 35px rgba(0, 0, 0, 0.5);
+        border: 2px solid var(--silver-dark);
+        transition: all 0.4s ease;
+        display: flex;
+        flex-direction: column;
+        position: relative;
+    }
+    
+    .announcement-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 50px rgba(212, 175, 55, 0.4);
+        border-color: var(--gold);
+    }
+    
+    .announcement-header {
+        padding: 1.5rem;
+        border-bottom: 1px solid var(--silver-dark);
+    }
+    
+    .announcement-type-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.2;
+        height: 1.75rem;
+    }
+    
+    .announcement-type-badge.need_performer {
+        background: linear-gradient(135deg, rgba(74, 144, 226, 0.3), rgba(74, 144, 226, 0.2));
+        color: var(--blue-accent);
+        border: 1px solid var(--blue-accent);
+    }
+    
+    .announcement-type-badge.need_venue {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.3), rgba(212, 175, 55, 0.2));
+        color: var(--gold);
+        border: 1px solid var(--gold);
+    }
+    
+    .announcement-type-badge.collaboration {
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.3), rgba(46, 204, 113, 0.2));
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+    
+    .announcement-type-badge.audition {
+        background: linear-gradient(135deg, rgba(155, 89, 182, 0.3), rgba(155, 89, 182, 0.2));
+        color: #9b59b6;
+        border: 1px solid #9b59b6;
+    }
+    
+    .announcement-type-badge.contest {
+        background: linear-gradient(135deg, rgba(241, 196, 15, 0.3), rgba(241, 196, 15, 0.2));
+        color: #f1c40f;
+        border: 1px solid #f1c40f;
+    }
+    
+    .announcement-type-badge.other {
+        background: linear-gradient(135deg, rgba(192, 192, 192, 0.3), rgba(192, 192, 192, 0.2));
+        color: var(--silver);
+        border: 1px solid var(--silver);
+    }
+    
+    .announcement-title {
+        color: var(--white);
+        font-size: 1.3rem;
+        font-weight: 700;
+        margin-bottom: 0.5rem;
+        line-height: 1.3;
+    }
+    
+    .announcement-body {
+        padding: 1.5rem;
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .announcement-description {
+        color: var(--silver-light);
+        font-size: 0.95rem;
+        line-height: 1.6;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+        overflow: hidden;
+        margin-bottom: 1rem;
+        flex: 1;
+    }
+    
+    .announcement-footer {
+        padding: 1rem 1.5rem;
+        background: rgba(0, 0, 0, 0.3);
+        border-top: 1px solid var(--silver-dark);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .status-badge {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.25rem 0.75rem;
+        border-radius: 15px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        line-height: 1.2;
+        height: 1.75rem;
+    }
+    
+    .status-badge.published {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+    
+    .status-badge.draft {
+        background: rgba(192, 192, 192, 0.2);
+        color: var(--silver);
+        border: 1px solid var(--silver);
+    }
+    
+    .status-badge.archived {
+        background: rgba(149, 165, 166, 0.2);
+        color: #95a5a6;
+        border: 1px solid #95a5a6;
+    }
+    
+    .status-badge.completed {
+        background: rgba(46, 204, 113, 0.2);
+        color: #2ecc71;
+        border: 1px solid #2ecc71;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="my-announcements-content">
+    <div class="container">
+        {% if user.is_authenticated %}
+        <div class="page-header" style="margin-bottom: 2rem;">
+            <a href="{% url 'announcements:create' %}" class="btn btn-outline-light">
+                <i class="bi bi-plus-circle"></i> Создать объявление
+            </a>
+        </div>
+        {% endif %}
+        
+        {% if announcements %}
+        <div class="announcements-grid">
+            {% for announcement in announcements %}
+            <div class="announcement-card">
+                <div class="announcement-header">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.75rem; flex-wrap: wrap;">
+                        <span class="announcement-type-badge {{ announcement.announcement_type }}">
+                            {{ announcement.get_announcement_type_display }}
+                        </span>
+                        <span class="status-badge {{ announcement.status }}">
+                            {{ announcement.get_status_display }}
+                        </span>
+                    </div>
+                    <h3 class="announcement-title">{{ announcement.title }}</h3>
+                </div>
+                <div class="announcement-body">
+                    <p class="announcement-description">{{ announcement.description|truncatewords:30 }}</p>
+                </div>
+                <div class="announcement-footer">
+                    <span style="color: var(--silver); font-size: 0.85rem;">
+                        <i class="bi bi-chat-dots"></i> {{ announcement.responses_count|default:announcement.response_count }} откликов
+                    </span>
+                    <div class="btn-group">
+                        <a href="{% url 'announcements:detail' announcement.id %}" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-eye"></i> Просмотр
+                        </a>
+                        {% if announcement.responses_count|default:announcement.response_count > 0 %}
+                        <a href="{% url 'announcements:responses' announcement.id %}" class="btn btn-sm btn-outline-light">
+                            <i class="bi bi-chat-dots"></i> Отклики
+                        </a>
+                        {% endif %}
+                        {% if announcement.status != 'completed' %}
+                        <form method="post" action="{% url 'announcements:complete' announcement.id %}" class="d-inline">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-success">
+                                <i class="bi bi-check-circle"></i> Завершить
+                            </button>
+                        </form>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        
+        <!-- Пагинация -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="Навигация по страницам">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page=1">&laquo; Первая</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Предыдущая</a>
+                </li>
+                {% endif %}
+                
+                <li class="page-item active">
+                    <span class="page-link">{{ page_obj.number }} из {{ page_obj.paginator.num_pages }}</span>
+                </li>
+                
+                {% if page_obj.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">Следующая</a>
+                </li>
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">Последняя &raquo;</a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+        
+        {% else %}
+        <div class="text-center py-5">
+            <i class="bi bi-inbox" style="font-size: 4rem; color: var(--silver);"></i>
+            <h3 class="mt-3" style="color: var(--silver);">У вас пока нет объявлений</h3>
+            <a href="{% url 'announcements:create' %}" class="btn btn-outline-light mt-3">
+                <i class="bi bi-plus-circle"></i> Создать первое объявление
+            </a>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+

@@ -6,13 +6,64 @@ class PerformerProfile(models.Model):
         ('mark_available', 'Отмечать доступные даты'),
         ('mark_unavailable', 'Отмечать занятые даты'),
     ]
+
+    PERFORMER_TYPE_VOCALIST = 'vocalist'
+    PERFORMER_TYPE_INSTRUMENTALIST = 'instrumentalist'
+    PERFORMER_TYPE_CHOICES = [
+        (PERFORMER_TYPE_VOCALIST, 'Вокалист'),
+        (PERFORMER_TYPE_INSTRUMENTALIST, 'Инструменталист'),
+    ]
+
+    DEFAULT_VOICE_TYPES = [
+        'Сопрано',
+        'Меццо-сопрано',
+        'Контральто',
+        'Тенор',
+        'Баритон',
+        'Бас',
+        'Контртенор',
+        'Альт',
+    ]
+
+    DEFAULT_INSTRUMENTS = [
+        'Скрипка',
+        'Альт',
+        'Виолончель',
+        'Контрабас',
+        'Флейта',
+        'Гобой',
+        'Кларнет',
+        'Фагот',
+        'Саксофон',
+        'Труба',
+        'Тромбон',
+        'Валторна',
+        'Туба',
+        'Фортепиано',
+        'Орган',
+        'Арфа',
+        'Гитара',
+        'Ударные',
+        'Барабаны',
+        'Аккордеон',
+        'Домра',
+        'Балалайка',
+        'Баян',
+    ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='performer_profile')
     full_name = models.CharField(max_length=200)
-    birth_year = models.IntegerField(null=True, blank=True)
+    performer_type = models.CharField(
+        max_length=20,
+        choices=PERFORMER_TYPE_CHOICES,
+        default=PERFORMER_TYPE_VOCALIST,
+        help_text='Основная специализация исполнителя'
+    )
+    voice_type = models.CharField(max_length=100, blank=True)
+    instrument = models.CharField(max_length=100, blank=True)
+    birth_date = models.DateField(null=True, blank=True, verbose_name='Дата рождения')
     education = models.TextField(blank=True)
     achievements = models.TextField(blank=True)
-    voice_type = models.CharField(max_length=100, blank=True)
     repertoire = models.TextField(blank=True)
     bio = models.TextField(blank=True)
     video_url = models.URLField(blank=True)
@@ -29,7 +80,32 @@ class PerformerProfile(models.Model):
     )
     created_at = models.DateTimeField(auto_now_add=True)
 
+    def clean(self):
+        # Обнуляем несоответствующие специализации поля
+        if self.performer_type == self.PERFORMER_TYPE_VOCALIST:
+            self.instrument = ''
+        elif self.performer_type == self.PERFORMER_TYPE_INSTRUMENTALIST:
+            self.voice_type = ''
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+        if self.user and self.user.is_verified != self.is_verified:
+            self.user.is_verified = self.is_verified
+            self.user.save(update_fields=['is_verified'])
+
+    @property
+    def specialization_display(self):
+        if self.performer_type == self.PERFORMER_TYPE_INSTRUMENTALIST and self.instrument:
+            return self.instrument
+        if self.performer_type == self.PERFORMER_TYPE_VOCALIST and self.voice_type:
+            return self.voice_type
+        return ''
+
     def __str__(self):
+        specialization = self.specialization_display
+        if specialization:
+            return f"{self.full_name} ({specialization})"
         return f"Performer: {self.full_name}"
 
 

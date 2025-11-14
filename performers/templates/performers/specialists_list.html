@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}Наши специалисты - Maestro Platform{% endblock %}
+{% block title %}Музыканты - Maestro Platform{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -10,30 +10,8 @@
         background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
     }
     
-    .page-title {
-        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        font-size: 2.8rem;
-        font-weight: 800;
-        text-align: center;
-        margin-bottom: 3rem;
-        padding-top: 2rem;
-        text-shadow: 0 0 30px rgba(212, 175, 55, 0.3);
-        letter-spacing: -1px;
-    }
-    
-    .page-title i {
-        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-        filter: drop-shadow(0 0 20px rgba(212, 175, 55, 0.5));
-    }
-    
     .specialists-content {
-        padding: 0;
+        padding: 0 0 3rem;
         background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
         min-height: calc(100vh - 200px);
     }
@@ -46,7 +24,9 @@
         display: grid;
         grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
         gap: 2rem;
-        margin-bottom: 3rem;
+        margin: 0 auto 3rem;
+        max-width: 1120px;
+        width: 100%;
     }
     
     .specialist-card {
@@ -121,13 +101,27 @@
     }
     
     .verification-badge.unverified {
-        color: var(--silver-dark);
-        opacity: 0.5;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 1px solid rgba(255, 255, 255, 0.25);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: rgba(255, 255, 255, 0.4);
+        background: transparent;
     }
     
     .verification-badge.verified {
-        color: #27ae60;
-        filter: drop-shadow(0 0 8px rgba(39, 174, 96, 0.6));
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(135deg, rgba(46, 204, 113, 0.95), rgba(39, 174, 96, 1));
+        color: rgba(0, 0, 0, 0.8);
+        box-shadow: 0 10px 25px rgba(46, 204, 113, 0.4);
     }
     
     .specialist-voice {
@@ -146,7 +140,7 @@
         font-size: 0.95rem;
         line-height: 1.5;
         display: -webkit-box;
-        -webkit-line-clamp: 3;
+        -webkit-line-clamp: 2;
         -webkit-box-orient: vertical;
         overflow: hidden;
         flex: 1;
@@ -210,6 +204,168 @@
         font-weight: 700;
     }
     
+    .filter-bar {
+        background: linear-gradient(135deg, rgba(26, 26, 26, 0.95) 0%, rgba(12, 12, 12, 0.95) 100%);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        border-radius: 24px;
+        padding: 1.25rem;
+        padding-bottom: 1.5rem;
+        margin: 0.5rem 0 0.75rem;
+        box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+        backdrop-filter: blur(6px);
+    }
+    
+    .filter-bar-header {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .filter-bar-title {
+        color: var(--gold);
+        font-size: 1.3rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        letter-spacing: 0.05em;
+        text-transform: uppercase;
+    }
+    
+    .filter-bar-count {
+        color: var(--silver-light);
+        font-size: 0.95rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+    
+    .filter-bar label {
+        color: var(--silver);
+        font-weight: 600;
+        font-size: 0.85rem;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+    
+    .filter-bar .form-control,
+    .filter-bar .form-select {
+        background: rgba(15, 15, 15, 0.85);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        color: var(--white);
+        border-radius: 12px;
+        padding: 0.65rem 0.85rem;
+    }
+    
+    .filter-bar .form-control:focus,
+    .filter-bar .form-select:focus {
+        background: rgba(15, 15, 15, 0.95);
+        border-color: var(--gold);
+        box-shadow: 0 0 0 0.2rem rgba(212, 175, 55, 0.25);
+        color: var(--white);
+    }
+    
+    .filter-bar .form-control::placeholder {
+        color: rgba(255, 255, 255, 0.45);
+    }
+    
+    .filter-bar .input-group-text {
+        background: rgba(212, 175, 55, 0.12);
+        border: 1px solid rgba(212, 175, 55, 0.25);
+        color: var(--gold);
+        border-radius: 12px 0 0 12px;
+    }
+    
+    .filter-bar .btn-apply {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 600;
+        border: none;
+        padding: 0.45rem 1.1rem;
+        border-radius: 10px;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+    }
+    
+    .filter-bar .btn-apply:hover {
+        box-shadow: 0 12px 25px rgba(212, 175, 55, 0.45);
+        transform: translateY(-1px);
+        color: var(--black);
+    }
+    
+    .filter-bar .btn-reset {
+        color: var(--silver-light);
+        font-weight: 500;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+        font-size: 0.78rem;
+        border-radius: 10px;
+        padding: 0.4rem 0.9rem;
+    }
+    
+    .filter-bar .btn-reset:hover {
+        color: var(--gold-light);
+    }
+    
+    @media (min-width: 992px) {
+        .filter-bar-header {
+            flex-direction: row;
+            align-items: center;
+            justify-content: space-between;
+        }
+    }
+    
+    .filter-bar .btn-reset.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+        cursor: default;
+    }
+
+    .filter-bar {
+        position: relative;
+    }
+
+    .filter-actions-vertical {
+        position: absolute;
+        right: 0;
+        top: 52px;
+        display: flex;
+        flex-direction: column;
+        gap: 0.4rem;
+        width: 150px;
+    }
+
+    .filter-actions-vertical .btn {
+        width: 100%;
+    }
+
+    .filter-bar form {
+        padding-right: 190px;
+    }
+
+    @media (max-width: 992px) {
+        .filter-actions-vertical {
+            position: static;
+            width: 100%;
+            flex-direction: row;
+            justify-content: flex-end;
+        }
+
+        .filter-bar form {
+            padding-right: 0;
+        }
+
+        .filter-actions-vertical .btn {
+            width: auto;
+        }
+    }
+    
+    .filters-panel {
+        margin-bottom: 1.5rem;
+    }
+    
     .pagination-wrapper {
         display: flex;
         justify-content: center;
@@ -264,28 +420,153 @@
     }
     
     @media (max-width: 768px) {
-        .page-title {
-            font-size: 2rem;
-            padding-top: 1rem;
+        .filter-bar {
+            padding: 1.25rem;
+        }
+        
+        .filter-bar .filter-actions {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        
+        .filter-bar .btn-apply,
+        .filter-bar .btn-reset {
+            width: 100%;
+            text-align: center;
         }
         
         .specialists-grid {
             grid-template-columns: 1fr;
             gap: 1.5rem;
+            max-width: 420px;
         }
         
         .specialist-card {
             margin: 0 1rem;
         }
     }
+
+    .specialist-card {
+        max-width: 360px;
+        justify-self: center;
+        width: 100%;
+    }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- Specialists Content -->
+<!-- Musicians Content -->
 <div class="specialists-content">
     <div class="container">
-        <h1 class="page-title"><i class="bi bi-music-note-beamed me-3"></i>Наши специалисты</h1>
+        <div class="filters-panel d-flex align-items-start gap-3 flex-wrap flex-lg-nowrap mt-3">
+            <button class="btn btn-outline-warning fw-semibold px-4 align-self-start mb-3 mb-lg-0" type="button"
+                    data-bs-toggle="collapse" data-bs-target="#musiciansFilters" aria-expanded="true"
+                    aria-controls="musiciansFilters">
+                <i class="bi bi-sliders me-2"></i>Фильтры
+            </button>
+            <div class="flex-grow-1 flex-shrink-1 position-relative">
+                <div class="collapse show" id="musiciansFilters">
+                    <div class="filter-bar">
+                        <div class="filter-bar-header">
+                            <div class="filter-bar-title">
+                                <i class="bi bi-funnel-fill"></i>
+                                Подбор музыкантов
+                            </div>
+                            <span class="filter-bar-count">
+                                Найдено: {{ total_count }}
+                            </span>
+                        </div>
+                        <form method="get" class="row g-3 align-items-end">
+                            <div class="col-lg-4">
+                                <label for="search" class="form-label">Поиск</label>
+                                <div class="input-group">
+                                    <span class="input-group-text"><i class="bi bi-search"></i></span>
+                                    <input type="search"
+                                           class="form-control"
+                                           id="search"
+                                           name="q"
+                                           placeholder="Имя, репертуар или образование"
+                                           value="{{ request.GET.q }}">
+                                </div>
+                            </div>
+                            <div class="col-md-4 col-lg-3">
+                                <label for="performer_type" class="form-label">Тип исполнителя</label>
+                                <select class="form-select" id="performer_type" name="performer_type">
+                                    <option value="">Все исполнители</option>
+                                    <option value="vocalist" {% if request.GET.performer_type == 'vocalist' %}selected{% endif %}>Певцы</option>
+                                    <option value="instrumentalist" {% if request.GET.performer_type == 'instrumentalist' %}selected{% endif %}>Инструменталисты</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4 col-lg-3" id="voice-type-filter">
+                                <label for="voice_type" class="form-label">Тип голоса</label>
+                                <select class="form-select" id="voice_type" name="voice_type">
+                                    <option value="">Все типы</option>
+                                    {% for voice in voice_types %}
+                                        <option value="{{ voice }}" {% if request.GET.voice_type == voice %}selected{% endif %}>{{ voice }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 col-lg-3" id="instrument-filter">
+                                <label for="instrument" class="form-label">Инструмент</label>
+                                <select class="form-select" id="instrument" name="instrument">
+                                    <option value="">Все инструменты</option>
+                                    {% for instrument_name in instrument_choices %}
+                                        <option value="{{ instrument_name }}" {% if request.GET.instrument == instrument_name %}selected{% endif %}>{{ instrument_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <label for="availability_date" class="form-label">Доступен</label>
+                                <input type="date"
+                                       class="form-control"
+                                       id="availability_date"
+                                       name="availability_date"
+                                       value="{{ availability_date }}">
+                            </div>
+                            <div class="col-md-4 col-lg-2">
+                                <label for="verified" class="form-label">Верификация</label>
+                                <select class="form-select" id="verified" name="verified">
+                                    <option value="">Любой статус</option>
+                                    <option value="true" {% if request.GET.verified == 'true' %}selected{% endif %}>Только проверенные</option>
+                                    <option value="false" {% if request.GET.verified == 'false' %}selected{% endif %}>Только непроверенные</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6 col-lg-3">
+                                <label class="form-label">Дата рождения</label>
+                                <div class="d-flex gap-2">
+                                    <input type="date"
+                                           class="form-control"
+                                           name="birth_date_from"
+                                           placeholder="от"
+                                           value="{{ request.GET.birth_date_from }}">
+                                    <input type="date"
+                                           class="form-control"
+                                           name="birth_date_to"
+                                           placeholder="до"
+                                           value="{{ request.GET.birth_date_to }}">
+                                </div>
+                            </div>
+                                <div class="filter-actions-vertical">
+                                    <button type="submit" class="btn btn-sm btn-apply w-100">
+                                        <i class="bi bi-sliders me-2"></i>Применить
+                                    </button>
+                                    {% if query_params %}
+                                        <a href="{% url 'performers:specialists' %}" class="btn btn-sm btn-reset w-100 mt-2">
+                                            Сбросить
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'performers:specialists' %}" class="btn btn-sm btn-reset disabled w-100 mt-2" role="button" aria-disabled="true">
+                                            Сбросить
+                                        </a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         {% if performers %}
             <div class="specialists-grid">
                 {% for performer in performers %}
@@ -301,27 +582,41 @@
                         <div class="specialist-info">
                             <h3 class="specialist-name">
                                 {{ performer.full_name }}
-                                <span class="verification-badge {% if performer.is_verified %}verified{% else %}unverified{% endif %}">
-                                    <i class="bi bi-check-circle-fill"></i>
+                                <span class="verification-badge {% if performer.is_verified %}verified{% else %}unverified{% endif %}" title="{% if performer.is_verified %}Верифицирован{% else %}Ожидает верификации{% endif %}">
+                                    {% if performer.is_verified %}
+                                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
+                                            <path fill="currentColor" d="M5.97 10.97 3.477 8.477l-.708.708L5.97 12.384l7.292-7.292-.708-.708z"/>
+                                        </svg>
+                                    {% else %}
+                                        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
+                                            <path fill="currentColor" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3 8a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h6zm0-3a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h6z"/>
+                                        </svg>
+                                    {% endif %}
                                 </span>
                             </h3>
                             
-                            {% if performer.voice_type %}
-                                <p class="specialist-voice">
-                                    <i class="bi bi-mic me-2"></i>{{ performer.voice_type }}
-                                </p>
-                            {% endif %}
+                            {% with specialization=performer.specialization_display %}
+                                {% if specialization %}
+                                    <p class="specialist-voice">
+                                        {% if performer.performer_type == 'instrumentalist' %}
+                                            <i class="bi bi-music-note-beamed me-2"></i>{{ specialization }}
+                                        {% else %}
+                                            <i class="bi bi-mic me-2"></i>{{ specialization }}
+                                        {% endif %}
+                                    </p>
+                                {% endif %}
+                            {% endwith %}
                             
                             {% if performer.bio %}
-                                <p class="specialist-bio">{{ performer.bio|truncatewords:20 }}</p>
+                                <p class="specialist-bio">{{ performer.bio }}</p>
                             {% else %}
                                 <p class="specialist-bio">Профессиональный классический музыкант</p>
                             {% endif %}
                             
                             <div class="specialist-meta">
-                                {% if performer.birth_year %}
+                                {% if performer.birth_date %}
                                     <span class="specialist-year">
-                                        <i class="bi bi-calendar3 me-1"></i>{{ performer.birth_year }} г.р.
+                                        <i class="bi bi-calendar3 me-1"></i>{{ performer.birth_date|date:"d.m.Y" }}
                                     </span>
                                 {% endif %}
                                 <span class="specialist-link">
@@ -339,12 +634,12 @@
                     <ul class="pagination">
                         {% if page_obj.has_previous %}
                             <li class="page-item">
-                                <a class="page-link" href="?page=1">
+                                <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page=1">
                                     <i class="bi bi-chevron-double-left"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.previous_page_number }}">
                                     <i class="bi bi-chevron-left"></i>
                                 </a>
                             </li>
@@ -357,19 +652,19 @@
                                 </li>
                             {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
                                 <li class="page-item">
-                                    <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ num }}">{{ num }}</a>
                                 </li>
                             {% endif %}
                         {% endfor %}
                         
                         {% if page_obj.has_next %}
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.next_page_number }}">
                                     <i class="bi bi-chevron-right"></i>
                                 </a>
                             </li>
                             <li class="page-item">
-                                <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                <a class="page-link" href="?{% if query_params %}{{ query_params }}&{% endif %}page={{ page_obj.paginator.num_pages }}">
                                     <i class="bi bi-chevron-double-right"></i>
                                 </a>
                             </li>
@@ -380,10 +675,41 @@
         {% else %}
             <div class="empty-state">
                 <i class="bi bi-music-note-beamed"></i>
-                <h3>Пока нет зарегистрированных артистов</h3>
-                <p>Скоро здесь появятся талантливые музыканты!</p>
+                <h3>Пока нет зарегистрированных музыкантов</h3>
+                <p>Скоро здесь появятся талантливые артисты!</p>
             </div>
         {% endif %}
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+{{ block.super }}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const performerTypeSelect = document.getElementById('performer_type');
+    const voiceFilter = document.getElementById('voice-type-filter');
+    const instrumentFilter = document.getElementById('instrument-filter');
+
+    function toggleFilters() {
+        if (!performerTypeSelect) {
+            return;
+        }
+        const value = performerTypeSelect.value;
+        if (value === 'vocalist') {
+            voiceFilter?.classList.remove('d-none');
+            instrumentFilter?.classList.add('d-none');
+        } else if (value === 'instrumentalist') {
+            voiceFilter?.classList.add('d-none');
+            instrumentFilter?.classList.remove('d-none');
+        } else {
+            voiceFilter?.classList.remove('d-none');
+            instrumentFilter?.classList.remove('d-none');
+        }
+    }
+
+    toggleFilters();
+    performerTypeSelect?.addEventListener('change', toggleFilters);
+});
+</script>
 {% endblock %}
