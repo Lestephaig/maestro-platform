@@ -1,0 +1,46 @@
+# Django и основные зависимости
+Django==5.2.7
+asgiref==3.10.0
+sqlparse==0.5.3
+tzdata==2025.2
+
+# Channels для WebSocket
+channels==4.3.1
+channels-redis==4.3.0
+daphne==4.2.1
+
+# Redis
+redis==6.4.0
+
+# Утилиты
+python-decouple==3.8
+Pillow==12.0.0
+
+# Для работы с базами данных (PostgreSQL для продакшена)
+psycopg2-binary==2.9.9
+dj-database-url==2.1.0
+
+# Для статических файлов в продакшене (опционально)
+# whitenoise==6.6.0  # Раскомментируйте если используете WhiteNoise
+
+# Зависимости Channels
+autobahn==24.4.2
+Twisted==25.5.0
+txaio==25.9.2
+hyperlink==21.0.0
+incremental==24.7.2
+constantly==23.10.4
+Automat==25.4.16
+attrs==25.4.0
+cffi==2.0.0
+cryptography==46.0.2
+idna==3.11
+msgpack==1.1.2
+pyasn1==0.6.1
+pyasn1-modules==0.4.2
+pycparser==2.23
+pyOpenSSL==25.3.0
+service-identity==24.2.0
+typing-extensions==4.15.0
+zope.interface==8.0.1
+
