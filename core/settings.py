@@ -36,6 +36,7 @@ CSRF_TRUSTED_ORIGINS = config('CSRF_TRUSTED_ORIGINS', default='').split(',') if 
 # Application definition
 
 INSTALLED_APPS = [
+'grappelli',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -249,3 +250,5 @@ LOGGING = {
 # Создаем директорию для логов если её нет
 LOGS_DIR = BASE_DIR / 'logs'
 LOGS_DIR.mkdir(exist_ok=True)
+# Grappelli settings
+GRAPPELLI_ADMIN_TITLE = 'Maestro Platform Admin'
