@@ -1,0 +1,53 @@
+name: Deploy to Yandex Cloud
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Deploy to server
+      uses: appleboy/ssh-action@v0.1.7
+      with:
+        host: ${{ secrets.SERVER_IP }}
+        username: ${{ secrets.SERVER_USER }}
+        key: ${{ secrets.SSH_PRIVATE_KEY }}
+        script: |
+          cd maestro-platform
+          
+          # Активируем виртуальное окружение
+          source venv/bin/activate
+          
+          # Получаем последние изменения
+          echo "📥 Pulling latest changes..."
+          git fetch origin
+          git reset --hard origin/main
+          
+          # Устанавливаем зависимости
+          echo "📦 Installing dependencies..."
+          pip install -r requirements.txt
+          
+          # Применяем миграции БД
+          echo "🗄️ Applying database migrations..."
+          python manage.py migrate
+          
+          # Собираем статику
+          echo "🎨 Collecting static files..."
+          python manage.py collectstatic --noinput
+          
+          # Перезапускаем сервер
+          echo "🚀 Restarting server..."
+          sudo systemctl restart maestro
+          
+          # Проверяем статус
+          echo "🔍 Checking service status..."
+          sudo systemctl status maestro --no-pager
+          
+          echo "✅ Deploy completed successfully!"
+          echo "🌐 Site: https://maestrocast.ru"
