@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes">
     <title>{% block title %}Maestro Platform - Платформа для классических музыкантов{% endblock %}</title>
     
     <!-- Bootstrap CSS -->
@@ -15,6 +15,7 @@
     {% block extra_css %}{% endblock %}
     
     <style>
+        /* Force cache refresh - v2 */
         :root {
             --gold: #d4af37;
             --gold-dark: #b8941f;
@@ -33,7 +34,15 @@
         html, body {
             height: 100%;
             margin: 0;
+            padding: 0;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+            width: 100%;
+            max-width: 100vw;
+        }
+        
+        * {
+            box-sizing: border-box;
         }
         
         body {
@@ -41,6 +50,14 @@
             flex-direction: column;
             background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
             color: var(--white);
+            width: 100%;
+            max-width: 100vw;
+        }
+        
+        main {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
         }
         
         main {
@@ -76,6 +93,7 @@
             backdrop-filter: blur(10px);
             position: relative;
             z-index: 1040;
+            overflow: visible !important;
         }
         
         .navbar-brand {
@@ -137,16 +155,26 @@
             background: linear-gradient(180deg, var(--gray-dark) 0%, var(--gray) 100%) !important;
             border: 2px solid var(--gold) !important;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9) !important;
-            z-index: 9999 !important;
+            z-index: 1050 !important; /* Выше чем navbar (1040) */
             min-width: 220px;
             margin-top: 0 !important;
             position: absolute !important;
+            display: none; /* Скрыт по умолчанию */
         }
         
         .dropdown-menu.show {
             display: block !important;
             opacity: 1 !important;
             visibility: visible !important;
+        }
+        
+        /* Убедимся, что desktop dropdown-menu работает */
+        .desktop-user-menu .dropdown-menu {
+            display: none;
+        }
+        
+        .desktop-user-menu .dropdown-menu.show {
+            display: block !important;
         }
         
         .navbar .dropdown-menu {
@@ -156,7 +184,39 @@
         }
         
         .nav-item.dropdown {
-            position: relative;
+            position: relative !important;
+        }
+        
+        /* Убедимся, что desktop dropdown виден и поверх всего */
+        .desktop-user-menu {
+            position: relative !important;
+        }
+        
+        .desktop-user-menu .dropdown-menu {
+            position: absolute !important;
+            right: 0 !important;
+            left: auto !important;
+            top: 100% !important;
+            margin-top: 0.125rem !important;
+            z-index: 1050 !important; /* Выше navbar */
+        }
+        
+        /* Убедимся, что navbar не обрезает dropdown */
+        .navbar {
+            overflow: visible !important;
+        }
+        
+        .navbar-collapse {
+            overflow: visible !important;
+        }
+        
+        .navbar-nav {
+            overflow: visible !important;
+        }
+        
+        /* Убедимся, что dropdown не обрезается контейнером */
+        .container {
+            overflow: visible !important;
         }
         
         .dropdown-item {
@@ -311,6 +371,139 @@
         ::-webkit-scrollbar-thumb:hover {
             background: linear-gradient(180deg, var(--gold), var(--gold-light));
         }
+        
+        /* Prevent horizontal scroll */
+        .container,
+        .container-fluid {
+            max-width: 100%;
+            overflow-x: hidden;
+        }
+        
+        /* Desktop Menu - показываем только на ПК */
+        .desktop-user-menu {
+            display: block !important;
+        }
+        
+        /* Mobile Menu - скрываем на ПК */
+        .mobile-user-menu {
+            display: none !important;
+        }
+        
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .container {
+                padding-left: 1rem;
+                padding-right: 1rem;
+                max-width: 100%;
+            }
+            
+            .navbar {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+            
+            .navbar-brand {
+                font-size: 1.2rem;
+            }
+            
+            .navbar-nav {
+                margin-top: 1rem;
+            }
+            
+            .nav-link {
+                padding: 0.5rem 0.75rem !important;
+            }
+            
+            .btn-outline-light {
+                margin-top: 0.5rem;
+                width: 100%;
+            }
+            
+            /* Desktop Menu - скрываем на мобильных */
+            .desktop-user-menu {
+                display: none !important;
+            }
+            
+            /* Mobile Menu - показываем на мобильных */
+            .mobile-user-menu {
+                display: list-item !important;
+            }
+            
+            /* Стили для мобильных ссылок */
+            .mobile-user-menu .nav-link {
+                padding: 0.65rem 1rem !important;
+                color: var(--silver-light) !important;
+                text-decoration: none !important;
+            }
+            
+            .mobile-user-menu .nav-link:hover,
+            .mobile-user-menu .nav-link:focus {
+                color: var(--gold) !important;
+                text-decoration: none !important;
+            }
+            
+            .mobile-user-menu .nav-link.active-nav {
+                color: var(--gold) !important;
+            }
+            
+            /* Стили для кнопки выхода на мобильных */
+            .mobile-user-menu form {
+                width: 100%;
+            }
+            
+            .mobile-user-menu form button {
+                padding: 0.65rem 1rem !important;
+                color: var(--silver-light) !important;
+                font-weight: 500;
+                width: 100%;
+                text-align: left;
+            }
+            
+            .mobile-user-menu form button:hover {
+                color: var(--gold) !important;
+            }
+            
+            .footer {
+                padding: 1.5rem 0;
+                text-align: center;
+            }
+            
+            .footer .col-md-6 {
+                margin-bottom: 1rem;
+            }
+            
+            .footer .text-md-end {
+                text-align: center !important;
+            }
+            
+            /* Prevent elements from overflowing */
+            img, video, iframe {
+                max-width: 100%;
+                height: auto;
+            }
+            
+            table {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .navbar-brand {
+                font-size: 1rem;
+            }
+            
+            .container {
+                padding-left: 0.75rem;
+                padding-right: 0.75rem;
+            }
+            
+            .navbar {
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+        }
     </style>
 </head>
 <body>
@@ -351,10 +544,11 @@
                 
                 <ul class="navbar-nav">
                     {% if user.is_authenticated %}
-                        <li class="nav-item dropdown">
+                        <!-- Desktop Menu (только для ПК) -->
+                        <li class="nav-item dropdown desktop-user-menu">
                             <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false" id="userDropdown">
                                 <i class="bi bi-person-circle me-1"></i>
-                                {{ user.username }}
+                                {{ user.display_name|default:user.email }}
                             </a>
                             <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                                 <li><a class="dropdown-item" href="{% url 'profile' %}">
@@ -376,6 +570,31 @@
                                     </form>
                                 </li>
                             </ul>
+                        </li>
+                        
+                        <!-- Mobile Menu (только для мобильных) -->
+                        <li class="nav-item mobile-user-menu">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'profile' %}active-nav{% endif %}" href="{% url 'profile' %}">
+                                Профиль
+                            </a>
+                        </li>
+                        <li class="nav-item mobile-user-menu">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'my_announcements' %}active-nav{% endif %}" href="{% url 'announcements:my_announcements' %}">
+                                Мои объявления
+                            </a>
+                        </li>
+                        <li class="nav-item mobile-user-menu">
+                            <a class="nav-link {% if request.resolver_match.url_name == 'chat_list' %}active-nav{% endif %}" href="{% url 'chat_list' %}">
+                                Чаты
+                            </a>
+                        </li>
+                        <li class="nav-item mobile-user-menu">
+                            <form method="post" action="{% url 'logout' %}" class="d-inline w-100">
+                                {% csrf_token %}
+                                <button type="submit" class="nav-link border-0 bg-transparent text-start w-100 p-0" style="color: var(--silver-light); font-weight: 500;">
+                                    Выйти
+                                </button>
+                            </form>
                         </li>
                     {% else %}
                         <li class="nav-item">
@@ -419,32 +638,63 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     
     <script>
-        // Ensure dropdown works properly
+        // Bootstrap dropdown должен работать автоматически через data-атрибуты
+        // Но добавим дополнительную проверку для desktop меню
         document.addEventListener('DOMContentLoaded', function() {
-            console.log('Initializing dropdowns...');
-            
-            // Check if Bootstrap is loaded
+            // Проверяем, что Bootstrap загружен
             if (typeof bootstrap === 'undefined') {
                 console.error('Bootstrap is not loaded!');
                 return;
             }
             
-            // Initialize all dropdowns
-            var dropdownElementList = [].slice.call(document.querySelectorAll('[data-bs-toggle="dropdown"]'));
-            console.log('Found dropdowns:', dropdownElementList.length);
-            
-            var dropdownList = dropdownElementList.map(function (dropdownToggleEl) {
-                // Initialize Bootstrap dropdown with autoClose on click outside
-                var dropdown = new bootstrap.Dropdown(dropdownToggleEl, {
-                    boundary: 'viewport',
-                    offset: [0, 2],
-                    autoClose: true  // Close only on click outside or on item
+            // Находим desktop dropdown
+            var desktopDropdownToggle = document.querySelector('.desktop-user-menu [data-bs-toggle="dropdown"]');
+            if (desktopDropdownToggle) {
+                console.log('Desktop dropdown found, initializing...');
+                
+                // Инициализируем dropdown явно
+                try {
+                    var dropdown = new bootstrap.Dropdown(desktopDropdownToggle, {
+                        boundary: 'viewport',
+                        offset: [0, 2],
+                        autoClose: true
+                    });
+                    console.log('Desktop dropdown initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing desktop dropdown:', error);
+                }
+                
+                // Добавляем обработчик клика для отладки
+                desktopDropdownToggle.addEventListener('click', function(e) {
+                    console.log('Desktop dropdown clicked!');
+                    
+                    // Проверяем dropdown-menu после небольшой задержки
+                    setTimeout(function() {
+                        var dropdownMenu = document.querySelector('.desktop-user-menu .dropdown-menu');
+                        if (dropdownMenu) {
+                            console.log('Dropdown menu classes:', dropdownMenu.className);
+                            console.log('Dropdown menu display:', window.getComputedStyle(dropdownMenu).display);
+                            console.log('Dropdown menu visibility:', window.getComputedStyle(dropdownMenu).visibility);
+                            console.log('Dropdown menu z-index:', window.getComputedStyle(dropdownMenu).zIndex);
+                        } else {
+                            console.error('Dropdown menu element not found!');
+                        }
+                    }, 100);
                 });
                 
-                return dropdown;
-            });
-            
-            console.log('Dropdowns initialized:', dropdownList.length);
+                // Также слушаем события Bootstrap dropdown
+                var dropdownMenu = document.querySelector('.desktop-user-menu .dropdown-menu');
+                if (dropdownMenu) {
+                    dropdownMenu.addEventListener('show.bs.dropdown', function() {
+                        console.log('Dropdown show event fired');
+                    });
+                    dropdownMenu.addEventListener('shown.bs.dropdown', function() {
+                        console.log('Dropdown shown event fired');
+                    });
+                }
+            } else {
+                console.warn('Desktop dropdown toggle not found!');
+            }
         });
     </script>
     

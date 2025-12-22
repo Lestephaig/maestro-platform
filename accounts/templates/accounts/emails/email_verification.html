@@ -49,7 +49,7 @@
     </div>
     <div class="content">
         <h2>Подтверждение email адреса</h2>
-        <p>Здравствуйте, {{ user.username }}!</p>
+        <p>Здравствуйте, {{ user.display_name|default:user.email }}!</p>
         <p>Спасибо за регистрацию на Maestro Platform. Для завершения регистрации, пожалуйста, подтвердите ваш email адрес, нажав на кнопку ниже:</p>
         <p style="text-align: center;">
             <a href="{{ verification_url }}" class="button">Подтвердить email</a>

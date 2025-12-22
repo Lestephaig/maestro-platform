@@ -1,6 +1,6 @@
 Maestro Platform - Изменение статуса проекта
 
-Здравствуйте, {{ user.username }}!
+Здравствуйте, {{ user.display_name|default:user.email }}!
 
 Статус проекта "{{ project_title }}" был изменен:
 

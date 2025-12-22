@@ -1,6 +1,6 @@
 {% extends 'base.html' %}
 
-{% block title %}{{ client_user.username }} - Maestro Platform{% endblock %}
+{% block title %}{{ client_user.display_name|default:client_user.email }} - Maestro Platform{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -210,7 +210,7 @@
             <div class="client-avatar">
                 <i class="bi bi-briefcase"></i>
             </div>
-            <h1 class="client-username">{{ client_user.username }}</h1>
+            <h1 class="client-username">{{ client_user.display_name|default:client_user.email }}</h1>
             
             <div class="client-role {% if client_user.agent_profile or client_user.role == 'agent' %}agent{% else %}venue{% endif %}">
                 {% if client_user.agent_profile or client_user.role == 'agent' %}
@@ -245,7 +245,7 @@
                         <i class="bi bi-person"></i>
                         Имя пользователя
                     </div>
-                    <div class="info-value">{{ client_user.username }}</div>
+                    <div class="info-value">{{ client_user.display_name|default:client_user.email }}</div>
                 </div>
                 
                 {% if client_user.get_full_name %}

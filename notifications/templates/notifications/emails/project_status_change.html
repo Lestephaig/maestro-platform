@@ -70,7 +70,7 @@
     </div>
     <div class="content">
         <h2>Изменение статуса проекта</h2>
-        <p>Здравствуйте, {{ user.username }}!</p>
+        <p>Здравствуйте, {{ user.display_name|default:user.email }}!</p>
         <p>Статус проекта <strong>"{{ project_title }}"</strong> был изменен:</p>
         <div class="status-box">
             <div class="status-change">

@@ -4,9 +4,9 @@ from .models import User
 
 class CustomUserAdmin(UserAdmin):
     # Поля, которые будут отображаться в списке пользователей
-    list_display = ('username', 'email', 'role', 'is_verified', 'is_active', 'date_joined')
+    list_display = ('display_name', 'email', 'role', 'is_verified', 'is_active', 'date_joined')
     # Поля для поиска
-    search_fields = ('username', 'email')
+    search_fields = ('display_name', 'email', 'username')
     # Фильтры справа
     list_filter = ('role', 'is_verified', 'is_active', 'is_staff', 'date_joined')
 
@@ -15,14 +15,14 @@ class CustomUserAdmin(UserAdmin):
 
     # Поля, которые будут отображаться при создании/редактировании пользователя
     fieldsets = (
-        (None, {'fields': ('username', 'email', 'password', 'role')}),
+        (None, {'fields': ('username', 'email', 'display_name', 'password', 'role')}),
         ('Permissions', {'fields': ('is_active', 'is_staff', 'is_superuser', 'groups', 'user_permissions')}),
         ('Important dates', {'fields': ('last_login', 'date_joined')}),
     )
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'role', 'password1', 'password2'),
+            'fields': ('email', 'display_name', 'role', 'password1', 'password2'),
         }),
     )
 

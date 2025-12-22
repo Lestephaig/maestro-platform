@@ -56,7 +56,7 @@
     </div>
     <div class="content">
         <h2>Проект завершен</h2>
-        <p>Здравствуйте, {{ user.username }}!</p>
+        <p>Здравствуйте, {{ user.display_name|default:user.email }}!</p>
         <p>Проект <strong>"{{ project_title }}"</strong> был успешно завершен!</p>
         <div class="completion-box">
             <p style="margin: 0; font-size: 1.2em;">✓ Проект завершен</p>

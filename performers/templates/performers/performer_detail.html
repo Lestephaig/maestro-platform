@@ -72,7 +72,7 @@
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         flex-shrink: 0;
         gap: 1rem;
         flex-wrap: wrap;
@@ -163,7 +163,7 @@
     .info-tabs {
         display: flex;
         gap: 0.5rem;
-        margin-bottom: 2rem;
+        margin-bottom: 1rem;
         border-bottom: 2px solid var(--gold);
         padding-bottom: 0;
         flex-shrink: 0;
@@ -192,6 +192,51 @@
         color: var(--gold);
         border-bottom-color: var(--gold);
         text-shadow: 0 0 10px rgba(212, 175, 55, 0.5);
+    }
+    
+    /* Mobile Menu (только для мобильной версии) */
+    .mobile-menu {
+        display: none;
+    }
+    
+    .mobile-menu-item {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 1rem 1.25rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: var(--white);
+        text-decoration: none;
+        font-weight: 600;
+        font-size: 1rem;
+        margin-bottom: 0.75rem;
+        transition: all 0.3s ease;
+        text-align: left;
+        cursor: pointer;
+    }
+    
+    .mobile-menu-item:hover {
+        background: rgba(212, 175, 55, 0.15);
+        border-color: var(--gold);
+        color: var(--gold);
+        transform: translateX(5px);
+        text-decoration: none;
+    }
+    
+    .mobile-menu-item.active {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.1));
+        border-color: var(--gold);
+        color: var(--gold);
+        box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
+    }
+    
+    .mobile-menu-item i {
+        margin-right: 0.75rem;
+        width: 24px;
+        text-align: center;
+        font-size: 1.1rem;
     }
     
     /* Tab Content */
@@ -827,11 +872,19 @@
     @media (max-width: 992px) {
         .performer-content {
             grid-template-columns: 1fr;
+            height: auto;
+            max-height: none;
+        }
+        
+        .performer-image {
+            height: 300px;
+            min-height: 300px;
         }
         
         .performer-header {
             flex-direction: column;
             align-items: stretch;
+            margin-bottom: 0.75rem;
         }
         
         .performer-name {
@@ -846,6 +899,45 @@
         
         .performer-info {
             padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            min-height: auto;
+        }
+        
+        /* Скрываем обычные вкладки на мобильных */
+        .info-tabs {
+            display: none !important;
+        }
+        
+        /* Показываем мобильное меню */
+        .mobile-menu {
+            display: block !important;
+            margin-bottom: 1.5rem;
+        }
+        
+        /* На мобильных показываем только активную вкладку */
+        .tab-content-area .tab-pane {
+            display: none !important;
+        }
+        
+        .tab-content-area .tab-pane.active {
+            display: block !important;
+        }
+        
+        /* Улучшаем стили мобильного меню */
+        .mobile-menu-item {
+            font-size: 0.95rem;
+            padding: 0.875rem 1rem;
+        }
+        
+        .mobile-menu-item:last-child {
+            margin-bottom: 0;
+        }
+        
+        .tab-content-area {
+            flex: 1 1 auto;
+            min-height: auto;
+            overflow-y: visible;
         }
         
         .repertoire-public-list {
@@ -863,11 +955,6 @@
         
         .repertoire-work {
             font-size: 0.95rem;
-        }
-        
-        .info-tabs {
-            flex-wrap: wrap;
-            gap: 0.25rem;
         }
         
         .tab-btn {
@@ -911,6 +998,49 @@
         .gallery-tab {
             padding: 0.75rem 1rem;
             font-size: 1rem;
+        }
+        
+        /* В мобильной версии галерея адаптируется к высоте контента */
+        .media-gallery-section {
+            padding: 1.5rem;
+        }
+        
+        .gallery-content {
+            min-height: auto;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .performer-header {
+            margin-bottom: 0.5rem;
+        }
+        
+        .performer-name {
+            font-size: 1.5rem;
+        }
+        
+        .performer-info {
+            padding: 1.5rem;
+        }
+        
+        .performer-image {
+            height: 250px;
+            min-height: 250px;
+        }
+        
+        .mobile-menu {
+            margin-bottom: 1.25rem;
+        }
+        
+        .mobile-menu-item {
+            font-size: 0.9rem;
+            padding: 0.75rem 0.875rem;
+            margin-bottom: 0.5rem;
+        }
+        
+        .mobile-menu-item i {
+            font-size: 1rem;
+            width: 20px;
         }
     }
 </style>
@@ -964,7 +1094,7 @@
                 {% endif %}
             </div>
             
-            <!-- Tabs Navigation -->
+            <!-- Desktop Tabs Navigation -->
             <div class="info-tabs">
                 <button class="tab-btn active" data-tab="info">Информация</button>
                 <button class="tab-btn" data-tab="repertoire">Репертуар</button>
@@ -972,6 +1102,27 @@
                 <button class="tab-btn" data-tab="about">Биография</button>
                 {% if user.is_authenticated %}
                 <button class="tab-btn" data-tab="calendar">Календарь</button>
+                {% endif %}
+            </div>
+            
+            <!-- Mobile Menu Navigation -->
+            <div class="mobile-menu">
+                <a href="#" class="mobile-menu-item active" data-tab="info">
+                    <i class="bi bi-info-circle"></i>Информация
+                </a>
+                <a href="#" class="mobile-menu-item" data-tab="repertoire">
+                    <i class="bi bi-music-note-list"></i>Репертуар
+                </a>
+                <a href="#" class="mobile-menu-item" data-tab="achievements">
+                    <i class="bi bi-trophy"></i>Достижения
+                </a>
+                <a href="#" class="mobile-menu-item" data-tab="about">
+                    <i class="bi bi-person-lines-fill"></i>Биография
+                </a>
+                {% if user.is_authenticated %}
+                <a href="#" class="mobile-menu-item" data-tab="calendar">
+                    <i class="bi bi-calendar"></i>Календарь
+                </a>
                 {% endif %}
             </div>
             
@@ -1201,24 +1352,42 @@
 // Tab switching functionality
 document.addEventListener('DOMContentLoaded', function() {
     const tabButtons = document.querySelectorAll('.tab-btn');
+    const mobileMenuItems = document.querySelectorAll('.mobile-menu-item');
     const tabPanes = document.querySelectorAll('.tab-pane');
     
+    function switchTab(tabName, element) {
+        // Remove active class from all buttons, menu items and panes
+        tabButtons.forEach(btn => btn.classList.remove('active'));
+        mobileMenuItems.forEach(item => item.classList.remove('active'));
+        tabPanes.forEach(pane => pane.classList.remove('active'));
+        
+        // Add active class to clicked element
+        if (element) {
+            element.classList.add('active');
+        }
+        
+        // Show corresponding tab pane
+        const targetPane = document.getElementById(tabName + '-tab');
+        if (targetPane) {
+            targetPane.classList.add('active');
+        }
+    }
+    
+    // Desktop tabs
     tabButtons.forEach(button => {
-        button.addEventListener('click', function() {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
             const tabName = this.getAttribute('data-tab');
-            
-            // Remove active class from all buttons and panes
-            tabButtons.forEach(btn => btn.classList.remove('active'));
-            tabPanes.forEach(pane => pane.classList.remove('active'));
-            
-            // Add active class to clicked button
-            this.classList.add('active');
-            
-            // Show corresponding tab pane
-            const targetPane = document.getElementById(tabName + '-tab');
-            if (targetPane) {
-                targetPane.classList.add('active');
-            }
+            switchTab(tabName, this);
+        });
+    });
+    
+    // Mobile menu items
+    mobileMenuItems.forEach(item => {
+        item.addEventListener('click', function(e) {
+            e.preventDefault();
+            const tabName = this.getAttribute('data-tab');
+            switchTab(tabName, this);
         });
     });
 });

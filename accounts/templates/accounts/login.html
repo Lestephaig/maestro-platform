@@ -237,7 +237,17 @@
         box-sizing: border-box;
     }
     
-    @media (max-width: 576px) {
+    @media (max-width: 768px) {
+        .login-page-content {
+            min-height: calc(100vh - 150px);
+            padding: 1.5rem 0;
+        }
+        
+        .login-container {
+            max-width: 100%;
+            padding: 0 1rem;
+        }
+        
         .login-card {
             border-radius: 20px;
         }
@@ -252,6 +262,45 @@
         
         .login-body {
             padding: 2rem 1.5rem;
+        }
+        
+        .login-footer {
+            padding: 1.5rem 1.5rem;
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .login-page-content {
+            padding: 1rem 0;
+        }
+        
+        .login-container {
+            padding: 0 0.75rem;
+        }
+        
+        .login-card {
+            border-radius: 16px;
+        }
+        
+        .login-header {
+            padding: 1.5rem 1rem;
+        }
+        
+        .login-icon {
+            font-size: 2.5rem !important;
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+        }
+        
+        .login-body {
+            padding: 1.5rem 1rem;
+        }
+        
+        .login-footer {
+            padding: 1.25rem 1rem;
+            font-size: 0.9rem;
         }
     }
 </style>
@@ -273,7 +322,7 @@
 
                 <div class="form-group">
                     <label for="{{ form.username.id_for_label }}" class="form-label">
-                        <i class="bi bi-person me-2"></i>Логин или email
+                        <i class="bi bi-envelope me-2"></i>Email
                     </label>
                     {{ form.username }}
                     {% if form.username.errors %}

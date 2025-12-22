@@ -1,6 +1,6 @@
 Maestro Platform - Приглашение в проект
 
-Здравствуйте, {{ user.username }}!
+Здравствуйте, {{ user.display_name|default:user.email }}!
 
 {{ inviter_name }} пригласил вас участвовать в проекте:
 

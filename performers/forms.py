@@ -73,7 +73,14 @@ class PerformerProfileForm(forms.ModelForm):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         
+        # Устанавливаем русские названия для всех полей
+        self.fields['full_name'].label = 'Полное имя'
         self.fields['birth_date'].label = 'Дата рождения'
+        self.fields['education'].label = 'Образование'
+        self.fields['achievements'].label = 'Достижения'
+        self.fields['bio'].label = 'Биография'
+        self.fields['video_url'].label = 'Ссылка на видео'
+        self.fields['photo'].label = 'Фото'
 
         if self.instance and self.instance.voice_type:
             current_voice = (self.instance.voice_type, self.instance.voice_type)

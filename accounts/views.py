@@ -22,12 +22,14 @@ def register(request):
             user = form.save()
             # Создаём профиль в зависимости от роли
             role = form.cleaned_data.get('role')
+            # Используем display_name, если оно есть, иначе email
+            display_name = user.display_name or user.email
             if role == 'performer':
-                PerformerProfile.objects.create(user=user, full_name=user.username)
+                PerformerProfile.objects.create(user=user, full_name=display_name)
             elif role == 'client':
-                ClientProfile.objects.create(user=user, company_name=user.username)
+                ClientProfile.objects.create(user=user, company_name=display_name)
             elif role == 'agent':
-                AgentProfile.objects.create(user=user, display_name=user.username)
+                AgentProfile.objects.create(user=user, display_name=display_name)
 
             # Отправляем email для подтверждения
             try:

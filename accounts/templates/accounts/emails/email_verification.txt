@@ -1,6 +1,6 @@
 Maestro Platform - Подтверждение email адреса
 
-Здравствуйте, {{ user.username }}!
+Здравствуйте, {{ user.display_name|default:user.email }}!
 
 Спасибо за регистрацию на Maestro Platform. Для завершения регистрации, пожалуйста, подтвердите ваш email адрес, перейдя по следующей ссылке:
 

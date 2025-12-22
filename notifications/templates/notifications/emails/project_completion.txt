@@ -1,6 +1,6 @@
 Maestro Platform - Проект завершен
 
-Здравствуйте, {{ user.username }}!
+Здравствуйте, {{ user.display_name|default:user.email }}!
 
 Проект "{{ project_title }}" был успешно завершен!
 
