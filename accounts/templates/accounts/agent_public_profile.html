@@ -1,0 +1,315 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ agent_user.agent_profile.display_name }} - Организатор - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    body {
+        background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
+        min-height: 100vh;
+    }
+    
+    .agent-profile-container {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+    }
+    
+    .back-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--gold);
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        margin-bottom: 2rem;
+    }
+    
+    .back-link:hover {
+        color: var(--gold-light);
+        transform: translateX(-5px);
+    }
+    
+    .agent-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border-radius: 25px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.7);
+        border: 2px solid var(--gold);
+        overflow: hidden;
+    }
+    
+    .agent-header {
+        background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%);
+        padding: 3rem 2rem;
+        text-align: center;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .agent-avatar {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #8e44ad, #9b59b6);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1.5rem;
+        color: white;
+        font-size: 4rem;
+        box-shadow: 0 10px 35px rgba(155, 89, 182, 0.5);
+    }
+    
+    .agent-name {
+        background: linear-gradient(135deg, var(--gold-light), var(--gold-dark));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        font-size: 2.5rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+    
+    .agent-role {
+        display: inline-block;
+        padding: 0.5rem 1.5rem;
+        border-radius: 20px;
+        font-weight: 700;
+        color: white;
+        margin-bottom: 1rem;
+        background: linear-gradient(135deg, #8e44ad, #9b59b6);
+        box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
+    }
+    
+    .agent-body {
+        padding: 2.5rem;
+    }
+    
+    .info-section {
+        margin-bottom: 2rem;
+    }
+    
+    .info-section:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-section h3 {
+        color: var(--gold);
+        font-size: 1.4rem;
+        font-weight: 700;
+        margin-bottom: 1.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding-bottom: 0.75rem;
+        border-bottom: 2px solid var(--gold);
+    }
+    
+    .info-section h3 i {
+        color: var(--gold);
+        font-size: 1.6rem;
+    }
+    
+    .info-item {
+        background: rgba(0, 0, 0, 0.2);
+        padding: 1.25rem 1.5rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        border: 1px solid var(--silver-dark);
+        transition: all 0.3s ease;
+    }
+    
+    .info-item:hover {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.05);
+    }
+    
+    .info-label {
+        color: var(--silver);
+        font-size: 0.85rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .info-label i {
+        color: var(--gold);
+        font-size: 1rem;
+    }
+    
+    .info-value {
+        color: var(--white);
+        font-size: 1.2rem;
+        font-weight: 600;
+    }
+    
+    .own-profile-notice {
+        background: rgba(155, 89, 182, 0.15);
+        border: 1px solid #9b59b6;
+        border-radius: 12px;
+        padding: 1rem 1.5rem;
+        margin-bottom: 2rem;
+        color: var(--silver-light);
+    }
+    
+    .own-profile-notice a {
+        color: var(--gold);
+        font-weight: 700;
+        text-decoration: none;
+    }
+    
+    .own-profile-notice a:hover {
+        color: var(--gold-light);
+        text-decoration: underline;
+    }
+    
+    .btn-chat {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 700;
+        border: none;
+        padding: 0.875rem 2rem;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        text-decoration: none;
+        margin-top: 1.5rem;
+    }
+    
+    .btn-chat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+        color: var(--black);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="agent-profile-container">
+    <a href="javascript:history.back()" class="back-link">
+        <i class="bi bi-arrow-left"></i>
+        Назад
+    </a>
+    
+    <div class="agent-card">
+        <div class="agent-header">
+            <div class="agent-avatar">
+                <i class="bi bi-person-badge"></i>
+            </div>
+            <h1 class="agent-name">{{ agent_user.agent_profile.display_name }}</h1>
+            
+            <div class="agent-role">
+                <i class="bi bi-people me-2"></i>Организатор
+            </div>
+            
+            {% if not is_own_profile and user.is_authenticated %}
+            <div>
+                <a href="{% url 'start_chat_with_user' agent_user.id %}" class="btn-chat">
+                    <i class="bi bi-chat-dots-fill"></i>
+                    Написать сообщение
+                </a>
+            </div>
+            {% endif %}
+        </div>
+        
+        <div class="agent-body">
+            {% if is_own_profile %}
+                <div class="own-profile-notice">
+                    <i class="bi bi-info-circle me-2"></i>
+                    Это ваш профиль. <a href="{% url 'profile' %}">Перейти в личный кабинет</a> для редактирования.
+                </div>
+            {% endif %}
+            
+            <div class="info-section">
+                <h3>
+                    <i class="bi bi-person-circle"></i>
+                    Основная информация
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-person"></i>
+                        Имя
+                    </div>
+                    <div class="info-value">{{ agent_user.agent_profile.display_name }}</div>
+                </div>
+                
+                {% if agent_user.agent_profile.agency_name %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-building"></i>
+                        Агентство
+                    </div>
+                    <div class="info-value">{{ agent_user.agent_profile.agency_name }}</div>
+                </div>
+                {% endif %}
+                
+                {% if agent_user.agent_profile.specialization %}
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-award"></i>
+                        Специализация
+                    </div>
+                    <div class="info-value">{{ agent_user.agent_profile.specialization }}</div>
+                </div>
+                {% endif %}
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-calendar-check"></i>
+                        На платформе с
+                    </div>
+                    <div class="info-value">{{ agent_user.date_joined|date:"d.m.Y" }}</div>
+                </div>
+            </div>
+            
+            {% if agent_user.agent_profile.bio %}
+            <div class="info-section">
+                <h3>
+                    <i class="bi bi-file-text"></i>
+                    О себе
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-value" style="font-size: 1rem; line-height: 1.6;">
+                        {{ agent_user.agent_profile.bio|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if agent_user.agent_profile.website %}
+            <div class="info-section">
+                <h3>
+                    <i class="bi bi-link-45deg"></i>
+                    Контакты
+                </h3>
+                
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-globe"></i>
+                        Веб-сайт
+                    </div>
+                    <div class="info-value">
+                        <a href="{{ agent_user.agent_profile.website }}" target="_blank" 
+                           style="color: #9b59b6; text-decoration: none; transition: all 0.3s ease;"
+                           onmouseover="this.style.color='var(--gold)'" 
+                           onmouseout="this.style.color='#9b59b6'">
+                            {{ agent_user.agent_profile.website }}
+                            <i class="bi bi-box-arrow-up-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}
