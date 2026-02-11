@@ -37,7 +37,8 @@ if not SECRET_KEY:
     else:
         raise ValueError('SECRET_KEY must be set when DEBUG=False')
 
-ALLOWED_HOSTS = _split_csv(config('ALLOWED_HOSTS', default='localhost,127.0.0.1'))
+#ALLOWED_HOSTS = _split_csv(config('ALLOWED_HOSTS', default='localhost,127.0.0.1'))
+ALLOWED_HOSTS = ['*']
 
 # CSRF trusted origins для production
 CSRF_TRUSTED_ORIGINS = _split_csv(config('CSRF_TRUSTED_ORIGINS', default=''))
