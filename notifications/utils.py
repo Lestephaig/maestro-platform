@@ -3,11 +3,14 @@ from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
 from datetime import timedelta
-from .models import Notification
+from .models import Notification, NotificationPreference
 
 
 def send_notification_email(user, notification_type, title, message, context=None, related_object_id=None, related_object_type=None):
-    """Отправляет email уведомление пользователю"""
+    """Создает системное уведомление и, при настройке, отправляет email."""
+    preference = NotificationPreference.get_or_create_for(user, notification_type)
+    if not preference.in_app_enabled and not preference.email_enabled:
+        return False
     
     # Проверяем, не отправляли ли мы уже такое уведомление
     if related_object_id and related_object_type:
@@ -16,7 +19,8 @@ def send_notification_email(user, notification_type, title, message, context=Non
             notification_type=notification_type,
             related_object_id=related_object_id,
             related_object_type=related_object_type,
-            is_sent=True,
+            title=title,
+            message=message,
             sent_at__gte=timezone.now() - timedelta(hours=1)  # Не отправляем дубликаты в течение часа
         ).exists()
         
@@ -48,18 +52,25 @@ def send_notification_email(user, notification_type, title, message, context=Non
         message_text = message
         html_message = None
     
-    # Отправляем email
-    try:
-        send_mail(
-            subject=subject,
-            message=message_text,
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[user.email],
-            html_message=html_message,
-            fail_silently=False,
-        )
-        
-        # Сохраняем уведомление в БД
+    should_send_email = preference.email_enabled and getattr(user, 'is_email_verified', False)
+    in_app_sent = preference.in_app_enabled
+    email_sent = False
+    if should_send_email:
+        try:
+            send_mail(
+                subject=subject,
+                message=message_text,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            email_sent = True
+        except Exception:
+            email_sent = False
+
+    # Сохраняем уведомление в БД с независимыми статусами каналов
+    if in_app_sent or should_send_email:
         Notification.objects.create(
             user=user,
             notification_type=notification_type,
@@ -67,21 +78,11 @@ def send_notification_email(user, notification_type, title, message, context=Non
             message=message,
             related_object_id=related_object_id,
             related_object_type=related_object_type,
-            is_sent=True,
+            is_sent=email_sent,
+            email_sent=email_sent,
+            in_app_sent=in_app_sent,
         )
-        return True
-    except Exception as e:
-        # Сохраняем неудачную попытку
-        Notification.objects.create(
-            user=user,
-            notification_type=notification_type,
-            title=title,
-            message=message,
-            related_object_id=related_object_id,
-            related_object_type=related_object_type,
-            is_sent=False,
-        )
-        return False
+    return email_sent
 
 
 def check_unread_chat_messages():
@@ -107,7 +108,7 @@ def check_unread_chat_messages():
             notification_type=Notification.NOTIFICATION_TYPE_CHAT_MESSAGE,
             related_object_id=message.id,
             related_object_type='chat.message',
-            is_sent=True
+            email_sent=True
         ).exists()
         
         if not notification_exists:
@@ -133,4 +134,59 @@ def check_unread_chat_messages():
                 related_object_id=message.id,
                 related_object_type='chat.message'
             )
+
+
+def notify_performers_about_announcement_by_tags(announcement):
+    """Уведомляет исполнителей о новом объявлении по совпадающим тегам."""
+    from performers.models import PerformerProfile
+
+    if announcement.status != announcement.STATUS_PUBLISHED or not announcement.is_approved:
+        return 0
+
+    tag_names = list(announcement.tags.values_list('name', flat=True))
+    normalized_tags = {name.strip().lower() for name in tag_names if name and name.strip()}
+    if not normalized_tags:
+        return 0
+
+    performers = PerformerProfile.objects.select_related('user').exclude(user=announcement.author)
+    notified_users = set()
+    sent_count = 0
+
+    for performer in performers:
+        user = performer.user
+        if user.id in notified_users:
+            continue
+        candidate_values = {
+            (performer.voice_type or '').strip().lower(),
+            (performer.instrument or '').strip().lower(),
+        }
+        candidate_values.discard('')
+        matched_tags = sorted(
+            name for name in tag_names if name and name.strip().lower() in candidate_values
+        )
+        if not matched_tags:
+            continue
+
+        sent = send_notification_email(
+            user=user,
+            notification_type=Notification.NOTIFICATION_TYPE_ANNOUNCEMENT_TAG_MATCH,
+            title=f'Новые подходящие объявления: {announcement.title}',
+            message=(
+                f'Появилось новое подходящее объявление по вашим тегам: '
+                f'{", ".join(matched_tags)}.'
+            ),
+            context={
+                'announcement_title': announcement.title,
+                'announcement_description': announcement.description[:220],
+                'matched_tags': matched_tags,
+                'announcement_url': f'/announcements/{announcement.id}/',
+            },
+            related_object_id=announcement.id,
+            related_object_type='announcements.announcement',
+        )
+        notified_users.add(user.id)
+        if sent:
+            sent_count += 1
+
+    return sent_count
 

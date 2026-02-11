@@ -10,9 +10,11 @@ from performers.models import PerformerProfile
 class Interaction(models.Model):
     TYPE_ONE_TIME = 'one_time'
     TYPE_LONG_TERM = 'long_term'
+    TYPE_CASTING = 'casting'
     TYPE_CHOICES = [
         (TYPE_ONE_TIME, 'Разовое сотрудничество'),
         (TYPE_LONG_TERM, 'Долгосрочное сотрудничество'),
+        (TYPE_CASTING, 'Кастинг'),
     ]
 
     STATUS_DRAFT = 'draft'
@@ -35,6 +37,24 @@ class Interaction(models.Model):
         (CURRENCY_RUB, '₽'),
         (CURRENCY_USD, '$'),
         (CURRENCY_EUR, '€'),
+    ]
+
+    EVENT_TYPE_CHOICES = [
+        ('concert_solo', 'Концерт (сольный)'),
+        ('concert_mixed', 'Концерт (сборный)'),
+        ('festival', 'Фестиваль'),
+        ('competition', 'Конкурс'),
+        ('gala', 'Гала-концерт'),
+        ('reporting', 'Отчётный концерт'),
+        ('charity', 'Благотворительный концерт'),
+        ('online', 'Онлайн-мероприятие'),
+        ('hybrid', 'Смешанный формат'),
+    ]
+
+    EVENT_FORMAT_CHOICES = [
+        ('onsite', 'Очный'),
+        ('remote', 'Дистанционный'),
+        ('hybrid', 'Смешанный'),
     ]
 
     title = models.CharField('Название', max_length=255)
@@ -71,6 +91,47 @@ class Interaction(models.Model):
         choices=CURRENCY_CHOICES,
         default=CURRENCY_RUB,
     )
+    organizer_name = models.CharField('Организатор', max_length=255, blank=True)
+    contact_person = models.CharField('Контактное лицо', max_length=255, blank=True)
+    contact_info = models.CharField('Телефон / Email', max_length=255, blank=True)
+    event_date = models.DateField('Дата проведения', null=True, blank=True)
+    event_start_time = models.TimeField('Время начала', null=True, blank=True)
+    event_end_time = models.TimeField('Время окончания', null=True, blank=True)
+    total_duration = models.CharField('Общая продолжительность', max_length=120, blank=True)
+    rehearsal_schedule = models.CharField('Репетиции / саундчек', max_length=200, blank=True)
+    setup_schedule = models.CharField('Монтаж оборудования', max_length=200, blank=True)
+    teardown_schedule = models.CharField('Демонтаж оборудования', max_length=200, blank=True)
+    event_type = models.CharField('Тип мероприятия', max_length=32, blank=True)
+    event_format = models.CharField('Формат проведения', max_length=32, blank=True)
+    venue_name = models.CharField('Наименование площадки', max_length=255, blank=True)
+    venue_address = models.CharField('Адрес площадки', max_length=255, blank=True)
+    venue_type = models.CharField('Тип площадки', max_length=120, blank=True)
+    venue_capacity = models.PositiveIntegerField('Вместимость зала', null=True, blank=True)
+    venue_has_stage = models.BooleanField('Наличие сцены', default=False)
+    venue_requirements = models.TextField('Требования к площадке', blank=True)
+    stage_size = models.CharField('Размер сцены (Ш×Г×В)', max_length=120, blank=True)
+    microphones_count = models.PositiveIntegerField('Микрофоны (кол-во)', null=True, blank=True)
+    sound_system = models.CharField('Акустическая система', max_length=200, blank=True)
+    mixing_console = models.CharField('Микшерный пульт', max_length=200, blank=True)
+    lighting_equipment = models.CharField('Световое оборудование', max_length=200, blank=True)
+    video_equipment = models.CharField('Видеооборудование / экраны', max_length=200, blank=True)
+    has_internet = models.BooleanField('Интернет', default=False)
+    power_supply = models.CharField('Электропитание 220В / 380В', max_length=120, blank=True)
+    has_green_rooms = models.BooleanField('Гримерные комнаты', default=False)
+    staff_host = models.BooleanField('Ведущий', default=False)
+    staff_sound_engineer = models.BooleanField('Звукорежиссёр', default=False)
+    staff_light_engineer = models.BooleanField('Светорежиссёр', default=False)
+    staff_tech_admin = models.BooleanField('Технический администратор', default=False)
+    staff_security = models.BooleanField('Охрана', default=False)
+    staff_medical = models.BooleanField('Медицинское сопровождение', default=False)
+    info_promo_materials = models.BooleanField('Афиша / рекламные материалы', default=False)
+    info_online_registration = models.BooleanField('Онлайн-регистрация', default=False)
+    info_photo_video = models.BooleanField('Фото- и видеосъёмка', default=False)
+    info_live_stream = models.BooleanField('Онлайн-трансляция', default=False)
+    paid_entry = models.BooleanField('Платный вход', default=False)
+    ticket_price = models.CharField('Стоимость билета / взноса', max_length=120, blank=True)
+    venue_special_requirements = models.TextField('Особые требования площадки', blank=True)
+    additional_comments = models.TextField('Дополнительные комментарии', blank=True)
     success_flag = models.BooleanField('Успешно завершено', default=False)
     result_notes = models.TextField('Результаты', blank=True)
     completion_requested_at = models.DateTimeField('Запрос завершения', null=True, blank=True)
@@ -85,6 +146,16 @@ class Interaction(models.Model):
 
     def __str__(self):
         return f"{self.title} ({self.get_status_display()})"
+
+    @property
+    def event_type_label(self):
+        mapping = dict(self.EVENT_TYPE_CHOICES)
+        return mapping.get(self.event_type, self.event_type)
+
+    @property
+    def event_format_label(self):
+        mapping = dict(self.EVENT_FORMAT_CHOICES)
+        return mapping.get(self.event_format, self.event_format)
 
     # --- Participants helpers -------------------------------------------------
 

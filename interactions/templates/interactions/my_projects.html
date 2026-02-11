@@ -7,9 +7,15 @@
         <h1 class="h3 mb-1 text-light">Мои проекты</h1>
         <p class="mb-0 text-subtle">Здесь собраны проекты, где вы являетесь участником или автором.</p>
     </div>
-    <a href="{% url 'interactions:create' %}" class="btn btn-warning fw-bold">
-        <i class="bi bi-plus-circle me-2"></i>Новый проект
-    </a>
+    {% if user.is_email_verified %}
+        <a href="{% url 'interactions:create' %}" class="btn btn-warning fw-bold">
+            <i class="bi bi-plus-circle me-2"></i>Новый проект
+        </a>
+    {% else %}
+        <button class="btn btn-secondary fw-bold" disabled title="Подтвердите email, чтобы создавать проекты">
+            <i class="bi bi-lock me-2"></i>Новый проект
+        </button>
+    {% endif %}
 </div>
 
 {% if projects %}
@@ -81,7 +87,9 @@
                                     <span class="participants-row__label">Организаторы:</span>
                                     <span class="participants-row__value">
                                         {% for participant in agents %}
-                                            {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                            <a href="{% url 'agent_public_profile' participant.user.id %}" class="participants-row__link">
+                                                {{ participant.display_name }}
+                                            </a>{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
                                         {% endfor %}
                                     </span>
                                 </div>
@@ -93,7 +101,9 @@
                                     <span class="participants-row__label">Площадки:</span>
                                     <span class="participants-row__value">
                                         {% for participant in venues %}
-                                            {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                            <a href="{% url 'client_public_profile' participant.user.id %}" class="participants-row__link">
+                                                {{ participant.display_name }}
+                                            </a>{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
                                         {% endfor %}
                                     </span>
                                 </div>
@@ -105,7 +115,13 @@
                                     <span class="participants-row__label">Исполнители:</span>
                                     <span class="participants-row__value">
                                         {% for participant in performers %}
-                                            {{ participant.display_name }}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
+                                            {% if participant.profile %}
+                                                <a href="{% url 'performers:performer_detail' participant.profile.id %}" class="participants-row__link">
+                                                    {{ participant.display_name }}
+                                                </a>
+                                            {% else %}
+                                                {{ participant.display_name }}
+                                            {% endif %}{% if participant.status == 'pending' %} (ожидание){% endif %}{% if not forloop.last %}, {% endif %}
                                         {% endfor %}
                                     </span>
                                 </div>
@@ -216,6 +232,13 @@
         font-weight: 600;
         color: rgba(255,255,255,0.55);
         margin-right: 0.35rem;
+    }
+    .participants-row__link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .participants-row__link:hover {
+        text-decoration: underline;
     }
     .project-card__info {
         display: flex;

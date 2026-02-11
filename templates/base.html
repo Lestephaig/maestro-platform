@@ -528,6 +528,12 @@
                         <a class="nav-link {% if request.resolver_match.url_name == 'specialists' %}active-nav{% endif %}" href="{% url 'performers:specialists' %}">Музыканты</a>
                     </li>
                     <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'venues_list' %}active-nav{% endif %}" href="{% url 'venues_list' %}">Площадки</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.resolver_match.url_name == 'agents_list' %}active-nav{% endif %}" href="{% url 'agents_list' %}">Организаторы</a>
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link {% if request.resolver_match.app_name == 'announcements' %}active-nav{% endif %}" href="{% url 'announcements:list' %}">Доска объявлений</a>
                     </li>
                     {% if user.is_authenticated %}
@@ -560,6 +566,9 @@
                                 <li><a class="dropdown-item" href="{% url 'chat_list' %}">
                                     <i class="bi bi-chat-dots me-2"></i>Чаты
                                 </a></li>
+                                <li><a class="dropdown-item" href="{% url 'notifications:list' %}">
+                                    <i class="bi bi-bell me-2"></i>Уведомления
+                                </a></li>
                                 <li><hr class="dropdown-divider"></li>
                                 <li>
                                     <form method="post" action="{% url 'logout' %}" class="d-inline w-100">
@@ -586,6 +595,11 @@
                         <li class="nav-item mobile-user-menu">
                             <a class="nav-link {% if request.resolver_match.url_name == 'chat_list' %}active-nav{% endif %}" href="{% url 'chat_list' %}">
                                 Чаты
+                            </a>
+                        </li>
+                        <li class="nav-item mobile-user-menu">
+                            <a class="nav-link {% if request.resolver_match.app_name == 'notifications' %}active-nav{% endif %}" href="{% url 'notifications:list' %}">
+                                Уведомления
                             </a>
                         </li>
                         <li class="nav-item mobile-user-menu">

@@ -3,11 +3,36 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
+from django.db import transaction, close_old_connections
 from django.utils import timezone
 from datetime import date
+import logging
+import threading
 
 from .models import Announcement, AnnouncementResponse, Tag
 from .forms import AnnouncementForm, AnnouncementResponseForm
+from notifications.utils import notify_performers_about_announcement_by_tags
+
+logger = logging.getLogger(__name__)
+
+
+def _dispatch_announcement_notifications_async(announcement_id):
+    """Запускает уведомления о новом объявлении в отдельном потоке."""
+    def _worker():
+        close_old_connections()
+        try:
+            announcement = Announcement.objects.prefetch_related('tags').get(id=announcement_id)
+            notify_performers_about_announcement_by_tags(announcement)
+        except Exception:
+            logger.exception('Failed to notify performers for announcement %s', announcement_id)
+        finally:
+            close_old_connections()
+
+    threading.Thread(
+        target=_worker,
+        name=f'announcement-notify-{announcement_id}',
+        daemon=True,
+    ).start()
 
 
 def announcement_list(request):
@@ -217,6 +242,7 @@ def announcement_create(request):
             announcement.is_approved = True
             announcement.save()
             form.save_m2m()  # Сохраняем теги
+            transaction.on_commit(lambda: _dispatch_announcement_notifications_async(announcement.id))
             messages.success(request, 'Объявление успешно создано!')
             return redirect('announcements:detail', announcement_id=announcement.id)
     else:

@@ -24,6 +24,16 @@ class PerformerProfileForm(forms.ModelForm):
         label='Инструмент',
         widget=forms.Select(attrs={'class': 'form-select'})
     )
+    photo_position = forms.ChoiceField(
+        choices=[
+            ('top', 'Верх'),
+            ('center', 'Центр'),
+            ('bottom', 'Низ'),
+        ],
+        required=False,
+        label='Позиция фото',
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
 
     class Meta:
         model = PerformerProfile
@@ -38,6 +48,7 @@ class PerformerProfileForm(forms.ModelForm):
             'bio',
             'video_url',
             'photo',
+            'photo_position',
         ]
         widgets = {
             'full_name': forms.TextInput(attrs={
@@ -81,6 +92,10 @@ class PerformerProfileForm(forms.ModelForm):
         self.fields['bio'].label = 'Биография'
         self.fields['video_url'].label = 'Ссылка на видео'
         self.fields['photo'].label = 'Фото'
+        self.fields['photo_position'].label = 'Позиция фото'
+
+        self.fields['birth_date'].required = True
+        self.fields['birth_date'].widget.attrs['required'] = 'required'
 
         if self.instance and self.instance.voice_type:
             current_voice = (self.instance.voice_type, self.instance.voice_type)
@@ -97,15 +112,22 @@ class PerformerProfileForm(forms.ModelForm):
         performer_type = cleaned.get('performer_type')
         voice_type = cleaned.get('voice_type')
         instrument = cleaned.get('instrument')
+        birth_date = cleaned.get('birth_date')
 
         if performer_type == PerformerProfile.PERFORMER_TYPE_VOCALIST:
             if not voice_type:
                 self.add_error('voice_type', 'Выберите тип голоса.')
             cleaned['instrument'] = ''
-        elif performer_type == PerformerProfile.PERFORMER_TYPE_INSTRUMENTALIST:
+        elif performer_type in (PerformerProfile.PERFORMER_TYPE_INSTRUMENTALIST, PerformerProfile.PERFORMER_TYPE_CONCERTMASTER):
             if not instrument:
                 self.add_error('instrument', 'Выберите основной инструмент.')
             cleaned['voice_type'] = ''
+        else:
+            cleaned['voice_type'] = ''
+            cleaned['instrument'] = ''
+
+        if not birth_date:
+            self.add_error('birth_date', 'Дата рождения обязательна.')
 
         return cleaned
 

@@ -28,7 +28,6 @@ def specialists_list(request):
     availability_date_str = request.GET.get('availability_date', '').strip()
     performer_type = request.GET.get('performer_type', '').strip()
     instrument = request.GET.get('instrument', '').strip()
-    verified = request.GET.get('verified')
     birth_date_from = request.GET.get('birth_date_from', '').strip()
     birth_date_to = request.GET.get('birth_date_to', '').strip()
     sort_option = request.GET.get('sort', 'newest')
@@ -53,9 +52,6 @@ def specialists_list(request):
 
     if instrument:
         performers = performers.filter(instrument__iexact=instrument)
-
-    if verified in {'true', 'false'}:
-        performers = performers.filter(is_verified=(verified == 'true'))
 
     selected_availability_date = None
     if availability_date_str:
@@ -105,7 +101,6 @@ def specialists_list(request):
         'name_desc': ['-full_name', '-created_at'],
         'birth_date_desc': ['-birth_date', 'full_name'],
         'birth_date_asc': ['birth_date', 'full_name'],
-        'verified_first': ['-is_verified', '-created_at'],
     }
     order_by_fields = sort_map.get(sort_option, ['-created_at'])
     performers = performers.order_by(*order_by_fields)
@@ -131,7 +126,10 @@ def specialists_list(request):
     instrument_choices = merge_options(
         PerformerProfile.DEFAULT_INSTRUMENTS,
         PerformerProfile.objects.filter(
-            performer_type=PerformerProfile.PERFORMER_TYPE_INSTRUMENTALIST
+            performer_type__in=[
+                PerformerProfile.PERFORMER_TYPE_INSTRUMENTALIST,
+                PerformerProfile.PERFORMER_TYPE_CONCERTMASTER,
+            ]
         )
         .exclude(instrument__isnull=True)
         .exclude(instrument='')

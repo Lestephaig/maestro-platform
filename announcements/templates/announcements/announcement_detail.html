@@ -252,6 +252,10 @@
                         <i class="bi bi-calendar3"></i>
                         <span>Опубликовано: {{ announcement.published_at|date:"d.m.Y H:i" }}</span>
                     </div>
+                    <div class="announcement-meta-item">
+                        <i class="bi bi-clock"></i>
+                        <span>Часовой пояс: UTC</span>
+                    </div>
                     {% if announcement.city or announcement.location %}
                     <div class="announcement-meta-item">
                         <i class="bi bi-geo-alt"></i>

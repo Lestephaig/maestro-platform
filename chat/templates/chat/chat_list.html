@@ -220,19 +220,43 @@
                         </div>
                         <div class="flex-grow-1">
                             {% if user == chat.performer %}
-                                <h6>{{ chat.client.username }}</h6>
-                                {% if chat.client.get_full_name %}
-                                    <div class="username">
-                                        {{ chat.client.get_full_name }}
-                                    </div>
-                                {% endif %}
+                                {% with target=chat.client %}
+                                    <h6>
+                                        {% if target.performer_profile %}
+                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                        {% elif target.agent_profile %}
+                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                        {% elif target.client_profile %}
+                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                        {% else %}
+                                            {{ target.username }}
+                                        {% endif %}
+                                    </h6>
+                                    {% if target.get_full_name %}
+                                        <div class="username">
+                                            {{ target.get_full_name }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
                             {% elif user == chat.client %}
-                                <h6>{{ chat.performer.username }}</h6>
-                                {% if chat.performer.get_full_name %}
-                                    <div class="username">
-                                        {{ chat.performer.get_full_name }}
-                                    </div>
-                                {% endif %}
+                                {% with target=chat.performer %}
+                                    <h6>
+                                        {% if target.performer_profile %}
+                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                        {% elif target.agent_profile %}
+                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                        {% elif target.client_profile %}
+                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                        {% else %}
+                                            {{ target.username }}
+                                        {% endif %}
+                                    </h6>
+                                    {% if target.get_full_name %}
+                                        <div class="username">
+                                            {{ target.get_full_name }}
+                                        </div>
+                                    {% endif %}
+                                {% endwith %}
                             {% endif %}
                             <small>
                                 <i class="bi bi-clock"></i>

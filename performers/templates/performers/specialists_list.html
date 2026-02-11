@@ -96,34 +96,6 @@
         gap: 0.5rem;
     }
     
-    .verification-badge {
-        font-size: 1.1rem;
-    }
-    
-    .verification-badge.unverified {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        border: 1px solid rgba(255, 255, 255, 0.25);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        color: rgba(255, 255, 255, 0.4);
-        background: transparent;
-    }
-    
-    .verification-badge.verified {
-        width: 24px;
-        height: 24px;
-        border-radius: 50%;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: linear-gradient(135deg, rgba(46, 204, 113, 0.95), rgba(39, 174, 96, 1));
-        color: rgba(0, 0, 0, 0.8);
-        box-shadow: 0 10px 25px rgba(46, 204, 113, 0.4);
-    }
-    
     .specialist-voice {
         color: var(--white);
         font-size: 1rem;
@@ -493,8 +465,10 @@
                                 <label for="performer_type" class="form-label">Тип исполнителя</label>
                                 <select class="form-select" id="performer_type" name="performer_type">
                                     <option value="">Все исполнители</option>
-                                    <option value="vocalist" {% if request.GET.performer_type == 'vocalist' %}selected{% endif %}>Певцы</option>
+                                    <option value="vocalist" {% if request.GET.performer_type == 'vocalist' %}selected{% endif %}>Вокалисты</option>
                                     <option value="instrumentalist" {% if request.GET.performer_type == 'instrumentalist' %}selected{% endif %}>Инструменталисты</option>
+                                    <option value="conductor" {% if request.GET.performer_type == 'conductor' %}selected{% endif %}>Дирижеры</option>
+                                    <option value="concertmaster" {% if request.GET.performer_type == 'concertmaster' %}selected{% endif %}>Концертмейстеры</option>
                                 </select>
                             </div>
                             <div class="col-md-4 col-lg-3" id="voice-type-filter">
@@ -522,14 +496,6 @@
                                        id="availability_date"
                                        name="availability_date"
                                        value="{{ availability_date }}">
-                            </div>
-                            <div class="col-md-4 col-lg-2">
-                                <label for="verified" class="form-label">Верификация</label>
-                                <select class="form-select" id="verified" name="verified">
-                                    <option value="">Любой статус</option>
-                                    <option value="true" {% if request.GET.verified == 'true' %}selected{% endif %}>Только проверенные</option>
-                                    <option value="false" {% if request.GET.verified == 'false' %}selected{% endif %}>Только непроверенные</option>
-                                </select>
                             </div>
                             <div class="col-md-6 col-lg-3">
                                 <label class="form-label">Дата рождения</label>
@@ -572,7 +538,8 @@
                 {% for performer in performers %}
                     <a href="{% url 'performers:performer_detail' performer.id %}" class="specialist-card">
                         {% if performer.photo %}
-                            <img src="{{ performer.photo.url }}" alt="{{ performer.full_name }}" class="specialist-photo">
+                            <img src="{{ performer.photo.url }}" alt="{{ performer.full_name }}" class="specialist-photo"
+                                 style="{% if performer.photo_position == 'top' %}object-position: center top;{% elif performer.photo_position == 'bottom' %}object-position: center bottom;{% else %}object-position: center center;{% endif %}">
                         {% else %}
                             <div class="specialist-photo d-flex align-items-center justify-content-center">
                                 <i class="bi bi-person-circle" style="font-size: 4.5rem; background: linear-gradient(135deg, var(--gold-dark), var(--gold-light)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;"></i>
@@ -582,24 +549,15 @@
                         <div class="specialist-info">
                             <h3 class="specialist-name">
                                 {{ performer.full_name }}
-                                <span class="verification-badge {% if performer.is_verified %}verified{% else %}unverified{% endif %}" title="{% if performer.is_verified %}Верифицирован{% else %}Ожидает верификации{% endif %}">
-                                    {% if performer.is_verified %}
-                                        <svg width="16" height="16" viewBox="0 0 16 16" aria-hidden="true">
-                                            <path fill="currentColor" d="M5.97 10.97 3.477 8.477l-.708.708L5.97 12.384l7.292-7.292-.708-.708z"/>
-                                        </svg>
-                                    {% else %}
-                                        <svg width="14" height="14" viewBox="0 0 16 16" aria-hidden="true">
-                                            <path fill="currentColor" d="M8 1a7 7 0 1 0 0 14A7 7 0 0 0 8 1zm3 8a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h6zm0-3a.5.5 0 0 1 0 1H5a.5.5 0 0 1 0-1h6z"/>
-                                        </svg>
-                                    {% endif %}
-                                </span>
                             </h3>
                             
                             {% with specialization=performer.specialization_display %}
                                 {% if specialization %}
                                     <p class="specialist-voice">
-                                        {% if performer.performer_type == 'instrumentalist' %}
+                                        {% if performer.performer_type == 'instrumentalist' or performer.performer_type == 'concertmaster' %}
                                             <i class="bi bi-music-note-beamed me-2"></i>{{ specialization }}
+                                        {% elif performer.performer_type == 'conductor' %}
+                                            <i class="bi bi-music-note-list me-2"></i>{{ specialization }}
                                         {% else %}
                                             <i class="bi bi-mic me-2"></i>{{ specialization }}
                                         {% endif %}
@@ -699,9 +657,12 @@ document.addEventListener('DOMContentLoaded', function () {
         if (value === 'vocalist') {
             voiceFilter?.classList.remove('d-none');
             instrumentFilter?.classList.add('d-none');
-        } else if (value === 'instrumentalist') {
+        } else if (value === 'instrumentalist' || value === 'concertmaster') {
             voiceFilter?.classList.add('d-none');
             instrumentFilter?.classList.remove('d-none');
+        } else if (value === 'conductor') {
+            voiceFilter?.classList.add('d-none');
+            instrumentFilter?.classList.add('d-none');
         } else {
             voiceFilter?.classList.remove('d-none');
             instrumentFilter?.classList.remove('d-none');

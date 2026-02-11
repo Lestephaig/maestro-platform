@@ -84,6 +84,11 @@
                                     <i class="bi bi-calendar-date me-2"></i>{{ form.birth_date.label }}
                                 </label>
                                 {{ form.birth_date }}
+                                <button type="button"
+                                        class="btn btn-outline-secondary btn-sm mt-2 js-clear-date"
+                                        data-clear-target="{{ form.birth_date.id_for_label }}">
+                                    Сбросить дату
+                                </button>
                                 {% if form.birth_date.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.birth_date.errors.0 }}
@@ -112,8 +117,25 @@
                                 {% endif %}
                             </div>
 
+                            <!-- Поле "Позиция фото" -->
+                            <div class="mb-3">
+                                <label for="{{ form.photo_position.id_for_label }}" class="form-label">
+                                    <i class="bi bi-arrows-move me-2"></i>{{ form.photo_position.label }}
+                                </label>
+                                {{ form.photo_position }}
+                                <div class="form-text">Настройте кадрирование фото в профиле</div>
+                                {% if form.photo_position.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.photo_position.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
                         {% elif user.client_profile %}
                             <!-- Поля для площадки -->
+                            <div class="mb-3">
+                                <h6 class="text-uppercase text-muted fw-semibold">Основная информация</h6>
+                            </div>
                             <div class="mb-3">
                                 <label for="{{ form.company_name.id_for_label }}" class="form-label">
                                     <i class="bi bi-building me-2"></i>{{ form.company_name.label }}
@@ -122,6 +144,54 @@
                                 {% if form.company_name.errors %}
                                     <div class="invalid-feedback d-block">
                                         {{ form.company_name.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.address.id_for_label }}" class="form-label">
+                                    <i class="bi bi-geo-alt me-2"></i>{{ form.address.label }}
+                                </label>
+                                {{ form.address }}
+                                {% if form.address.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.address.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.venue_type.id_for_label }}" class="form-label">
+                                    <i class="bi bi-tag me-2"></i>{{ form.venue_type.label }}
+                                </label>
+                                {{ form.venue_type }}
+                                {% if form.venue_type.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.venue_type.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.hall_capacity.id_for_label }}" class="form-label">
+                                    <i class="bi bi-people me-2"></i>{{ form.hall_capacity.label }}
+                                </label>
+                                {{ form.hall_capacity }}
+                                {% if form.hall_capacity.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.hall_capacity.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3 form-check venue-check">
+                                {{ form.has_stage }}
+                                <label for="{{ form.has_stage.id_for_label }}" class="form-check-label">
+                                    {{ form.has_stage.label }}
+                                </label>
+                                {% if form.has_stage.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.has_stage.errors.0 }}
                                     </div>
                                 {% endif %}
                             </div>
@@ -239,6 +309,118 @@
                                     </div>
                                 {% endif %}
                             </div>
+                        {% elif user.client_profile %}
+                            <div class="mb-3">
+                                <h6 class="text-uppercase text-muted fw-semibold">Техническое оснащение</h6>
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.stage_size.id_for_label }}" class="form-label">
+                                    <i class="bi bi-rulers me-2"></i>{{ form.stage_size.label }}
+                                </label>
+                                {{ form.stage_size }}
+                                {% if form.stage_size.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.stage_size.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.microphones_count.id_for_label }}" class="form-label">
+                                    <i class="bi bi-mic me-2"></i>{{ form.microphones_count.label }}
+                                </label>
+                                {{ form.microphones_count }}
+                                {% if form.microphones_count.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.microphones_count.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.sound_system.id_for_label }}" class="form-label">
+                                    <i class="bi bi-speaker me-2"></i>{{ form.sound_system.label }}
+                                </label>
+                                {{ form.sound_system }}
+                                {% if form.sound_system.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.sound_system.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.mixing_console.id_for_label }}" class="form-label">
+                                    <i class="bi bi-sliders me-2"></i>{{ form.mixing_console.label }}
+                                </label>
+                                {{ form.mixing_console }}
+                                {% if form.mixing_console.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.mixing_console.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.lighting_equipment.id_for_label }}" class="form-label">
+                                    <i class="bi bi-lightbulb me-2"></i>{{ form.lighting_equipment.label }}
+                                </label>
+                                {{ form.lighting_equipment }}
+                                {% if form.lighting_equipment.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.lighting_equipment.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.video_equipment.id_for_label }}" class="form-label">
+                                    <i class="bi bi-camera-video me-2"></i>{{ form.video_equipment.label }}
+                                </label>
+                                {{ form.video_equipment }}
+                                {% if form.video_equipment.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.video_equipment.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3 form-check venue-check">
+                                {{ form.has_internet }}
+                                <label for="{{ form.has_internet.id_for_label }}" class="form-check-label">
+                                    {{ form.has_internet.label }}
+                                </label>
+                                {% if form.has_internet.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.has_internet.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.power_supply.id_for_label }}" class="form-label">
+                                    <i class="bi bi-plug me-2"></i>{{ form.power_supply.label }}
+                                </label>
+                                {{ form.power_supply }}
+                                {% if form.power_supply.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.power_supply.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
+
+                            <div class="mb-3 form-check venue-check">
+                                {{ form.has_green_rooms }}
+                                <label for="{{ form.has_green_rooms.id_for_label }}" class="form-check-label">
+                                    {{ form.has_green_rooms.label }}
+                                </label>
+                                {% if form.has_green_rooms.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.has_green_rooms.errors.0 }}
+                                    </div>
+                                {% endif %}
+                            </div>
                         {% endif %}
                     </div>
                 </div>
@@ -334,6 +516,22 @@
     transform: translateY(-4px);
     box-shadow: 0 22px 60px rgba(243, 156, 18, 0.25);
     border-color: rgba(243, 156, 18, 0.5);
+}
+
+.venue-check {
+    padding-left: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.venue-check .form-check-input {
+    margin-left: 0;
+    margin-top: 0;
+}
+
+.venue-check .form-check-label {
+    margin: 0;
 }
 
 .form-label {
@@ -472,15 +670,15 @@
 
         const togglePerformerFields = () => {
             const value = performerTypeField.value;
-            if (value === 'instrumentalist') {
+            if (value === 'instrumentalist' || value === 'concertmaster') {
                 voiceField?.classList.add('d-none');
                 instrumentField?.classList.remove('d-none');
             } else if (value === 'vocalist') {
                 voiceField?.classList.remove('d-none');
                 instrumentField?.classList.add('d-none');
             } else {
-                voiceField?.classList.remove('d-none');
-                instrumentField?.classList.remove('d-none');
+                voiceField?.classList.add('d-none');
+                instrumentField?.classList.add('d-none');
             }
         };
 
@@ -505,6 +703,45 @@
         }
         if (target.id === 'profile-content' || target.closest?.('#profile-content')) {
             initPerformerTypeControls(target);
+        }
+    });
+})();
+
+// Сброс даты рождения
+(function () {
+    function initDateClear(root) {
+        const context = root || document;
+        const buttons = context.querySelectorAll('.js-clear-date');
+        buttons.forEach((btn) => {
+            if (btn.dataset.bound) {
+                return;
+            }
+            btn.addEventListener('click', () => {
+                const targetId = btn.dataset.clearTarget;
+                const input = targetId ? context.querySelector(`#${targetId}`) : null;
+                if (input) {
+                    input.value = '';
+                    input.dispatchEvent(new Event('input', { bubbles: true }));
+                    input.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            btn.dataset.bound = 'true';
+        });
+    }
+
+    if (document.readyState !== 'loading') {
+        initDateClear();
+    } else {
+        document.addEventListener('DOMContentLoaded', () => initDateClear());
+    }
+
+    document.addEventListener('htmx:afterSwap', (event) => {
+        const target = event.target || event.detail?.target;
+        if (!target) {
+            return;
+        }
+        if (target.id === 'profile-content' || target.closest?.('#profile-content')) {
+            initDateClear(target);
         }
     });
 })();

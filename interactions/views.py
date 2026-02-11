@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from .forms import InteractionForm, ProjectReportForm
 from .models import Interaction, InteractionParticipant
@@ -71,6 +72,10 @@ def interaction_detail(request, pk):
 
 @login_required
 def interaction_create(request):
+    if not request.user.is_email_verified:
+        messages.warning(request, 'Подтвердите email, чтобы создавать проекты.')
+        return redirect('profile')
+
     form = InteractionForm(request.POST or None, user=request.user)
     if request.method == 'POST' and form.is_valid():
         interaction = form.save(created_by=request.user)
@@ -175,6 +180,7 @@ def my_projects(request):
 
 
 @login_required
+@require_POST
 def participant_decision(request, pk, decision):
     participation = get_object_or_404(
         InteractionParticipant.objects.select_related('interaction'),
@@ -199,33 +205,34 @@ def participant_decision(request, pk, decision):
 
 
 @login_required
+@require_POST
 def cancel_project(request, pk):
     interaction = get_object_or_404(_accessible_interactions_queryset(request.user), pk=pk)
     if not interaction.is_creator(request.user):
         return redirect('interactions:detail', pk=interaction.pk)
-    if request.method == 'POST':
-        interaction.cancel_project()
-        interaction.participant_links.update(
-            completion_status=InteractionParticipant.COMPLETION_NOT_REQUESTED,
-            completion_requested_at=None,
-            completion_responded_at=None,
-        )
+    interaction.cancel_project()
+    interaction.participant_links.update(
+        completion_status=InteractionParticipant.COMPLETION_NOT_REQUESTED,
+        completion_requested_at=None,
+        completion_responded_at=None,
+    )
     return redirect('interactions:detail', pk=interaction.pk)
 
 
 @login_required
+@require_POST
 def complete_project(request, pk):
     interaction = get_object_or_404(_accessible_interactions_queryset(request.user), pk=pk)
     if not interaction.is_creator(request.user):
         return redirect('interactions:detail', pk=interaction.pk)
-    if request.method == 'POST':
-        started = interaction.start_completion_confirmation()
-        if started:
-            interaction.evaluate_completion_confirmation()
+    started = interaction.start_completion_confirmation()
+    if started:
+        interaction.evaluate_completion_confirmation()
     return redirect('interactions:detail', pk=interaction.pk)
 
 
 @login_required
+@require_POST
 def participant_completion_decision(request, pk, decision):
     participation = get_object_or_404(
         InteractionParticipant.objects.select_related('interaction'),
@@ -233,9 +240,6 @@ def participant_completion_decision(request, pk, decision):
         user=request.user,
     )
     interaction = participation.interaction
-    if request.method != 'POST':
-        return redirect('interactions:my_projects')
-
     if participation.status != InteractionParticipant.STATUS_ACCEPTED:
         return redirect('interactions:my_projects')
 

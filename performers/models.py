@@ -9,9 +9,13 @@ class PerformerProfile(models.Model):
 
     PERFORMER_TYPE_VOCALIST = 'vocalist'
     PERFORMER_TYPE_INSTRUMENTALIST = 'instrumentalist'
+    PERFORMER_TYPE_CONDUCTOR = 'conductor'
+    PERFORMER_TYPE_CONCERTMASTER = 'concertmaster'
     PERFORMER_TYPE_CHOICES = [
         (PERFORMER_TYPE_VOCALIST, 'Вокалист'),
         (PERFORMER_TYPE_INSTRUMENTALIST, 'Инструменталист'),
+        (PERFORMER_TYPE_CONDUCTOR, 'Дирижер'),
+        (PERFORMER_TYPE_CONCERTMASTER, 'Концертмейстер'),
     ]
 
     DEFAULT_VOICE_TYPES = [
@@ -22,7 +26,6 @@ class PerformerProfile(models.Model):
         'Баритон',
         'Бас',
         'Контртенор',
-        'Альт',
     ]
 
     DEFAULT_INSTRUMENTS = [
@@ -68,6 +71,16 @@ class PerformerProfile(models.Model):
     bio = models.TextField(blank=True)
     video_url = models.URLField(blank=True)
     photo = models.ImageField(upload_to='performers/photos/', blank=True, null=True)
+    photo_position = models.CharField(
+        max_length=20,
+        choices=[
+            ('top', 'Верх'),
+            ('center', 'Центр'),
+            ('bottom', 'Низ'),
+        ],
+        default='center',
+        help_text='Позиция фото в Hero секции'
+    )
     calendar_mode = models.CharField(
         max_length=20, 
         choices=CALENDAR_MODE_CHOICES, 
@@ -84,8 +97,11 @@ class PerformerProfile(models.Model):
         # Обнуляем несоответствующие специализации поля
         if self.performer_type == self.PERFORMER_TYPE_VOCALIST:
             self.instrument = ''
-        elif self.performer_type == self.PERFORMER_TYPE_INSTRUMENTALIST:
+        elif self.performer_type in (self.PERFORMER_TYPE_INSTRUMENTALIST, self.PERFORMER_TYPE_CONCERTMASTER):
             self.voice_type = ''
+        else:
+            self.voice_type = ''
+            self.instrument = ''
 
     def save(self, *args, **kwargs):
         self.clean()
@@ -96,10 +112,12 @@ class PerformerProfile(models.Model):
 
     @property
     def specialization_display(self):
-        if self.performer_type == self.PERFORMER_TYPE_INSTRUMENTALIST and self.instrument:
+        if self.performer_type in (self.PERFORMER_TYPE_INSTRUMENTALIST, self.PERFORMER_TYPE_CONCERTMASTER) and self.instrument:
             return self.instrument
         if self.performer_type == self.PERFORMER_TYPE_VOCALIST and self.voice_type:
             return self.voice_type
+        if self.performer_type == self.PERFORMER_TYPE_CONDUCTOR:
+            return self.get_performer_type_display()
         return ''
 
     def __str__(self):

@@ -122,8 +122,15 @@
             <p><i class="bi bi-info-circle"></i>Письмо может прийти в папку "Спам"</p>
             <p><i class="bi bi-clock"></i>Ссылка действительна в течение 24 часов</p>
         </div>
+
+        <form method="post" action="{% url 'email_verification_resend' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-home">
+                <i class="bi bi-send me-2"></i>Отправить письмо повторно
+            </button>
+        </form>
         
-        <a href="{% url 'home' %}" class="btn-home">
+        <a href="{% url 'home' %}" class="btn-home" style="margin-top: 1rem;">
             <i class="bi bi-house me-2"></i>На главную
         </a>
     </div>

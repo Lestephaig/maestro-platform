@@ -90,26 +90,6 @@
         box-shadow: 0 4px 15px rgba(155, 89, 182, 0.4);
     }
     
-    .verification-badge {
-        display: inline-block;
-        padding: 0.5rem 1.25rem;
-        border-radius: 15px;
-        font-weight: 600;
-        margin-top: 1rem;
-    }
-    
-    .verification-badge.verified {
-        background: linear-gradient(135deg, #27ae60, #2ecc71);
-        color: white;
-        box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
-    }
-    
-    .verification-badge.unverified {
-        background: linear-gradient(135deg, var(--silver-dark), var(--silver-light));
-        color: var(--black);
-        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
-    }
-    
     .client-body {
         padding: 2.5rem;
     }
@@ -195,6 +175,26 @@
         color: var(--gold-light);
         text-decoration: underline;
     }
+    
+    .btn-chat {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        font-weight: 700;
+        border: none;
+        padding: 0.625rem 1rem;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .btn-chat:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(212, 175, 55, 0.5);
+        color: var(--black);
+    }
 </style>
 {% endblock %}
 
@@ -202,7 +202,7 @@
 <div class="client-profile-container">
     <a href="javascript:history.back()" class="back-link">
         <i class="bi bi-arrow-left"></i>
-        Назад к чату
+        Назад
     </a>
     
     <div class="client-card">
@@ -220,10 +220,14 @@
                 {% endif %}
             </div>
             
-            <div class="verification-badge {% if client_user.is_verified %}verified{% else %}unverified{% endif %}">
-                <i class="bi bi-{% if client_user.is_verified %}check-circle-fill{% else %}clock-fill{% endif %} me-2"></i>
-                {% if client_user.is_verified %}Верифицирован{% else %}На проверке{% endif %}
+            {% if user.is_authenticated and user != client_user %}
+            <div class="mt-3">
+                <a href="{% url 'start_chat_with_user' client_user.id %}" class="btn btn-chat">
+                    <i class="bi bi-chat-dots me-1"></i>Начать чат
+                </a>
             </div>
+            {% endif %}
+            
         </div>
         
         <div class="client-body">
@@ -277,9 +281,41 @@
                 <div class="info-item">
                     <div class="info-label">
                         <i class="bi bi-building"></i>
-                        Компания / Организация
+                        Наименование площадки
                     </div>
                     <div class="info-value">{{ client_user.client_profile.company_name|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-geo-alt"></i>
+                        Адрес площадки
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.address|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-tag"></i>
+                        Тип площадки
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.venue_type|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-people"></i>
+                        Вместимость зала
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.hall_capacity|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-easel2"></i>
+                        Наличие сцены
+                    </div>
+                    <div class="info-value">{% if client_user.client_profile.has_stage %}Да{% else %}Нет{% endif %}</div>
                 </div>
                 
                 {% if client_user.client_profile.contact_person %}
@@ -309,6 +345,85 @@
                     </div>
                 </div>
                 {% endif %}
+            </div>
+
+            <div class="info-section">
+                <h3>
+                    <i class="bi bi-gear"></i>
+                    Техническое оснащение
+                </h3>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-rulers"></i>
+                        Размер сцены (Ш×Г×В)
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.stage_size|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-mic"></i>
+                        Микрофоны (кол-во)
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.microphones_count|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-speaker"></i>
+                        Акустическая система
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.sound_system|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-sliders"></i>
+                        Микшерный пульт
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.mixing_console|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-lightbulb"></i>
+                        Световое оборудование
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.lighting_equipment|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-camera-video"></i>
+                        Видеооборудование / экраны
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.video_equipment|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-wifi"></i>
+                        Интернет
+                    </div>
+                    <div class="info-value">{% if client_user.client_profile.has_internet %}Да{% else %}Нет{% endif %}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-plug"></i>
+                        Электропитание 220В / 380В
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.power_supply|default:"Не указано" }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-door-open"></i>
+                        Гримерные комнаты
+                    </div>
+                    <div class="info-value">{% if client_user.client_profile.has_green_rooms %}Да{% else %}Нет{% endif %}</div>
+                </div>
             </div>
             {% endif %}
         </div>

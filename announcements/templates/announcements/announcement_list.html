@@ -293,6 +293,15 @@
         box-shadow: 0 10px 25px rgba(212, 175, 55, 0.5);
         color: var(--black);
     }
+
+    .timezone-note {
+        color: var(--silver-light);
+        font-size: 0.9rem;
+        margin: 0.5rem 0 1rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -306,6 +315,11 @@
             </a>
         </div>
         {% endif %}
+
+        <div class="timezone-note">
+            <i class="bi bi-clock"></i>
+            Все даты и время указаны по UTC
+        </div>
         
         <!-- Фильтры -->
         <div class="filter-bar">

@@ -2,18 +2,21 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import login
 from django.http import JsonResponse
 from django.contrib import messages
+import logging
 from .forms import CustomUserCreationForm
 from .utils import send_verification_email, verify_email_token
 from performers.models import PerformerProfile, PerformerPhoto, PerformerVideo
 from clients.models import ClientProfile
 from agents.models import AgentProfile
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.http import require_POST
 from performers.forms import PerformerProfileForm, PerformerPhotoForm, PerformerVideoForm
 from clients.forms import ClientProfileForm
 from agents.forms import AgentProfileForm
 from interactions.models import Interaction, InteractionParticipant
 from django.db.models import Q
 
+logger = logging.getLogger(__name__)
 
 def register(request):
     if request.method == 'POST':
@@ -34,19 +37,20 @@ def register(request):
             # Отправляем email для подтверждения
             try:
                 send_verification_email(user, request)
+                request.session['pending_verification_email'] = user.email
                 messages.success(
                     request,
-                    'Регистрация успешна! Пожалуйста, проверьте вашу почту и подтвердите email адрес.'
+                    'Регистрация успешна! Пожалуйста, подтвердите email адрес.'
                 )
                 return redirect('email_verification_sent')
-            except Exception as e:
-                # Если не удалось отправить email, все равно показываем сообщение
+            except Exception:
+                logger.exception('Failed to send verification email during registration')
+                # Если не удалось отправить email, показываем предупреждение и разрешаем вход
                 messages.warning(
                     request,
                     'Регистрация успешна, но не удалось отправить email подтверждения. '
-                    'Пожалуйста, свяжитесь с администратором.'
+                    'Пожалуйста, попробуйте позже или свяжитесь с администратором.'
                 )
-                # Автоматический вход, если email не отправился
                 login(request, user)
                 return redirect('profile')
     else:
@@ -74,6 +78,37 @@ def verify_email(request, uidb64, token):
         return redirect('register')
 
 
+def resend_verification_email(request):
+    if request.method != 'POST':
+        return redirect('email_verification_sent')
+
+    from .models import User
+    email = request.session.get('pending_verification_email')
+    user = None
+    if email:
+        user = User.objects.filter(email=email).first()
+    elif request.user.is_authenticated:
+        user = request.user
+        request.session['pending_verification_email'] = user.email
+
+    if not user:
+        messages.error(request, 'Пользователь не найден.')
+        return redirect('email_verification_sent')
+
+    if user.is_email_verified:
+        messages.info(request, 'Email уже подтверждён.')
+        return redirect('login')
+
+    try:
+        send_verification_email(user, request)
+        messages.success(request, 'Письмо подтверждения отправлено повторно.')
+    except Exception:
+        logger.exception('Failed to resend verification email')
+        messages.error(request, 'Не удалось отправить письмо. Попробуйте позже.')
+
+    return redirect('email_verification_sent')
+
+
 def _build_profile_context(user):
     context = {}
     base_queryset = Interaction.objects.select_related('created_by').prefetch_related('participant_links__user')
@@ -99,6 +134,11 @@ def _build_profile_context(user):
             Q(created_by=user) | Q(participant_links__user=user, participant_links__role=InteractionParticipant.ROLE_PERFORMER)
         ).distinct().order_by('-created_at')
         context['performer_interactions'] = performer_interactions
+
+    if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
+        from .models import User
+        context['admin_users'] = User.objects.order_by('-date_joined')[:200]
+        context['admin_users_total'] = User.objects.count()
     return context
 
 
@@ -127,6 +167,57 @@ def client_public_profile(request, user_id):
     }
     
     return render(request, 'accounts/client_public_profile.html', context)
+
+
+def venues_list(request):
+    venues = ClientProfile.objects.select_related('user').order_by('-created_at')
+    return render(request, 'accounts/venues_list.html', {'venues': venues})
+
+
+def agents_list(request):
+    agents = AgentProfile.objects.select_related('user').order_by('-created_at')
+    return render(request, 'accounts/agents_list.html', {'agents': agents})
+
+
+def agent_public_profile(request, user_id):
+    """Публичный профиль организатора"""
+    from .models import User
+
+    agent_user = get_object_or_404(User, id=user_id)
+
+    if not hasattr(agent_user, 'agent_profile'):
+        if hasattr(agent_user, 'performer_profile'):
+            return redirect('performers:performer_detail', performer_id=agent_user.performer_profile.id)
+        if hasattr(agent_user, 'client_profile'):
+            return redirect('client_public_profile', user_id=agent_user.id)
+
+    context = {
+        'agent_user': agent_user,
+        'is_own_profile': request.user == agent_user,
+    }
+
+    return render(request, 'accounts/agent_public_profile.html', context)
+
+@login_required
+@require_POST
+def admin_delete_user(request, user_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return redirect('profile')
+
+    from .models import User
+    target_user = get_object_or_404(User, id=user_id)
+
+    if target_user == request.user:
+        messages.error(request, 'Нельзя удалить собственный аккаунт.')
+        return redirect('profile')
+
+    if target_user.is_superuser and not request.user.is_superuser:
+        messages.error(request, 'Недостаточно прав для удаления администратора.')
+        return redirect('profile')
+
+    target_user.delete()
+    messages.success(request, 'Пользователь удалён.')
+    return redirect('profile')
 
 @login_required
 def profile_view(request):
@@ -198,6 +289,7 @@ def add_photo(request):
 
 
 @login_required
+@require_POST
 def delete_photo(request, photo_id):
     """Удалить фото"""
     photo = get_object_or_404(PerformerPhoto, id=photo_id)
@@ -227,6 +319,7 @@ def add_video(request):
 
 
 @login_required
+@require_POST
 def delete_video(request, video_id):
     """Удалить видео"""
     video = get_object_or_404(PerformerVideo, id=video_id)

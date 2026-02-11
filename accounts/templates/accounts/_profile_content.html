@@ -1,4 +1,63 @@
 {% load interaction_extras %}
+    {% if user.is_staff or user.is_superuser %}
+    <div class="admin-users-card">
+        <div class="admin-users-header">
+            <div>
+                <h4><i class="bi bi-people me-2"></i>Пользователи</h4>
+                <p>Всего: {{ admin_users_total }}</p>
+            </div>
+        </div>
+        <div class="admin-users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Пользователь</th>
+                        <th>Роль</th>
+                        <th>Статус</th>
+                        <th>Зарегистрирован</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row_user in admin_users %}
+                    <tr>
+                        <td>#{{ row_user.id }}</td>
+                        <td>
+                            <div class="admin-user-main">{{ row_user.display_name|default:row_user.email }}</div>
+                            <div class="admin-user-sub">{{ row_user.email }}</div>
+                        </td>
+                        <td>{{ row_user.get_role_display }}</td>
+                        <td>
+                            <span class="admin-status {% if row_user.is_active %}is-active{% else %}is-inactive{% endif %}">
+                                {% if row_user.is_active %}Активен{% else %}Отключен{% endif %}
+                            </span>
+                        </td>
+                        <td>{{ row_user.date_joined|date:"d.m.Y" }}</td>
+                        <td class="admin-users-actions">
+                            {% if row_user != user %}
+                            <form method="post" action="{% url 'admin_delete_user' row_user.id %}">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-sm admin-delete-btn"
+                                        onclick="return confirm('Удалить пользователя?')">
+                                    Удалить
+                                </button>
+                            </form>
+                            {% else %}
+                                <span class="admin-users-hint">Вы</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="admin-users-empty">Пользователи не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    {% endif %}
     {% if user.performer_profile %}
     <div class="performer-profile">
         <!-- Hero секция с фото -->
@@ -8,20 +67,16 @@
                     {% if user.performer_profile.photo %}
                         <img src="{{ user.performer_profile.photo.url }}" 
                              alt="{{ user.performer_profile.full_name }}" 
-                             class="performer-avatar rounded-circle shadow-lg">
+                             class="performer-avatar rounded-circle shadow-lg"
+                             style="{% if user.performer_profile.photo_position == 'top' %}object-position: center top;{% elif user.performer_profile.photo_position == 'bottom' %}object-position: center bottom;{% else %}object-position: center center;{% endif %}">
                     {% else %}
                         <div class="performer-avatar rounded-circle shadow-lg bg-secondary d-flex align-items-center justify-content-center">
                             <i class="bi bi-person-fill" style="font-size: 4rem;"></i>
                         </div>
                     {% endif %}
                 </div>
-                <h2 class="display-5 fw-bold mb-2 d-inline-flex align-items-center gap-3">
+                <h2 class="display-5 fw-bold mb-2">
                     {{ user.performer_profile.full_name }}
-                    <span class="performer-verify-badge {% if user.performer_profile.is_verified %}is-verified{% endif %}">
-                        <svg width="18" height="18" viewBox="0 0 16 16" class="verify-icon" aria-hidden="true">
-                            <path d="M5.97 10.97 3.477 8.477l-.708.708L5.97 12.384l7.292-7.292-.708-.708z"/>
-                        </svg>
-                    </span>
                 </h2>
                 {% with specialization=user.performer_profile.specialization_display %}
                     {% if specialization %}
@@ -103,11 +158,13 @@
                                         <span class="badge bg-primary">{{ user.performer_profile.voice_type }}</span>
                                     </div>
                                 {% endif %}
-                                {% if user.performer_profile.performer_type == 'instrumentalist' and user.performer_profile.instrument %}
+                                {% if user.performer_profile.performer_type == 'instrumentalist' or user.performer_profile.performer_type == 'concertmaster' %}
+                                    {% if user.performer_profile.instrument %}
                                     <div class="mb-3">
                                         <h6><i class="bi bi-music-note-beamed me-2"></i>Инструмент</h6>
                                         <span class="badge bg-warning text-dark">{{ user.performer_profile.instrument }}</span>
                                     </div>
+                                    {% endif %}
                                 {% endif %}
                                 {% if user.performer_profile.education %}
                                     <div class="mb-3">
@@ -373,16 +430,10 @@
 
         <!-- Кнопки действий -->
         <div class="text-center mt-4">
-            <div class="d-flex gap-3 justify-content-center flex-wrap">
-                <button class="btn btn-primary btn-lg" hx-get="{% url 'profile_edit' %}" 
-                        hx-target="#profile-content" hx-swap="innerHTML">
-                    <i class="bi bi-pencil-square me-2"></i>Редактировать профиль
-                </button>
-                <a href="{% url 'performers:performer_detail' user.performer_profile.id %}" 
-                   class="btn btn-outline-success btn-lg" target="_blank">
-                    <i class="bi bi-eye me-2"></i>Посмотреть публичную страницу
-                </a>
-            </div>
+            <a href="{% url 'performers:performer_detail' user.performer_profile.id %}" 
+               class="btn btn-outline-success btn-lg" target="_blank">
+                <i class="bi bi-eye me-2"></i>Посмотреть публичную страницу
+            </a>
         </div>
     </div>
 
@@ -624,49 +675,128 @@
         </div>
 
         <div class="text-center mt-4">
-            <div class="d-flex gap-3 justify-content-center flex-wrap">
-                <button class="btn btn-primary btn-lg" hx-get="{% url 'profile_edit' %}"
-                        hx-target="#profile-content" hx-swap="innerHTML">
-                    <i class="bi bi-pencil-square me-2"></i>Обновить профиль организатора
-                </button>
-                <a href="#" class="btn btn-outline-warning btn-lg disabled">
-                    <i class="bi bi-bullseye me-2"></i>Создать объявление (скоро)
-                </a>
-            </div>
+            <a href="#" class="btn btn-outline-warning btn-lg disabled">
+                <i class="bi bi-bullseye me-2"></i>Создать объявление (скоро)
+            </a>
         </div>
     </div>
 
     {% elif user.client_profile %}
     <!-- Профиль площадки -->
-    <div class="card">
-        <div class="card-header text-white" style="background: linear-gradient(135deg, #34495e 0%, #2c3e50 100%); border-bottom: 2px solid #f39c12;">
-            <h5 class="mb-0"><i class="bi bi-building me-2"></i>Профиль площадки</h5>
-        </div>
-        <div class="card-body">
-            <div class="row">
-                <div class="col-md-6">
-                    <p><strong><i class="bi bi-building me-2"></i>Компания:</strong> {{ user.client_profile.company_name }}</p>
-                    <p><strong><i class="bi bi-person me-2"></i>Контактное лицо:</strong> {{ user.client_profile.contact_person|default:"Не указано" }}</p>
-                </div>
-                <div class="col-md-6">
-        {% if user.client_profile.website %}
-                        <p><strong><i class="bi bi-globe me-2"></i>Сайт:</strong> 
-                            <a href="{{ user.client_profile.website }}" target="_blank" class="text-decoration-none">
-                                {{ user.client_profile.website }}
-                            </a>
-                        </p>
-        {% endif %}
-                    <p><strong><i class="bi bi-calendar me-2"></i>Дата регистрации:</strong> 
-                        {{ user.client_profile.created_at|date:"d.m.Y" }}
-                    </p>
+    <div class="venue-profile">
+        <div class="venue-header">
+            <div class="venue-title">
+                <i class="bi bi-building"></i>
+                <div>
+                    <h5>Профиль площадки</h5>
+                    <p>{{ user.client_profile.company_name }}</p>
                 </div>
             </div>
         </div>
-        <div class="card-footer text-center">
-            <button class="btn btn-primary" hx-get="{% url 'profile_edit' %}" 
-                    hx-target="#profile-content" hx-swap="innerHTML">
-                <i class="bi bi-pencil-square me-2"></i>Редактировать профиль
-            </button>
+
+        <div class="venue-grid">
+            <div class="venue-card">
+                <div class="venue-card__title">
+                    <i class="bi bi-info-circle"></i>Основная информация
+                </div>
+                <div class="venue-list">
+                    <div class="venue-item">
+                        <span class="venue-label">Наименование площадки</span>
+                        <span class="venue-value">{{ user.client_profile.company_name }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Адрес площадки</span>
+                        <span class="venue-value">{{ user.client_profile.address|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Тип площадки</span>
+                        <span class="venue-value">{{ user.client_profile.venue_type|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Вместимость зала</span>
+                        <span class="venue-value">{{ user.client_profile.hall_capacity|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Наличие сцены</span>
+                        <span class="venue-value">
+                            <span class="venue-badge {% if user.client_profile.has_stage %}is-yes{% else %}is-no{% endif %}">
+                                {% if user.client_profile.has_stage %}Да{% else %}Нет{% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Контактное лицо</span>
+                        <span class="venue-value">{{ user.client_profile.contact_person|default:"Не указано" }}</span>
+                    </div>
+                    {% if user.client_profile.website %}
+                    <div class="venue-item">
+                        <span class="venue-label">Сайт</span>
+                        <span class="venue-value">
+                            <a href="{{ user.client_profile.website }}" target="_blank" class="venue-link">
+                                {{ user.client_profile.website }}
+                                <i class="bi bi-box-arrow-up-right ms-1"></i>
+                            </a>
+                        </span>
+                    </div>
+                    {% endif %}
+                    <div class="venue-item">
+                        <span class="venue-label">Дата регистрации</span>
+                        <span class="venue-value">{{ user.client_profile.created_at|date:"d.m.Y" }}</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="venue-card">
+                <div class="venue-card__title">
+                    <i class="bi bi-gear"></i>Техническое оснащение
+                </div>
+                <div class="venue-list">
+                    <div class="venue-item">
+                        <span class="venue-label">Размер сцены (Ш×Г×В)</span>
+                        <span class="venue-value">{{ user.client_profile.stage_size|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Микрофоны (кол-во)</span>
+                        <span class="venue-value">{{ user.client_profile.microphones_count|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Акустическая система</span>
+                        <span class="venue-value">{{ user.client_profile.sound_system|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Микшерный пульт</span>
+                        <span class="venue-value">{{ user.client_profile.mixing_console|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Световое оборудование</span>
+                        <span class="venue-value">{{ user.client_profile.lighting_equipment|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Видеооборудование / экраны</span>
+                        <span class="venue-value">{{ user.client_profile.video_equipment|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Интернет</span>
+                        <span class="venue-value">
+                            <span class="venue-badge {% if user.client_profile.has_internet %}is-yes{% else %}is-no{% endif %}">
+                                {% if user.client_profile.has_internet %}Да{% else %}Нет{% endif %}
+                            </span>
+                        </span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Электропитание 220В / 380В</span>
+                        <span class="venue-value">{{ user.client_profile.power_supply|default:"Не указано" }}</span>
+                    </div>
+                    <div class="venue-item">
+                        <span class="venue-label">Гримерные комнаты</span>
+                        <span class="venue-value">
+                            <span class="venue-badge {% if user.client_profile.has_green_rooms %}is-yes{% else %}is-no{% endif %}">
+                                {% if user.client_profile.has_green_rooms %}Да{% else %}Нет{% endif %}
+                            </span>
+                        </span>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     {% endif %}
@@ -685,41 +815,6 @@
     border: 2px solid rgba(243, 156, 18, 0.3);
 }
 
-.performer-verify-badge {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 38px;
-    height: 38px;
-    border-radius: 50%;
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.05));
-    border: 2px solid rgba(255, 255, 255, 0.18);
-    color: rgba(255, 255, 255, 0.45);
-    font-size: 1.35rem;
-    transition: all 0.3s ease;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
-}
-
-.performer-verify-badge.is-verified {
-    background: linear-gradient(135deg, rgba(46, 204, 113, 0.85), rgba(39, 174, 96, 0.95));
-    border-color: rgba(46, 204, 113, 0.75);
-    color: rgba(0, 0, 0, 0.75);
-    box-shadow: 0 18px 35px rgba(46, 204, 113, 0.35);
-}
-
-.performer-verify-badge.is-verified .verify-icon path {
-    fill: rgba(0, 0, 0, 0.75);
-    filter: drop-shadow(0 0 3px rgba(12, 65, 28, 0.3));
-}
-
-.performer-verify-badge:not(.is-verified):hover {
-    border-color: rgba(255, 255, 255, 0.35);
-    color: rgba(255, 255, 255, 0.6);
-}
-
-.performer-verify-badge .verify-icon path {
-    fill: rgba(255, 255, 255, 0.6);
-}
 
 .nav-tabs .nav-link {
     border: none;
@@ -759,6 +854,280 @@
 .agent-hero {
     border-radius: 18px;
     border: 2px solid rgba(243, 156, 18, 0.3);
+}
+
+.admin-users-card {
+    background: linear-gradient(135deg, rgba(52, 73, 94, 0.9), rgba(44, 62, 80, 0.9));
+    border-radius: 18px;
+    padding: 1.5rem;
+    border: 1px solid rgba(243, 156, 18, 0.25);
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
+    margin-bottom: 2rem;
+}
+
+.admin-users-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.admin-users-header h4 {
+    margin: 0;
+    color: #f6d58b;
+    font-weight: 700;
+}
+
+.admin-users-header p {
+    margin: 0.35rem 0 0;
+    color: rgba(255, 255, 255, 0.65);
+    font-size: 0.9rem;
+}
+
+.admin-users-table {
+    background: rgba(0, 0, 0, 0.25);
+    border-radius: 14px;
+    overflow: hidden;
+}
+
+.admin-users-table table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.admin-users-table th,
+.admin-users-table td {
+    padding: 0.75rem 0.9rem;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.admin-users-table th {
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-size: 0.75rem;
+    color: rgba(255, 255, 255, 0.6);
+    background: rgba(0, 0, 0, 0.35);
+}
+
+.admin-users-table tr {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin-users-table tr:last-child {
+    border-bottom: none;
+}
+
+.admin-user-main {
+    color: #f6f7fb;
+    font-weight: 600;
+}
+
+.admin-user-sub {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.8rem;
+}
+
+.admin-status {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.03em;
+}
+
+.admin-status.is-active {
+    background: rgba(46, 204, 113, 0.18);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.35);
+}
+
+.admin-status.is-inactive {
+    background: rgba(231, 76, 60, 0.18);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.35);
+}
+
+.admin-users-empty {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 1.5rem;
+}
+
+.admin-users-actions {
+    text-align: right;
+}
+
+.admin-delete-btn {
+    background: rgba(231, 76, 60, 0.15);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.5);
+    border-radius: 8px;
+    padding: 0.25rem 0.6rem;
+    font-weight: 700;
+}
+
+.admin-delete-btn:hover {
+    background: rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+}
+
+.admin-users-hint {
+    color: rgba(255, 255, 255, 0.45);
+    font-size: 0.8rem;
+}
+
+@media (max-width: 992px) {
+    .admin-users-table table {
+        display: block;
+        overflow-x: auto;
+        white-space: nowrap;
+    }
+}
+
+.venue-profile {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.venue-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1.5rem;
+    padding: 1.25rem 1.5rem;
+    border-radius: 18px;
+    background: linear-gradient(135deg, rgba(52, 73, 94, 0.8), rgba(44, 62, 80, 0.9));
+    border: 1px solid rgba(243, 156, 18, 0.25);
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.25);
+}
+
+.venue-title {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    color: #ecf0f1;
+}
+
+.venue-title i {
+    font-size: 2rem;
+    color: #f39c12;
+}
+
+.venue-title h5 {
+    margin: 0;
+    font-weight: 700;
+}
+
+.venue-title p {
+    margin: 0.25rem 0 0;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95rem;
+}
+
+.venue-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: 1.5rem;
+}
+
+.venue-card {
+    background: linear-gradient(135deg, rgba(52, 73, 94, 0.75), rgba(44, 62, 80, 0.85));
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    border-radius: 18px;
+    padding: 1.5rem;
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.25);
+}
+
+.venue-card__title {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-weight: 700;
+    color: #f6d58b;
+    margin-bottom: 1rem;
+}
+
+.venue-card__title i {
+    color: #f39c12;
+}
+
+.venue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.venue-item {
+    display: grid;
+    grid-template-columns: minmax(160px, 1fr) 1.2fr;
+    gap: 0.75rem;
+    padding: 0.65rem 0.75rem;
+    border-radius: 12px;
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.venue-label {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.85rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+
+.venue-value {
+    color: #f6f7fb;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    word-break: break-word;
+}
+
+.venue-badge {
+    padding: 0.2rem 0.65rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.venue-badge.is-yes {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+    border: 1px solid rgba(46, 204, 113, 0.4);
+}
+
+.venue-badge.is-no {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+    border: 1px solid rgba(231, 76, 60, 0.4);
+}
+
+.venue-link {
+    color: #8fd1ff;
+    text-decoration: none;
+    transition: color 0.2s ease;
+}
+
+.venue-link:hover {
+    color: #f39c12;
+}
+
+@media (max-width: 768px) {
+    .venue-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .venue-item {
+        grid-template-columns: 1fr;
+    }
 }
 
 .agent-avatar {

@@ -28,8 +28,8 @@ def notify_participant_invitation(sender, instance, created, **kwargs):
                 'inviter_name': interaction.created_by.username,
                 'project_url': f'/interactions/{interaction.id}/',
             },
-            related_object_id=instance.id,
-            related_object_type='interactions.interactionparticipant'
+            related_object_id=interaction.id,
+            related_object_type='interactions.interaction'
         )
 
 

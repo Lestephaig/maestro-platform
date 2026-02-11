@@ -1,0 +1,15 @@
+Maestro Platform - Новые подходящие объявления
+
+Здравствуйте, {{ user.display_name|default:user.email }}!
+
+Появилось новое подходящее объявление по вашим тегам: {{ matched_tags|join:", " }}.
+
+{{ announcement_title }}
+{% if announcement_description %}
+Описание: {{ announcement_description }}
+{% endif %}
+
+Открыть объявление: {{ site_url }}{{ announcement_url }}
+
+С уважением,
+Команда Maestro Platform

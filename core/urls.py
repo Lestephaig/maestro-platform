@@ -16,6 +16,7 @@ path('grappelli/', include('grappelli.urls')),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('chat/', include('chat.urls')),
     path('announcements/', include('announcements.urls')),
+    path('notifications/', include(('notifications.urls', 'notifications'), namespace='notifications')),
 ]
 
 # Обслуживание медиа файлов в режиме разработки

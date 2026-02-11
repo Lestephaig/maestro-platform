@@ -306,21 +306,31 @@
         <div class="flex-grow-1">
             <h5 class="mb-0">
                 {% if user == room.performer %}
-                    {# Артист смотрит на клиента - ссылка на публичный профиль клиента #}
-                    <a href="{% url 'client_public_profile' room.client.id %}">{{ room.client.username }}</a>
+                    {% with target=room.client %}
+                        {% if target.performer_profile %}
+                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}">{{ target.username }}</a>
+                        {% elif target.agent_profile %}
+                            <a href="{% url 'agent_public_profile' target.id %}">{{ target.username }}</a>
+                        {% elif target.client_profile %}
+                            <a href="{% url 'client_public_profile' target.id %}">{{ target.username }}</a>
+                        {% else %}
+                            {{ target.username }}
+                        {% endif %}
+                    {% endwith %}
                 {% elif user == room.client %}
-                    {# Клиент смотрит на артиста - ссылка на профиль артиста #}
-                    {% if room.performer.performer_profile %}
-                        <a href="{% url 'performers:performer_detail' room.performer.performer_profile.id %}">{{ room.performer.username }}</a>
-                    {% else %}
-                        <a href="{% url 'client_public_profile' room.performer.id %}">{{ room.performer.username }}</a>
-                    {% endif %}
+                    {% with target=room.performer %}
+                        {% if target.performer_profile %}
+                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}">{{ target.username }}</a>
+                        {% elif target.agent_profile %}
+                            <a href="{% url 'agent_public_profile' target.id %}">{{ target.username }}</a>
+                        {% elif target.client_profile %}
+                            <a href="{% url 'client_public_profile' target.id %}">{{ target.username }}</a>
+                        {% else %}
+                            {{ target.username }}
+                        {% endif %}
+                    {% endwith %}
                 {% endif %}
             </h5>
-            <small>
-                <i class="bi bi-circle-fill" style="font-size: 0.5rem; color: #48bb78;"></i>
-                Онлайн
-            </small>
         </div>
     </div>
 

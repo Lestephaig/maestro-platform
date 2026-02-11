@@ -15,7 +15,7 @@
                     {% for photo in photos %}
                         <div class="col-md-4 col-sm-6">
                             <div class="media-item">
-                                <img src="{{ photo.photo.url }}" alt="{{ photo.caption }}" class="media-thumb">
+                                <img src="{{ photo.photo.url }}" alt="{{ photo.caption }}" class="media-thumb js-media-thumb-view">
                                 <div class="media-overlay">
                                     <button class="btn btn-sm btn-danger" onclick="deletePhoto({{ photo.id }})">
                                         <i class="bi bi-trash"></i>
@@ -82,6 +82,21 @@
                     <p style="color: #95a5a6;">Добавьте видео для вашей галереи</p>
                 </div>
             {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="profilePhotoViewer" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-xl">
+        <div class="modal-content profile-photo-viewer-content">
+            <div class="modal-header profile-photo-viewer-header">
+                <h5 class="modal-title">Просмотр фото</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Закрыть"></button>
+            </div>
+            <div class="modal-body profile-photo-viewer-body">
+                <img id="profilePhotoViewerImage" class="profile-photo-viewer-image" src="" alt="Фото из галереи">
+                <div id="profilePhotoViewerCaption" class="profile-photo-viewer-caption"></div>
+            </div>
         </div>
     </div>
 </div>
@@ -180,6 +195,7 @@
     width: 100%;
     height: 200px;
     object-fit: cover;
+    cursor: zoom-in;
 }
 
 .media-overlay {
@@ -236,6 +252,36 @@
 .video-info h6 {
     margin-bottom: 0.5rem;
 }
+
+.profile-photo-viewer-content {
+    background: rgba(8, 8, 12, 0.96);
+    border: 1px solid rgba(243, 156, 18, 0.45);
+}
+
+.profile-photo-viewer-header {
+    border-bottom: 1px solid rgba(243, 156, 18, 0.3);
+    color: #ecf0f1;
+}
+
+.profile-photo-viewer-body {
+    padding: 0.75rem;
+}
+
+.profile-photo-viewer-image {
+    display: block;
+    max-width: 100%;
+    max-height: calc(100vh - 180px);
+    width: auto;
+    height: auto;
+    margin: 0 auto;
+    border-radius: 10px;
+}
+
+.profile-photo-viewer-caption {
+    text-align: center;
+    margin-top: 0.75rem;
+    color: rgba(255, 255, 255, 0.88);
+}
 </style>
 
 <script>
@@ -289,4 +335,22 @@ function getCookie(name) {
     }
     return cookieValue;
 }
+
+(function initProfileMediaPhotoViewer() {
+    const viewerElement = document.getElementById('profilePhotoViewer');
+    const viewerImage = document.getElementById('profilePhotoViewerImage');
+    const viewerCaption = document.getElementById('profilePhotoViewerCaption');
+    if (!viewerElement || !viewerImage) {
+        return;
+    }
+
+    const photoModal = new bootstrap.Modal(viewerElement);
+    document.querySelectorAll('.js-media-thumb-view').forEach((photo) => {
+        photo.addEventListener('click', function () {
+            viewerImage.src = this.getAttribute('src');
+            viewerCaption.textContent = this.getAttribute('alt') || '';
+            photoModal.show();
+        });
+    });
+})();
 </script>

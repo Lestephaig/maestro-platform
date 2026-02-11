@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Настройки уведомлений - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .notification-settings-subtitle {
+        color: rgba(255, 255, 255, 0.78);
+    }
+    .notification-settings-card {
+        background: linear-gradient(135deg, rgba(13, 15, 26, 0.9), rgba(19, 21, 32, 0.92));
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 1rem 1.1rem;
+    }
+    .notification-settings-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 0.75rem;
+    }
+    .notification-settings-title {
+        color: rgba(255, 255, 255, 0.94);
+        font-weight: 600;
+    }
+    .notification-settings-channels {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-top: 0.9rem;
+    }
+    .notification-channel {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        color: rgba(255, 255, 255, 0.86);
+        font-size: 0.95rem;
+    }
+    .notification-channel input {
+        margin: 0;
+    }
+    @media (max-width: 576px) {
+        .notification-settings-card {
+            padding: 0.9rem;
+        }
+        .notification-settings-title {
+            font-size: 0.95rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+    <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+        <div>
+            <h1 class="h3 mb-1 text-light">Настройки уведомлений</h1>
+            <p class="mb-0 notification-settings-subtitle">Выберите каналы доставки для каждого типа уведомлений.</p>
+        </div>
+        <a href="{% url 'notifications:list' %}" class="btn btn-outline-light">
+            <i class="bi bi-arrow-left me-1"></i>К уведомлениям
+        </a>
+    </div>
+
+    <form method="post" class="d-grid gap-3">
+        {% csrf_token %}
+        {% for row in rows %}
+            <div class="notification-settings-card">
+                <div class="notification-settings-row">
+                    <div class="notification-settings-title">{{ row.label }}</div>
+                </div>
+                <div class="notification-settings-channels">
+                    <label class="notification-channel">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            name="in_app_{{ row.notification_type }}"
+                            {% if row.in_app_enabled %}checked{% endif %}
+                        >
+                        <span>В приложении</span>
+                    </label>
+                    <label class="notification-channel">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            name="email_{{ row.notification_type }}"
+                            {% if row.email_enabled %}checked{% endif %}
+                        >
+                        <span>Email</span>
+                    </label>
+                </div>
+            </div>
+        {% endfor %}
+        <div class="d-flex justify-content-end">
+            <button type="submit" class="btn btn-warning fw-bold">
+                <i class="bi bi-check2 me-1"></i>Сохранить
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}

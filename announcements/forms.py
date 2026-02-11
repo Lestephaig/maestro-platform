@@ -6,7 +6,7 @@ class AnnouncementForm(forms.ModelForm):
     tags = forms.ModelMultipleChoiceField(
         queryset=Tag.objects.all().order_by('name'),
         required=False,
-        widget=forms.SelectMultiple(attrs={'class': 'form-select', 'size': '10'}),
+        widget=forms.CheckboxSelectMultiple(attrs={'class': 'tag-checkboxes'}),
         label='Теги',
     )
 

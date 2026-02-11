@@ -66,6 +66,53 @@
                     <div class="invalid-feedback d-block">{{ error }}</div>
                 {% endfor %}
             </div>
+
+            <h5 class="mt-4 mb-3 text-warning"><i class="bi bi-person-lines-fill me-2"></i>Общие сведения</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.organizer_name.label }}</label>
+                    {{ form.organizer_name }}
+                    {% for error in form.organizer_name.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.contact_person.label }}</label>
+                    {{ form.contact_person }}
+                    {% for error in form.contact_person.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.contact_info.label }}</label>
+                    {{ form.contact_info }}
+                    {% for error in form.contact_info.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <h5 class="mt-4 mb-3 text-warning"><i class="bi bi-list-check me-2"></i>Тип мероприятия</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.event_type.label }}</label>
+                    {{ form.event_type }}
+                    {% for error in form.event_type.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <h5 class="mt-4 mb-3 text-warning"><i class="bi bi-sliders me-2"></i>Формат проведения</h5>
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <label class="form-label">{{ form.event_format.label }}</label>
+                    {{ form.event_format }}
+                    {% for error in form.event_format.errors %}
+                        <div class="invalid-feedback d-block">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            </div>
         </div>
 
         <div class="step-panel d-none" data-step="2">
@@ -211,7 +258,10 @@
 
             <div class="row g-3 mt-1">
                 <div class="col-md-6">
-                    <label class="form-label">{{ form.budget_amount.label }}</label>
+                    <label class="form-label">
+                        {{ form.budget_amount.label }}
+                        <small class="text-muted ms-2">(виден только создателю)</small>
+                    </label>
                     {{ form.budget_amount }}
                     {% for error in form.budget_amount.errors %}
                         <div class="invalid-feedback d-block">{{ error }}</div>
@@ -223,6 +273,193 @@
                     {% for error in form.budget_currency.errors %}
                         <div class="invalid-feedback d-block">{{ error }}</div>
                     {% endfor %}
+                </div>
+            </div>
+
+            <div class="collapse-card">
+                <button class="collapse-toggle" type="button" data-collapse="time-details" aria-expanded="false">
+                    <span><i class="bi bi-clock me-2"></i>Временные рамки</span>
+                    <i class="bi bi-chevron-down collapse-icon"></i>
+                </button>
+                <div class="collapse-body d-none" id="time-details">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.event_date.label }}</label>
+                            {{ form.event_date }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.event_start_time.label }}</label>
+                            {{ form.event_start_time }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.event_end_time.label }}</label>
+                            {{ form.event_end_time }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.total_duration.label }}</label>
+                            {{ form.total_duration }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.rehearsal_schedule.label }}</label>
+                            {{ form.rehearsal_schedule }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.setup_schedule.label }}</label>
+                            {{ form.setup_schedule }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.teardown_schedule.label }}</label>
+                            {{ form.teardown_schedule }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapse-card">
+                <button class="collapse-toggle" type="button" data-collapse="venue-details" aria-expanded="false">
+                    <span><i class="bi bi-geo-alt me-2"></i>Место проведения</span>
+                    <i class="bi bi-chevron-down collapse-icon"></i>
+                </button>
+                <div class="collapse-body d-none" id="venue-details">
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.venue_name.label }}</label>
+                            {{ form.venue_name }}
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">{{ form.venue_address.label }}</label>
+                            {{ form.venue_address }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.venue_type.label }}</label>
+                            {{ form.venue_type }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.venue_capacity.label }}</label>
+                            {{ form.venue_capacity }}
+                        </div>
+                        <div class="col-12">
+                            <div class="venue-switch">
+                                <div>
+                                    <div class="venue-switch__label">Наличие сцены</div>
+                                    <div class="venue-switch__hint">Отметьте, если сцена есть</div>
+                                </div>
+                                <div class="form-check form-switch m-0">
+                                    {{ form.venue_has_stage }}
+                                    <label class="form-check-label" for="{{ form.venue_has_stage.id_for_label }}"></label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">{{ form.venue_requirements.label }}</label>
+                            {{ form.venue_requirements }}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="collapse-card">
+                <button class="collapse-toggle" type="button" data-collapse="tech-details" aria-expanded="false">
+                    <span><i class="bi bi-tools me-2"></i>Техническое оснащение</span>
+                    <i class="bi bi-chevron-down collapse-icon"></i>
+                </button>
+                <div class="collapse-body d-none" id="tech-details">
+                    <div class="row g-3">
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.stage_size.label }}</label>
+                            {{ form.stage_size }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.microphones_count.label }}</label>
+                            {{ form.microphones_count }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.sound_system.label }}</label>
+                            {{ form.sound_system }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.mixing_console.label }}</label>
+                            {{ form.mixing_console }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.lighting_equipment.label }}</label>
+                            {{ form.lighting_equipment }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.video_equipment.label }}</label>
+                            {{ form.video_equipment }}
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">{{ form.power_supply.label }}</label>
+                            {{ form.power_supply }}
+                        </div>
+                <div class="col-12">
+                    <div class="venue-switch">
+                        <div>
+                            <div class="venue-switch__label">Интернет</div>
+                            <div class="venue-switch__hint">Отметьте, если интернет доступен</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            {{ form.has_internet }}
+                            <label class="form-check-label" for="{{ form.has_internet.id_for_label }}"></label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="venue-switch">
+                        <div>
+                            <div class="venue-switch__label">Гримерные комнаты</div>
+                            <div class="venue-switch__hint">Отметьте, если комнаты предусмотрены</div>
+                        </div>
+                        <div class="form-check form-switch m-0">
+                            {{ form.has_green_rooms }}
+                            <label class="form-check-label" for="{{ form.has_green_rooms.id_for_label }}"></label>
+                        </div>
+                    </div>
+                </div>
+                    </div>
+                </div>
+            </div>
+
+            <h5 class="mt-4 mb-3 text-warning"><i class="bi bi-person-workspace me-2"></i>Персонал</h5>
+            <div class="checkbox-grid">
+                <label>{{ form.staff_host }} {{ form.staff_host.label }}</label>
+                <label>{{ form.staff_sound_engineer }} {{ form.staff_sound_engineer.label }}</label>
+                <label>{{ form.staff_light_engineer }} {{ form.staff_light_engineer.label }}</label>
+                <label>{{ form.staff_tech_admin }} {{ form.staff_tech_admin.label }}</label>
+                <label>{{ form.staff_security }} {{ form.staff_security.label }}</label>
+                <label>{{ form.staff_medical }} {{ form.staff_medical.label }}</label>
+            </div>
+
+            <h5 class="mt-4 mb-3 text-warning"><i class="bi bi-megaphone me-2"></i>Информационное сопровождение</h5>
+            <div class="checkbox-grid">
+                <label>{{ form.info_promo_materials }} {{ form.info_promo_materials.label }}</label>
+                <label>{{ form.info_online_registration }} {{ form.info_online_registration.label }}</label>
+                <label>{{ form.info_photo_video }} {{ form.info_photo_video.label }}</label>
+                <label>{{ form.info_live_stream }} {{ form.info_live_stream.label }}</label>
+            </div>
+
+            <h5 class="mt-4 mb-3 text-warning"><i class="bi bi-cash-coin me-2"></i>Финансовые параметры</h5>
+            <div class="row g-3">
+                <div class="col-md-4 form-check d-flex align-items-center gap-2 mt-4">
+                    {{ form.paid_entry }}
+                    <label class="form-check-label" for="{{ form.paid_entry.id_for_label }}">{{ form.paid_entry.label }}</label>
+                </div>
+                <div class="col-md-8">
+                    <label class="form-label">{{ form.ticket_price.label }}</label>
+                    {{ form.ticket_price }}
+                </div>
+            </div>
+
+            <h5 class="mt-4 mb-3 text-warning"><i class="bi bi-clipboard-check me-2"></i>Дополнительные условия</h5>
+            <div class="row g-3">
+                <div class="col-12">
+                    <label class="form-label">{{ form.venue_special_requirements.label }}</label>
+                    {{ form.venue_special_requirements }}
+                </div>
+                <div class="col-12">
+                    <label class="form-label">{{ form.additional_comments.label }}</label>
+                    {{ form.additional_comments }}
                 </div>
             </div>
 
@@ -301,6 +538,86 @@
     }
     .form-navigation .btn {
         min-width: 110px;
+    }
+    .collapse-card {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 14px;
+        margin-top: 1rem;
+        background: rgba(0, 0, 0, 0.25);
+        overflow: hidden;
+    }
+    .collapse-toggle {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: #f1c40f;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0.85rem 1rem;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    .collapse-toggle .collapse-icon {
+        transition: transform 0.2s ease;
+    }
+    .collapse-toggle[aria-expanded="false"] .collapse-icon {
+        transform: rotate(-90deg);
+    }
+    .collapse-body {
+        padding: 0.25rem 0.75rem 1rem;
+    }
+    .checkbox-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 0.75rem 0.9rem;
+        margin-top: 0.5rem;
+    }
+    .checkbox-grid label {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.6rem 0.9rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.22);
+        color: var(--silver-light);
+        font-weight: 600;
+        line-height: 1.2;
+        cursor: pointer;
+        transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+        min-height: 44px;
+    }
+    .checkbox-grid label:hover {
+        border-color: rgba(243, 156, 18, 0.55);
+        color: #f6d58b;
+    }
+    .checkbox-grid input[type="checkbox"] {
+        appearance: auto;
+        width: 16px;
+        height: 16px;
+        accent-color: var(--gold);
+        margin: 0;
+        flex-shrink: 0;
+    }
+    .venue-switch {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 1rem;
+        padding: 0.75rem 1rem;
+        border-radius: 12px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: rgba(0, 0, 0, 0.25);
+    }
+    .venue-switch__label {
+        color: var(--silver-light);
+        font-weight: 600;
+    }
+    .venue-switch__hint {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        margin-top: 0.2rem;
     }
     .participant-grid {
         display: grid;
@@ -507,6 +824,19 @@
                 currentStep -= 1;
                 updateView();
             }
+        });
+
+        document.querySelectorAll('.collapse-toggle').forEach((toggle) => {
+            toggle.addEventListener('click', () => {
+                const targetId = toggle.getAttribute('data-collapse');
+                const body = targetId ? document.getElementById(targetId) : null;
+                if (!body) {
+                    return;
+                }
+                const isHidden = body.classList.contains('d-none');
+                body.classList.toggle('d-none', !isHidden);
+                toggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+            });
         });
 
         currentStep = findErrorStep();

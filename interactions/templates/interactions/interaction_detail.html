@@ -93,6 +93,211 @@
             </div>
         </div>
 
+        <div class="detail-card mb-4 collapse-card">
+            <button class="collapse-toggle" type="button" data-collapse="general-details" aria-expanded="false">
+                <span><i class="bi bi-card-list me-2"></i>Общие сведения</span>
+                <i class="bi bi-chevron-down collapse-icon"></i>
+            </button>
+            <div class="detail-card__body collapse-body d-none" id="general-details">
+                <div class="detail-grid">
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Наименование мероприятия</span>
+                        <span class="detail-grid__value">{{ interaction.title }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Организатор</span>
+                        <span class="detail-grid__value">{{ interaction.organizer_name|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Контактное лицо</span>
+                        <span class="detail-grid__value">{{ interaction.contact_person|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Телефон / Email</span>
+                        <span class="detail-grid__value">{{ interaction.contact_info|default:"Не указано" }}</span>
+                    </div>
+                </div>
+                <div class="detail-card__divider"></div>
+                <div class="detail-grid">
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Тип мероприятия</span>
+                        <span class="detail-grid__value">
+                            {{ interaction.event_type_label|default:"Не указано" }}
+                        </span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Формат проведения</span>
+                        <span class="detail-grid__value">
+                            {{ interaction.event_format_label|default:"Не указано" }}
+                        </span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card mb-4 collapse-card">
+            <button class="collapse-toggle" type="button" data-collapse="venue-conditions" aria-expanded="false">
+                <span><i class="bi bi-geo-alt me-2"></i>Место</span>
+                <i class="bi bi-chevron-down collapse-icon"></i>
+            </button>
+            <div class="detail-card__body collapse-body d-none" id="venue-conditions">
+                <div class="detail-grid">
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Дата проведения</span>
+                        <span class="detail-grid__value">{{ interaction.event_date|date:"d.m.Y"|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Время начала</span>
+                        <span class="detail-grid__value">{{ interaction.event_start_time|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Время окончания</span>
+                        <span class="detail-grid__value">{{ interaction.event_end_time|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Общая продолжительность</span>
+                        <span class="detail-grid__value">{{ interaction.total_duration|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Репетиции / саундчек</span>
+                        <span class="detail-grid__value">{{ interaction.rehearsal_schedule|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Монтаж оборудования</span>
+                        <span class="detail-grid__value">{{ interaction.setup_schedule|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Демонтаж оборудования</span>
+                        <span class="detail-grid__value">{{ interaction.teardown_schedule|default:"Не указано" }}</span>
+                    </div>
+                </div>
+
+                <div class="detail-card__divider"></div>
+
+                <div class="detail-grid">
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Наименование площадки</span>
+                        <span class="detail-grid__value">{{ interaction.venue_name|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Адрес площадки</span>
+                        <span class="detail-grid__value">{{ interaction.venue_address|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Тип площадки</span>
+                        <span class="detail-grid__value">{{ interaction.venue_type|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Вместимость зала</span>
+                        <span class="detail-grid__value">{{ interaction.venue_capacity|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Наличие сцены</span>
+                        <span class="detail-grid__value">{% if interaction.venue_has_stage %}Да{% else %}Нет{% endif %}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="detail-card mb-4 collapse-card">
+            <button class="collapse-toggle" type="button" data-collapse="conditions-details" aria-expanded="false">
+                <span><i class="bi bi-clipboard-check me-2"></i>Условия</span>
+                <i class="bi bi-chevron-down collapse-icon"></i>
+            </button>
+            <div class="detail-card__body collapse-body d-none" id="conditions-details">
+                <div class="detail-grid">
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Размер сцены (Ш×Г×В)</span>
+                        <span class="detail-grid__value">{{ interaction.stage_size|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Микрофоны (кол-во)</span>
+                        <span class="detail-grid__value">{{ interaction.microphones_count|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Акустическая система</span>
+                        <span class="detail-grid__value">{{ interaction.sound_system|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Микшерный пульт</span>
+                        <span class="detail-grid__value">{{ interaction.mixing_console|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Световое оборудование</span>
+                        <span class="detail-grid__value">{{ interaction.lighting_equipment|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Видеооборудование / экраны</span>
+                        <span class="detail-grid__value">{{ interaction.video_equipment|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Интернет</span>
+                        <span class="detail-grid__value">{% if interaction.has_internet %}Да{% else %}Нет{% endif %}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Электропитание 220В / 380В</span>
+                        <span class="detail-grid__value">{{ interaction.power_supply|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Гримерные комнаты</span>
+                        <span class="detail-grid__value">{% if interaction.has_green_rooms %}Да{% else %}Нет{% endif %}</span>
+                    </div>
+                </div>
+
+                <div class="detail-card__divider"></div>
+
+                <div class="detail-grid">
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Персонал</span>
+                        <span class="detail-grid__value">
+                            {% if interaction.staff_host %}<span class="detail-pill">Ведущий</span>{% endif %}
+                            {% if interaction.staff_sound_engineer %}<span class="detail-pill">Звукорежиссёр</span>{% endif %}
+                            {% if interaction.staff_light_engineer %}<span class="detail-pill">Светорежиссёр</span>{% endif %}
+                            {% if interaction.staff_tech_admin %}<span class="detail-pill">Тех. администратор</span>{% endif %}
+                            {% if interaction.staff_security %}<span class="detail-pill">Охрана</span>{% endif %}
+                            {% if interaction.staff_medical %}<span class="detail-pill">Медицинское сопровождение</span>{% endif %}
+                            {% if not interaction.staff_host and not interaction.staff_sound_engineer and not interaction.staff_light_engineer and not interaction.staff_tech_admin and not interaction.staff_security and not interaction.staff_medical %}
+                                Не указано
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Информационное сопровождение</span>
+                        <span class="detail-grid__value">
+                            {% if interaction.info_promo_materials %}<span class="detail-pill">Афиша</span>{% endif %}
+                            {% if interaction.info_online_registration %}<span class="detail-pill">Онлайн-регистрация</span>{% endif %}
+                            {% if interaction.info_photo_video %}<span class="detail-pill">Фото/видео</span>{% endif %}
+                            {% if interaction.info_live_stream %}<span class="detail-pill">Онлайн-трансляция</span>{% endif %}
+                            {% if not interaction.info_promo_materials and not interaction.info_online_registration and not interaction.info_photo_video and not interaction.info_live_stream %}
+                                Не указано
+                            {% endif %}
+                        </span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Платный вход</span>
+                        <span class="detail-grid__value">{% if interaction.paid_entry %}Да{% else %}Нет{% endif %}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Стоимость билета / взноса</span>
+                        <span class="detail-grid__value">{{ interaction.ticket_price|default:"Не указано" }}</span>
+                    </div>
+                </div>
+
+                <div class="detail-card__divider"></div>
+
+                <div class="detail-grid">
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Особые требования площадки</span>
+                        <span class="detail-grid__value">{{ interaction.venue_special_requirements|default:"Не указано" }}</span>
+                    </div>
+                    <div class="detail-grid__item">
+                        <span class="detail-grid__label">Дополнительные комментарии</span>
+                        <span class="detail-grid__value">{{ interaction.additional_comments|default:"Не указано" }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="detail-card">
             <div class="detail-card__header">
                 <h5 class="detail-card__title mb-0"><i class="bi bi-journal-richtext me-2"></i>Отчёты</h5>
@@ -167,7 +372,9 @@
                             <div class="participants-list__chips">
                                 {% for participant in agents %}
                                     <span class="participants-list__chip participants-list__chip--{{ participant.status }} participants-list__chip--agent">
-                                        {{ participant.display_name }}
+                                        <a href="{% url 'agent_public_profile' participant.user.id %}" class="participants-list__link">
+                                            {{ participant.display_name }}
+                                        </a>
                                     </span>
                                 {% endfor %}
                             </div>
@@ -181,7 +388,9 @@
                             <div class="participants-list__chips">
                                 {% for participant in venues %}
                                     <span class="participants-list__chip participants-list__chip--{{ participant.status }} participants-list__chip--venue">
-                                        {{ participant.display_name }}
+                                        <a href="{% url 'client_public_profile' participant.user.id %}" class="participants-list__link">
+                                            {{ participant.display_name }}
+                                        </a>
                                     </span>
                                 {% endfor %}
                             </div>
@@ -195,7 +404,13 @@
                             <div class="participants-list__chips">
                                 {% for participant in performers %}
                                     <span class="participants-list__chip participants-list__chip--{{ participant.status }} participants-list__chip--performer">
-                                        {{ participant.display_name }}
+                                        {% if participant.profile %}
+                                            <a href="{% url 'performers:performer_detail' participant.profile.id %}" class="participants-list__link">
+                                                {{ participant.display_name }}
+                                            </a>
+                                        {% else %}
+                                            {{ participant.display_name }}
+                                        {% endif %}
                                     </span>
                                 {% endfor %}
                             </div>
@@ -359,6 +574,13 @@
         background: rgba(255,255,255,0.08);
         color: #f6f7fb;
     }
+    .participants-list__link {
+        color: inherit;
+        text-decoration: none;
+    }
+    .participants-list__link:hover {
+        text-decoration: underline;
+    }
     .participants-list__chip--agent {
         border: 1px solid rgba(255, 193, 7, 0.3);
     }
@@ -379,6 +601,68 @@
     .participants-list__chip--declined {
         background: rgba(231, 76, 60, 0.18);
         color: #e74c3c;
+    }
+    .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+        gap: 0.75rem 1rem;
+    }
+    .detail-grid__item {
+        background: rgba(0, 0, 0, 0.2);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        padding: 0.75rem 0.9rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.35rem;
+    }
+    .detail-grid__label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #f6d58b;
+        font-weight: 600;
+    }
+    .detail-grid__value {
+        font-weight: 600;
+        color: #f6f7fb;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    .detail-pill {
+        padding: 0.2rem 0.6rem;
+        border-radius: 999px;
+        background: rgba(255, 193, 7, 0.18);
+        color: #ffc107;
+        border: 1px solid rgba(255, 193, 7, 0.35);
+        font-size: 0.75rem;
+        font-weight: 700;
+    }
+    .collapse-card {
+        padding: 0;
+        overflow: hidden;
+    }
+    .collapse-toggle {
+        width: 100%;
+        border: none;
+        background: transparent;
+        color: #f1c40f;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 1rem 1.25rem;
+        font-weight: 700;
+        font-size: 1rem;
+    }
+    .collapse-toggle .collapse-icon {
+        transition: transform 0.2s ease;
+    }
+    .collapse-toggle[aria-expanded="false"] .collapse-icon {
+        transform: rotate(-90deg);
+    }
+    .collapse-body {
+        padding: 0.25rem 1.25rem 1.25rem;
     }
     .finance-card__row {
         display: flex;
@@ -469,5 +753,22 @@
         }
     }
 </style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.querySelectorAll('.collapse-toggle').forEach((toggle) => {
+        toggle.addEventListener('click', () => {
+            const targetId = toggle.getAttribute('data-collapse');
+            const body = targetId ? document.getElementById(targetId) : null;
+            if (!body) {
+                return;
+            }
+            const isHidden = body.classList.contains('d-none');
+            body.classList.toggle('d-none', !isHidden);
+            toggle.setAttribute('aria-expanded', isHidden ? 'true' : 'false');
+        });
+    });
+</script>
 {% endblock %}
 
