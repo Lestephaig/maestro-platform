@@ -44,3 +44,5 @@ service-identity==24.2.0
 typing-extensions==4.15.0
 zope.interface==8.0.1
 
+gunicorn==21.2.0 
+django-grappelli==3.0.8 
