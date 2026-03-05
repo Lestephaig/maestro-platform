@@ -1,0 +1,181 @@
+{% extends 'base.html' %}
+
+{% block title %}Поддержка и контакты - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .support-page {
+        padding: 2.5rem 1rem 3rem;
+    }
+
+    .support-wrap {
+        max-width: 900px;
+        margin: 0 auto;
+    }
+
+    .support-card {
+        background: linear-gradient(135deg, var(--gray) 0%, var(--gray-dark) 100%);
+        border: 1px solid var(--gold);
+        border-radius: 22px;
+        box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+        overflow: hidden;
+    }
+
+    .support-head {
+        padding: 2rem 2rem 1.5rem;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.4);
+        background: linear-gradient(180deg, rgba(10, 10, 10, 0.85) 0%, rgba(26, 26, 26, 0.45) 100%);
+    }
+
+    .support-title {
+        margin: 0;
+        font-size: 2rem;
+        font-weight: 800;
+        color: var(--gold-light);
+        display: flex;
+        align-items: center;
+        gap: 0.65rem;
+    }
+
+    .support-subtitle {
+        margin: 0.9rem 0 0;
+        color: var(--silver-light);
+        max-width: 760px;
+    }
+
+    .support-body {
+        padding: 2rem;
+        display: grid;
+        grid-template-columns: 1.25fr 1fr;
+        gap: 1.1rem;
+    }
+
+    .support-block {
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(192, 192, 192, 0.22);
+        border-radius: 14px;
+        padding: 1.2rem 1.15rem;
+    }
+
+    .support-block h3 {
+        margin: 0 0 0.6rem;
+        color: var(--gold);
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .support-block p,
+    .support-block li {
+        color: var(--silver-light);
+        margin-bottom: 0.5rem;
+    }
+
+    .support-list {
+        margin: 0;
+        padding-left: 1.1rem;
+    }
+
+    .support-email {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        margin-top: 0.35rem;
+        text-decoration: none;
+        color: var(--gold-light);
+        font-weight: 700;
+        font-size: 1.05rem;
+        word-break: break-word;
+    }
+
+    .support-email:hover {
+        color: var(--gold);
+    }
+
+    .support-note {
+        margin-top: 0.6rem;
+        font-size: 0.95rem;
+        color: var(--silver);
+    }
+
+    @media (max-width: 900px) {
+        .support-body {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .support-page {
+            padding: 1rem 0.75rem 2rem;
+        }
+
+        .support-head {
+            padding: 1.25rem 1.1rem 1rem;
+        }
+
+        .support-title {
+            font-size: 1.45rem;
+        }
+
+        .support-subtitle {
+            font-size: 0.96rem;
+        }
+
+        .support-body {
+            padding: 1.1rem;
+            gap: 0.9rem;
+        }
+
+        .support-block {
+            padding: 1rem 0.9rem;
+        }
+
+        .support-email {
+            font-size: 0.97rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="support-page">
+    <div class="support-wrap">
+        <div class="support-card">
+            <div class="support-head">
+                <h1 class="support-title">
+                    <i class="bi bi-headset"></i>
+                    Техническая поддержка
+                </h1>
+                <p class="support-subtitle">
+                    Если у вас возникли вопросы по работе платформы, проблемы со входом, регистрацией,
+                    уведомлениями или размещением заявок, напишите нам. Мы поможем разобраться.
+                </p>
+            </div>
+
+            <div class="support-body">
+                <article class="support-block">
+                    <h3>По каким вопросам можно обратиться</h3>
+                    <ul class="support-list">
+                        <li>Проблемы с авторизацией и восстановлением пароля</li>
+                        <li>Ошибки в профиле, объявлениях, чатах и уведомлениях</li>
+                        <li>Технические сбои и вопросы по работе функций сайта</li>
+                        <li>Предложения по улучшению платформы</li>
+                    </ul>
+                </article>
+
+                <article class="support-block">
+                    <h3>Контакты поддержки</h3>
+                    <p>Основной канал связи:</p>
+                    <a class="support-email" href="mailto:support@maestrocast.ru">
+                        <i class="bi bi-envelope-fill"></i>
+                        support@maestrocast.ru
+                    </a>
+                    <p class="support-note">
+                        В письме укажите ваш email аккаунта и кратко опишите проблему.
+                        По возможности приложите скриншот.
+                    </p>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}
