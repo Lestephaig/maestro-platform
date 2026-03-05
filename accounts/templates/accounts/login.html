@@ -178,6 +178,24 @@
     .btn-login:active {
         transform: translateY(-1px);
     }
+
+    .login-links {
+        text-align: right;
+        margin-top: -0.75rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .login-links a {
+        color: var(--gold);
+        text-decoration: none;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    .login-links a:hover {
+        color: var(--gold-light);
+        text-decoration: underline;
+    }
     
     .login-footer {
         text-align: center;
@@ -342,6 +360,10 @@
                             {{ form.password.errors.0 }}
                         </div>
                     {% endif %}
+                </div>
+
+                <div class="login-links">
+                    <a href="{% url 'password_reset' %}">Забыли пароль?</a>
                 </div>
 
                 <button type="submit" class="btn btn-login w-100">

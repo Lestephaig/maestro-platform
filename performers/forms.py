@@ -151,6 +151,24 @@ class PerformerPhotoForm(forms.ModelForm):
             }),
         }
 
+    def clean_photo(self):
+        photo = self.cleaned_data.get('photo')
+        if not photo:
+            return photo
+
+        max_size = 15 * 1024 * 1024  # 15 MB safety limit
+        if photo.size > max_size:
+            raise forms.ValidationError(
+                'Файл слишком большой. Максимальный размер фотографии: 15 МБ. '
+                'Попробуйте выбрать фото меньшего размера.'
+            )
+
+        content_type = getattr(photo, 'content_type', '')
+        if content_type and not content_type.startswith('image/'):
+            raise forms.ValidationError('Разрешены только изображения.')
+
+        return photo
+
 
 class PerformerVideoForm(forms.ModelForm):
     class Meta:

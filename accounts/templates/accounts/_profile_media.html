@@ -54,16 +54,16 @@
                     {% for video in videos %}
                         <div class="col-md-6">
                             <div class="video-item-card">
-                                <div class="video-preview">
+                                <a href="{{ video.video_url }}" target="_blank" rel="noopener noreferrer" class="video-preview video-preview-link" aria-label="Открыть видео">
                                     <i class="bi bi-play-circle" style="font-size: 3rem; color: #f39c12;"></i>
-                                </div>
+                                </a>
                                 <div class="video-info">
                                     <h6 style="color: #ecf0f1;">{{ video.title|default:"Без названия" }}</h6>
                                     {% if video.description %}
                                         <p style="color: #bdc3c7; font-size: 0.9rem;">{{ video.description|truncatewords:15 }}</p>
                                     {% endif %}
                                     <div class="d-flex gap-2 mt-2">
-                                        <a href="{{ video.video_url }}" target="_blank" class="btn btn-sm btn-outline-light">
+                                        <a href="{{ video.video_url }}" target="_blank" rel="noopener noreferrer" class="btn btn-sm btn-outline-light">
                                             <i class="bi bi-box-arrow-up-right"></i> Открыть
                                         </a>
                                         <button class="btn btn-sm btn-danger" onclick="deleteVideo({{ video.id }})">
@@ -109,12 +109,16 @@
                 <h5 class="modal-title" style="color: #f39c12;"><i class="bi bi-image me-2"></i>Добавить фотографию</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <form method="post" action="{% url 'add_photo' %}" enctype="multipart/form-data">
+            <form id="addPhotoForm" method="post" action="{% url 'add_photo' %}" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="modal-body">
                     <div class="mb-3">
                         <label class="form-label" style="color: #ecf0f1;">Фотография</label>
                         {{ photo_form.photo }}
+                        <small id="photoUploadHint" class="form-text d-block mt-2" style="color: #bdc3c7;">
+                            Рекомендуемый размер: до 15 МБ. На телефоне фото автоматически сжимается перед отправкой.
+                        </small>
+                        <div id="photoUploadError" class="small mt-2" style="color: #ff7b7b; display: none;"></div>
                     </div>
                     <div class="mb-3">
                         <label class="form-label" style="color: #ecf0f1;">Подпись</label>
@@ -128,7 +132,7 @@
                 </div>
                 <div class="modal-footer" style="border-top: 1px solid rgba(243, 156, 18, 0.3);">
                     <button type="button" class="btn btn-outline-light" data-bs-dismiss="modal">Отмена</button>
-                    <button type="submit" class="btn" style="background: #f39c12; color: #2c3e50;">
+                    <button id="addPhotoSubmitBtn" type="submit" class="btn" style="background: #f39c12; color: #2c3e50;">
                         <i class="bi bi-upload me-1"></i>Загрузить
                     </button>
                 </div>
@@ -245,12 +249,44 @@
     flex-shrink: 0;
 }
 
+.video-preview-link {
+    text-decoration: none;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.video-preview-link:hover {
+    transform: scale(1.02);
+    box-shadow: 0 0 0 1px rgba(243, 156, 18, 0.35) inset;
+}
+
 .video-info {
     flex: 1;
 }
 
 .video-info h6 {
     margin-bottom: 0.5rem;
+}
+
+.media-management .card {
+    border: 1px solid rgba(243, 156, 18, 0.2);
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.22);
+}
+
+.media-management .card-body {
+    background: rgba(16, 22, 30, 0.35);
+}
+
+.media-management .form-control,
+.media-management .form-select {
+    background: rgba(255, 255, 255, 0.06);
+    color: #ecf0f1;
+    border: 1px solid rgba(189, 195, 199, 0.45);
+}
+
+.media-management .form-control:focus,
+.media-management .form-select:focus {
+    border-color: #f39c12;
+    box-shadow: 0 0 0 0.2rem rgba(243, 156, 18, 0.2);
 }
 
 .profile-photo-viewer-content {
@@ -281,6 +317,29 @@
     text-align: center;
     margin-top: 0.75rem;
     color: rgba(255, 255, 255, 0.88);
+}
+
+@media (max-width: 768px) {
+    .media-thumb {
+        height: 160px;
+    }
+
+    .video-item-card {
+        flex-direction: column;
+    }
+
+    .video-preview {
+        width: 100%;
+        height: 140px;
+    }
+
+    .video-info .d-flex {
+        flex-wrap: wrap;
+    }
+
+    .video-info .btn {
+        flex: 1 1 auto;
+    }
 }
 </style>
 
@@ -336,6 +395,117 @@ function getCookie(name) {
     return cookieValue;
 }
 
+async function compressImageIfNeeded(file) {
+    const MAX_UPLOAD_BYTES = 8 * 1024 * 1024; // Keep under strict gateway limits
+    const MAX_SIDE = 2048;
+    const JPEG_QUALITY = 0.82;
+
+    if (!file || !file.type.startsWith('image/')) {
+        return file;
+    }
+
+    // Skip compression for already small files
+    if (file.size <= MAX_UPLOAD_BYTES) {
+        return file;
+    }
+
+    const imageUrl = URL.createObjectURL(file);
+    try {
+        const img = await new Promise((resolve, reject) => {
+            const image = new Image();
+            image.onload = () => resolve(image);
+            image.onerror = reject;
+            image.src = imageUrl;
+        });
+
+        let width = img.width;
+        let height = img.height;
+        const maxSide = Math.max(width, height);
+        if (maxSide > MAX_SIDE) {
+            const scale = MAX_SIDE / maxSide;
+            width = Math.round(width * scale);
+            height = Math.round(height * scale);
+        }
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, width, height);
+
+        const blob = await new Promise((resolve) => {
+            canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY);
+        });
+
+        if (!blob) {
+            return file;
+        }
+
+        // If compression did not help enough, still continue with original file.
+        if (blob.size >= file.size) {
+            return file;
+        }
+
+        return new File([blob], `${file.name.replace(/\.[^.]+$/, '')}.jpg`, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+        });
+    } finally {
+        URL.revokeObjectURL(imageUrl);
+    }
+}
+
+function humanSize(bytes) {
+    return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+}
+
+function initPhotoUploadOptimization() {
+    const form = document.getElementById('addPhotoForm');
+    if (!form) return;
+
+    const fileInput = form.querySelector('input[type="file"]');
+    const submitBtn = document.getElementById('addPhotoSubmitBtn');
+    const errorNode = document.getElementById('photoUploadError');
+    const hintNode = document.getElementById('photoUploadHint');
+    if (!fileInput || !submitBtn) return;
+
+    form.addEventListener('submit', async function (event) {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) {
+            return;
+        }
+
+        event.preventDefault();
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<i class="bi bi-arrow-repeat me-1"></i>Подготовка фото...';
+        if (errorNode) {
+            errorNode.style.display = 'none';
+            errorNode.textContent = '';
+        }
+
+        try {
+            const compressed = await compressImageIfNeeded(file);
+            const transfer = new DataTransfer();
+            transfer.items.add(compressed);
+            fileInput.files = transfer.files;
+
+            if (hintNode && compressed.size < file.size) {
+                hintNode.textContent = `Фото оптимизировано: ${humanSize(file.size)} -> ${humanSize(compressed.size)}.`;
+            }
+
+            form.submit();
+        } catch (error) {
+            console.error('Image optimization failed:', error);
+            if (errorNode) {
+                errorNode.textContent = 'Не удалось подготовить фото. Попробуйте файл меньшего размера.';
+                errorNode.style.display = 'block';
+            }
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="bi bi-upload me-1"></i>Загрузить';
+        }
+    });
+}
+
 (function initProfileMediaPhotoViewer() {
     const viewerElement = document.getElementById('profilePhotoViewer');
     const viewerImage = document.getElementById('profilePhotoViewerImage');
@@ -353,4 +523,6 @@ function getCookie(name) {
         });
     });
 })();
+
+initPhotoUploadOptimization();
 </script>
