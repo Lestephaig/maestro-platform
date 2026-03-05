@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 import os
+from email.utils import parseaddr
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -196,7 +197,11 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='Maestro <verification@maestrocast.ru>')
+_raw_default_from_email = config('DEFAULT_FROM_EMAIL', default='')
+_fallback_from_email = EMAIL_HOST_USER or 'noreply@localhost'
+DEFAULT_FROM_EMAIL = _raw_default_from_email or _fallback_from_email
+if not parseaddr(DEFAULT_FROM_EMAIL)[1]:
+    DEFAULT_FROM_EMAIL = _fallback_from_email
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Default primary key field type
