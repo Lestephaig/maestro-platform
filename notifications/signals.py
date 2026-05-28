@@ -1,10 +1,11 @@
 from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
-from django.utils import timezone
+from django.db import transaction
+from announcements.models import AnnouncementResponse
 from interactions.models import Interaction, InteractionParticipant
 from chat.models import Message
 from .models import Notification
-from .utils import send_notification_email
+from .utils import send_new_message_email, send_notification_email
 
 
 @receiver(post_save, sender=InteractionParticipant)
@@ -92,9 +93,38 @@ def notify_project_status_change(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Message)
 def schedule_chat_notification(sender, instance, created, **kwargs):
-    """Планирует проверку непрочитанного сообщения через 5 минут"""
-    if created:
-        # Сообщение только что создано, проверка будет выполнена через задачу
-        # Это будет обработано через management command или периодическую задачу
-        pass
+    """Отправляет email получателю при создании нового сообщения в чате."""
+    if not created:
+        return
+
+    recipient = instance.room.client if instance.sender == instance.room.performer else instance.room.performer
+    if recipient == instance.sender:
+        return
+
+    transaction.on_commit(lambda: send_new_message_email(
+        user=recipient,
+        sender=instance.sender,
+        message_text=instance.text,
+        platform_url=f'/chat/{instance.room.id}/',
+        related_object_id=instance.id,
+        related_object_type='chat.message',
+    ))
+
+
+@receiver(post_save, sender=AnnouncementResponse)
+def notify_announcement_author_about_response(sender, instance, created, **kwargs):
+    """Отправляет email автору объявления при новом отклике."""
+    if not created or instance.announcement.author == instance.responder:
+        return
+
+    response_text = instance.message.strip() or f'Отклик на объявление "{instance.announcement.title}"'
+
+    transaction.on_commit(lambda: send_new_message_email(
+        user=instance.announcement.author,
+        sender=instance.responder,
+        message_text=response_text,
+        platform_url='/chat/',
+        related_object_id=instance.id,
+        related_object_type='announcements.announcementresponse',
+    ))
 

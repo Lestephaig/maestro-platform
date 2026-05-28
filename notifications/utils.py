@@ -1,9 +1,102 @@
+import logging
+
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
 from django.utils import timezone
 from datetime import timedelta
 from .models import Notification, NotificationPreference
+
+logger = logging.getLogger(__name__)
+
+
+def _absolute_platform_url(path):
+    site_url = getattr(settings, 'SITE_URL', 'http://127.0.0.1:8000').rstrip('/')
+    return f'{site_url}{path}'
+
+
+def get_user_display_name(user):
+    """Возвращает понятное имя пользователя для писем и уведомлений."""
+    if getattr(user, 'display_name', ''):
+        return user.display_name
+    if hasattr(user, 'performer_profile') and getattr(user.performer_profile, 'full_name', ''):
+        return user.performer_profile.full_name
+    if hasattr(user, 'agent_profile') and getattr(user.agent_profile, 'display_name', ''):
+        return user.agent_profile.display_name
+    if hasattr(user, 'client_profile') and getattr(user.client_profile, 'company_name', ''):
+        return user.client_profile.company_name
+    return user.email or user.username
+
+
+def send_new_message_email(user, sender, message_text, platform_url=None, related_object_id=None, related_object_type='chat.message'):
+    """Отправляет письмо о новом сообщении в едином шаблоне платформы."""
+    if not user.email:
+        return False
+
+    notification_type = Notification.NOTIFICATION_TYPE_CHAT_MESSAGE
+    preference = NotificationPreference.get_or_create_for(user, notification_type)
+    if not preference.in_app_enabled and not preference.email_enabled:
+        return False
+
+    sender_name = get_user_display_name(sender)
+    message_preview = f'{sender_name}: {message_text}'
+    if platform_url and platform_url.startswith('/'):
+        platform_url = _absolute_platform_url(platform_url)
+    platform_url = platform_url or _absolute_platform_url('/chat/')
+
+    if related_object_id and related_object_type:
+        recent_notification = Notification.objects.filter(
+            user=user,
+            notification_type=notification_type,
+            related_object_id=related_object_id,
+            related_object_type=related_object_type,
+        ).exists()
+        if recent_notification:
+            return False
+
+    context = {
+        'user': user,
+        'sender_name': sender_name,
+        'message_text': message_text,
+        'message_preview': message_preview,
+        'platform_url': platform_url,
+    }
+    subject = 'Проверьте чаты. Вам доставлено новое сообщение.'
+    text_message = render_to_string('notifications/emails/chat_message.txt', context)
+    html_message = render_to_string('notifications/emails/chat_message.html', context)
+
+    should_send_email = preference.email_enabled and getattr(user, 'is_email_verified', False)
+    email_sent = False
+    if should_send_email:
+        try:
+            sent_count = send_mail(
+                subject=subject,
+                message=text_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                html_message=html_message,
+                fail_silently=False,
+            )
+            email_sent = sent_count > 0
+        except Exception:
+            logger.exception('Failed to send new message email to user %s', user.pk)
+            if settings.DEBUG:
+                raise
+
+    if preference.in_app_enabled or should_send_email:
+        Notification.objects.create(
+            user=user,
+            notification_type=notification_type,
+            title='Новое сообщение на платформе «Маэстро»',
+            message=message_preview,
+            related_object_id=related_object_id,
+            related_object_type=related_object_type,
+            is_sent=email_sent,
+            email_sent=email_sent,
+            in_app_sent=preference.in_app_enabled,
+        )
+
+    return email_sent
 
 
 def send_notification_email(user, notification_type, title, message, context=None, related_object_id=None, related_object_type=None):
@@ -112,25 +205,11 @@ def check_unread_chat_messages():
         ).exists()
         
         if not notification_exists:
-            # Отправляем уведомление
-            sender_name = message.sender.username
-            if hasattr(message.sender, 'performer_profile'):
-                sender_name = message.sender.performer_profile.full_name
-            elif hasattr(message.sender, 'agent_profile'):
-                sender_name = message.sender.agent_profile.display_name
-            elif hasattr(message.sender, 'client_profile'):
-                sender_name = message.sender.client_profile.company_name
-            
-            send_notification_email(
+            send_new_message_email(
                 user=recipient,
-                notification_type=Notification.NOTIFICATION_TYPE_CHAT_MESSAGE,
-                title='Новое сообщение в чате',
-                message=f'У вас новое сообщение от {sender_name}',
-                context={
-                    'sender_name': sender_name,
-                    'message_text': message.text[:100],  # Первые 100 символов
-                    'chat_url': f'{getattr(settings, "SITE_URL", "http://127.0.0.1:8000")}/chat/{message.room.id}/',
-                },
+                sender=message.sender,
+                message_text=message.text,
+                platform_url=f'/chat/{message.room.id}/',
                 related_object_id=message.id,
                 related_object_type='chat.message'
             )
