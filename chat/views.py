@@ -2,7 +2,8 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages as django_messages
 from django.http import HttpResponseForbidden
-from django.db.models import Q
+from django.db.models import Count, Max, Q
+from django.db.models.functions import Coalesce
 from .models import ChatRoom, Message
 from accounts.models import User
 from performers.models import PerformerProfile
@@ -27,12 +28,20 @@ def _get_or_create_chat_room(user_a, user_b):
 
 @login_required
 def chat_list(request):
-    # Показываем чаты, где пользователь — исполнитель или заказчик
+    # Показываем чаты пользователя, сначала самые активные.
     chats = ChatRoom.objects.filter(
-        performer=request.user
-    ).union(
-        ChatRoom.objects.filter(client=request.user)
-    )
+        Q(performer=request.user) | Q(client=request.user)
+    ).select_related(
+        'performer',
+        'client',
+    ).annotate(
+        last_message_at=Max('messages__timestamp'),
+        last_activity_at=Coalesce(Max('messages__timestamp'), 'created_at'),
+        unread_count=Count(
+            'messages',
+            filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user),
+        ),
+    ).order_by('-last_activity_at', '-created_at')
     return render(request, 'chat/chat_list.html', {'chats': chats})
 
 @login_required

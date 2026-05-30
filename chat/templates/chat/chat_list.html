@@ -64,6 +64,11 @@
         border-color: var(--gold);
         box-shadow: 0 8px 30px rgba(212, 175, 55, 0.4);
     }
+
+    .chat-card.has-unread {
+        border-color: var(--gold);
+        box-shadow: 0 8px 28px rgba(212, 175, 55, 0.35);
+    }
     
     .chat-card .card-body {
         background: transparent;
@@ -100,6 +105,21 @@
     .chat-card small {
         color: var(--silver-dark);
         font-size: 0.85rem;
+    }
+
+    .unread-badge {
+        min-width: 28px;
+        height: 28px;
+        padding: 0 0.5rem;
+        border-radius: 999px;
+        background: var(--gold);
+        color: var(--black);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.85rem;
+        font-weight: 800;
+        box-shadow: 0 4px 14px rgba(212, 175, 55, 0.45);
     }
     
     .btn-open-chat {
@@ -212,7 +232,7 @@
     
     {% if chats %}
         {% for chat in chats %}
-            <div class="card chat-card">
+            <div class="card chat-card {% if chat.unread_count %}has-unread{% endif %}">
                 <div class="card-body">
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar">
@@ -260,10 +280,17 @@
                             {% endif %}
                             <small>
                                 <i class="bi bi-clock"></i>
-                                Создан {{ chat.created_at|date:"d.m.Y" }}
+                                {% if chat.last_message_at %}
+                                    {{ chat.last_message_at|date:"d.m.Y H:i" }}
+                                {% else %}
+                                    Создан {{ chat.created_at|date:"d.m.Y" }}
+                                {% endif %}
                             </small>
                         </div>
-                        <div>
+                        <div class="d-flex align-items-center gap-3">
+                            {% if chat.unread_count %}
+                                <span class="unread-badge" title="Непрочитанные сообщения">{{ chat.unread_count }}</span>
+                            {% endif %}
                             <a href="{% url 'chat_room' chat.id %}" class="btn btn-open-chat">
                                 <i class="bi bi-chat-fill"></i>
                                 <span>Открыть</span>
