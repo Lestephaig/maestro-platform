@@ -213,6 +213,7 @@ AUTH_USER_MODEL = 'accounts.User'
 
 LOGIN_REDIRECT_URL = 'profile'
 LOGOUT_REDIRECT_URL = 'login'
+LOGIN_URL = 'login'
 
 # Site URL для генерации ссылок в email
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
