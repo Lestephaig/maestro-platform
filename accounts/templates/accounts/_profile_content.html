@@ -3,10 +3,200 @@
     <div class="admin-users-card">
         <div class="admin-users-header">
             <div>
-                <h4><i class="bi bi-people me-2"></i>Пользователи</h4>
-                <p>Всего: {{ admin_users_total }}</p>
+                <h4><i class="bi bi-shield-lock me-2"></i>Админ-панель</h4>
+                <p>Пользователи: {{ admin_users_total }} | Чаты: {{ admin_chats_total }} | Объявления: {{ admin_announcements_total }}</p>
             </div>
         </div>
+        <ul class="nav nav-tabs admin-nav-tabs mb-3" role="tablist">
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if admin_tab == 'users' %}active{% endif %}"
+                   href="?admin_tab=users{% if admin_users_q %}&admin_users_q={{ admin_users_q|urlencode }}{% endif %}">
+                    <i class="bi bi-people me-1"></i>Пользователи
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if admin_tab == 'chats' %}active{% endif %}" href="?admin_tab=chats">
+                    <i class="bi bi-chat-dots me-1"></i>Чаты
+                </a>
+            </li>
+            <li class="nav-item" role="presentation">
+                <a class="nav-link {% if admin_tab == 'announcements' %}active{% endif %}" href="?admin_tab=announcements">
+                    <i class="bi bi-megaphone me-1"></i>Объявления
+                </a>
+            </li>
+        </ul>
+
+        {% if admin_tab == 'chats' %}
+        <form method="get" class="admin-search-form mb-3">
+            <input type="hidden" name="admin_tab" value="chats">
+            <div class="admin-search-group">
+                <input type="text"
+                       name="admin_chats_q"
+                       class="form-control"
+                       value="{{ admin_chats_q }}"
+                       placeholder="Поиск по участникам (имя/email)">
+                <button type="submit" class="btn btn-sm btn-outline-light">Найти</button>
+                {% if admin_chats_q %}
+                    <a href="?admin_tab=chats" class="btn btn-sm btn-outline-secondary">Сброс</a>
+                {% endif %}
+            </div>
+            <div class="admin-search-meta">
+                Найдено: {{ admin_chats_filtered_total }} из {{ admin_chats_total }}
+            </div>
+        </form>
+        <div class="admin-users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Участник 1</th>
+                        <th>Участник 2</th>
+                        <th>Создан</th>
+                        <th>Сообщений</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for chat in admin_chats %}
+                    <tr>
+                        <td>#{{ chat.id }}</td>
+                        <td>
+                            {% if chat.performer.performer_profile %}
+                                <a class="admin-user-link" href="{% url 'performers:performer_detail' chat.performer.performer_profile.id %}">
+                                    {{ chat.performer.performer_profile.full_name|default:chat.performer.display_name|default:chat.performer.username }}
+                                </a>
+                            {% elif chat.performer.agent_profile %}
+                                <a class="admin-user-link" href="{% url 'agent_public_profile' chat.performer.id %}">
+                                    {{ chat.performer.agent_profile.display_name|default:chat.performer.display_name|default:chat.performer.username }}
+                                </a>
+                            {% else %}
+                                <a class="admin-user-link" href="{% url 'client_public_profile' chat.performer.id %}">
+                                    {{ chat.performer.client_profile.company_name|default:chat.performer.display_name|default:chat.performer.username }}
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if chat.client.performer_profile %}
+                                <a class="admin-user-link" href="{% url 'performers:performer_detail' chat.client.performer_profile.id %}">
+                                    {{ chat.client.performer_profile.full_name|default:chat.client.display_name|default:chat.client.username }}
+                                </a>
+                            {% elif chat.client.agent_profile %}
+                                <a class="admin-user-link" href="{% url 'agent_public_profile' chat.client.id %}">
+                                    {{ chat.client.agent_profile.display_name|default:chat.client.display_name|default:chat.client.username }}
+                                </a>
+                            {% else %}
+                                <a class="admin-user-link" href="{% url 'client_public_profile' chat.client.id %}">
+                                    {{ chat.client.client_profile.company_name|default:chat.client.display_name|default:chat.client.username }}
+                                </a>
+                            {% endif %}
+                        </td>
+                        <td>{{ chat.created_at|date:"d.m.Y H:i" }}</td>
+                        <td>
+                            {% if chat.messages_count > 99 %}99+{% else %}{{ chat.messages_count }}{% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="admin-users-empty">Чаты не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if admin_chats_page_obj.paginator.num_pages > 1 %}
+        <div class="admin-subtabs">
+            {% for page_num in admin_chats_page_obj.paginator.page_range %}
+                <a class="admin-subtab {% if admin_chats_page_obj.number == page_num %}is-active{% endif %}"
+                   href="?admin_tab=chats&admin_chats_page={{ page_num }}{% if admin_chats_q %}&admin_chats_q={{ admin_chats_q|urlencode }}{% endif %}">
+                    {{ page_num }}
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% elif admin_tab == 'announcements' %}
+        <form method="get" class="admin-search-form mb-3">
+            <input type="hidden" name="admin_tab" value="announcements">
+            <div class="admin-search-group">
+                <input type="text"
+                       name="admin_announcements_q"
+                       class="form-control"
+                       value="{{ admin_announcements_q }}"
+                       placeholder="Поиск по названию объявления">
+                <button type="submit" class="btn btn-sm btn-outline-light">Найти</button>
+                {% if admin_announcements_q %}
+                    <a href="?admin_tab=announcements" class="btn btn-sm btn-outline-secondary">Сброс</a>
+                {% endif %}
+            </div>
+            <div class="admin-search-meta">
+                Найдено: {{ admin_announcements_filtered_total }} из {{ admin_announcements_total }}
+            </div>
+        </form>
+        <div class="admin-users-table">
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Название</th>
+                        <th>Дата публикации</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for announcement in admin_announcements %}
+                    <tr>
+                        <td>#{{ announcement.id }}</td>
+                        <td>
+                            <a class="admin-user-link" href="{% url 'announcements:detail' announcement.id %}">
+                                {{ announcement.title }}
+                            </a>
+                        </td>
+                        <td>{{ announcement.published_at|default:announcement.created_at|date:"d.m.Y H:i" }}</td>
+                        <td class="admin-users-actions">
+                            <form method="post" action="{% url 'admin_delete_announcement' announcement.id %}">
+                                {% csrf_token %}
+                                <button type="submit"
+                                        class="btn btn-sm admin-delete-btn"
+                                        onclick="return confirm('Удалить объявление?') && confirm('Подтвердите удаление объявления еще раз.');">
+                                    Удалить
+                                </button>
+                            </form>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="admin-users-empty">Объявления не найдены.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% if admin_announcements_page_obj.paginator.num_pages > 1 %}
+        <div class="admin-subtabs">
+            {% for page_num in admin_announcements_page_obj.paginator.page_range %}
+                <a class="admin-subtab {% if admin_announcements_page_obj.number == page_num %}is-active{% endif %}"
+                   href="?admin_tab=announcements&admin_announcements_page={{ page_num }}{% if admin_announcements_q %}&admin_announcements_q={{ admin_announcements_q|urlencode }}{% endif %}">
+                    {{ page_num }}
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% else %}
+        <form method="get" class="admin-search-form mb-3">
+            <input type="hidden" name="admin_tab" value="users">
+            <div class="admin-search-group">
+                <input type="text"
+                       name="admin_users_q"
+                       class="form-control"
+                       value="{{ admin_users_q }}"
+                       placeholder="Поиск по имени или email">
+                <button type="submit" class="btn btn-sm btn-outline-light">Найти</button>
+                {% if admin_users_q %}
+                    <a href="?admin_tab=users" class="btn btn-sm btn-outline-secondary">Сброс</a>
+                {% endif %}
+            </div>
+            <div class="admin-search-meta">
+                Найдено: {{ admin_users_filtered_total }} из {{ admin_users_total }}
+            </div>
+        </form>
         <div class="admin-users-table">
             <table>
                 <thead>
@@ -56,6 +246,17 @@
                 </tbody>
             </table>
         </div>
+        {% if admin_users_page_obj.paginator.num_pages > 1 %}
+        <div class="admin-subtabs">
+            {% for page_num in admin_users_page_obj.paginator.page_range %}
+                <a class="admin-subtab {% if admin_users_page_obj.number == page_num %}is-active{% endif %}"
+                   href="?admin_tab=users&admin_users_page={{ page_num }}{% if admin_users_q %}&admin_users_q={{ admin_users_q|urlencode }}{% endif %}">
+                    {{ page_num }}
+                </a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        {% endif %}
     </div>
     {% endif %}
     {% if user.performer_profile %}
@@ -885,6 +1086,43 @@
     font-size: 0.9rem;
 }
 
+.admin-nav-tabs {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.admin-nav-tabs .nav-link {
+    color: rgba(255, 255, 255, 0.75);
+    border: none;
+    border-bottom: 2px solid transparent;
+}
+
+.admin-nav-tabs .nav-link:hover {
+    color: #f6d58b;
+    border-color: transparent;
+}
+
+.admin-nav-tabs .nav-link.active {
+    color: #f6d58b;
+    background: transparent;
+    border-bottom-color: #f39c12;
+}
+
+.admin-search-form {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.admin-search-group {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.admin-search-meta {
+    font-size: 0.85rem;
+    color: rgba(255, 255, 255, 0.65);
+}
+
 .admin-users-table {
     background: rgba(0, 0, 0, 0.25);
     border-radius: 14px;
@@ -978,6 +1216,45 @@
 .admin-users-hint {
     color: rgba(255, 255, 255, 0.45);
     font-size: 0.8rem;
+}
+
+.admin-user-link {
+    color: #f6f7fb;
+    text-decoration: none;
+}
+
+.admin-user-link:hover {
+    color: #f39c12;
+    text-decoration: underline;
+}
+
+.admin-subtabs {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+    margin-top: 0.9rem;
+}
+
+.admin-subtab {
+    min-width: 2rem;
+    text-align: center;
+    padding: 0.25rem 0.5rem;
+    border-radius: 999px;
+    text-decoration: none;
+    color: rgba(255, 255, 255, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.8rem;
+}
+
+.admin-subtab:hover {
+    color: #f6d58b;
+    border-color: rgba(243, 156, 18, 0.7);
+}
+
+.admin-subtab.is-active {
+    color: #111;
+    background: #f39c12;
+    border-color: #f39c12;
 }
 
 @media (max-width: 992px) {

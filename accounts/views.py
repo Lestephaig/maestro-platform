@@ -14,7 +14,10 @@ from performers.forms import PerformerProfileForm, PerformerPhotoForm, Performer
 from clients.forms import ClientProfileForm
 from agents.forms import AgentProfileForm
 from interactions.models import Interaction, InteractionParticipant
-from django.db.models import Q
+from django.db.models import Q, Count
+from django.core.paginator import Paginator
+from chat.models import ChatRoom
+from announcements.models import Announcement
 
 logger = logging.getLogger(__name__)
 
@@ -109,7 +112,7 @@ def resend_verification_email(request):
     return redirect('email_verification_sent')
 
 
-def _build_profile_context(user):
+def _build_profile_context(user, request=None):
     context = {}
     base_queryset = Interaction.objects.select_related('created_by').prefetch_related('participant_links__user')
 
@@ -137,14 +140,90 @@ def _build_profile_context(user):
 
     if getattr(user, 'is_staff', False) or getattr(user, 'is_superuser', False):
         from .models import User
-        context['admin_users'] = User.objects.order_by('-date_joined')[:200]
+        request_get = request.GET if request is not None else {}
+        admin_users_q = (request_get.get('admin_users_q') or '').strip()
+        admin_chats_q = (request_get.get('admin_chats_q') or '').strip()
+        admin_announcements_q = (request_get.get('admin_announcements_q') or '').strip()
+        admin_tab = request_get.get('admin_tab') or 'users'
+
+        users_queryset = User.objects.order_by('-date_joined')
+        if admin_users_q:
+            users_queryset = users_queryset.filter(
+                Q(display_name__icontains=admin_users_q)
+                | Q(email__icontains=admin_users_q)
+                | Q(username__icontains=admin_users_q)
+            )
+
+        users_paginator = Paginator(users_queryset, 50)
+        users_page = users_paginator.get_page(request_get.get('admin_users_page') or 1)
+
+        chats_queryset = (
+            ChatRoom.objects.select_related(
+                'performer',
+                'client',
+                'performer__performer_profile',
+                'performer__agent_profile',
+                'performer__client_profile',
+                'client__performer_profile',
+                'client__agent_profile',
+                'client__client_profile',
+            )
+            .annotate(messages_count=Count('messages'))
+            .order_by('-created_at')
+        )
+        if admin_chats_q:
+            chats_queryset = chats_queryset.filter(
+                Q(performer__display_name__icontains=admin_chats_q)
+                | Q(performer__username__icontains=admin_chats_q)
+                | Q(performer__email__icontains=admin_chats_q)
+                | Q(performer__performer_profile__full_name__icontains=admin_chats_q)
+                | Q(performer__agent_profile__display_name__icontains=admin_chats_q)
+                | Q(performer__client_profile__company_name__icontains=admin_chats_q)
+                | Q(client__display_name__icontains=admin_chats_q)
+                | Q(client__username__icontains=admin_chats_q)
+                | Q(client__email__icontains=admin_chats_q)
+                | Q(client__performer_profile__full_name__icontains=admin_chats_q)
+                | Q(client__agent_profile__display_name__icontains=admin_chats_q)
+                | Q(client__client_profile__company_name__icontains=admin_chats_q)
+            )
+        chats_paginator = Paginator(chats_queryset, 50)
+        chats_page = chats_paginator.get_page(request_get.get('admin_chats_page') or 1)
+
+        announcements_queryset = (
+            Announcement.objects.select_related('author')
+            .order_by('-published_at', '-created_at')
+        )
+        if admin_announcements_q:
+            announcements_queryset = announcements_queryset.filter(
+                title__icontains=admin_announcements_q
+            )
+        announcements_paginator = Paginator(announcements_queryset, 50)
+        announcements_page = announcements_paginator.get_page(
+            request_get.get('admin_announcements_page') or 1
+        )
+
+        context['admin_tab'] = admin_tab if admin_tab in {'users', 'chats', 'announcements'} else 'users'
+        context['admin_users_q'] = admin_users_q
+        context['admin_chats_q'] = admin_chats_q
+        context['admin_announcements_q'] = admin_announcements_q
         context['admin_users_total'] = User.objects.count()
+        context['admin_users_filtered_total'] = users_queryset.count()
+        context['admin_users_page_obj'] = users_page
+        context['admin_users'] = users_page.object_list
+        context['admin_chats_total'] = ChatRoom.objects.count()
+        context['admin_chats_filtered_total'] = chats_queryset.count()
+        context['admin_chats_page_obj'] = chats_page
+        context['admin_chats'] = chats_page.object_list
+        context['admin_announcements_total'] = Announcement.objects.count()
+        context['admin_announcements_filtered_total'] = announcements_queryset.count()
+        context['admin_announcements_page_obj'] = announcements_page
+        context['admin_announcements'] = announcements_page.object_list
     return context
 
 
 @login_required
 def profile(request):
-    context = _build_profile_context(request.user)
+    context = _build_profile_context(request.user, request)
     return render(request, 'accounts/profile.html', context)
 @login_required
 def client_public_profile(request, user_id):
@@ -219,10 +298,22 @@ def admin_delete_user(request, user_id):
     messages.success(request, 'Пользователь удалён.')
     return redirect('profile')
 
+
+@login_required
+@require_POST
+def admin_delete_announcement(request, announcement_id):
+    if not (request.user.is_staff or request.user.is_superuser):
+        return redirect('profile')
+
+    announcement = get_object_or_404(Announcement, id=announcement_id)
+    announcement.delete()
+    messages.success(request, 'Объявление удалено.')
+    return redirect('profile')
+
 @login_required
 def profile_view(request):
     """Возвращает только содержимое профиля для HTMX"""
-    context = _build_profile_context(request.user)
+    context = _build_profile_context(request.user, request)
     return render(request, 'accounts/_profile_content.html', context)
 @login_required
 def profile_edit(request):
@@ -243,7 +334,7 @@ def profile_edit(request):
         if form.is_valid():
             form.save()
             # Возвращаем только содержимое профиля для HTMX
-            context = _build_profile_context(request.user)
+            context = _build_profile_context(request.user, request)
             return render(request, 'accounts/_profile_content.html', context)
     else:
         form = form_class(instance=profile)

@@ -54,6 +54,16 @@
         color: var(--white);
         font-weight: 600;
     }
+
+    .response-author a {
+        color: inherit;
+        text-decoration: none;
+    }
+
+    .response-author a:hover {
+        color: var(--gold);
+        text-decoration: underline;
+    }
     
     .response-date {
         color: var(--silver);
@@ -128,7 +138,21 @@
                 <div class="response-author">
                     <i class="bi bi-person-circle" style="font-size: 1.5rem; color: var(--gold);"></i>
                     <div>
-                        <div>{{ response.responder.username }}</div>
+                        <div>
+                            {% if response.responder.performer_profile %}
+                                <a href="{% url 'performers:performer_detail' response.responder.performer_profile.id %}">
+                                    {{ response.responder.performer_profile.full_name|default:response.responder.display_name|default:response.responder.username }}
+                                </a>
+                            {% elif response.responder.agent_profile %}
+                                <a href="{% url 'agent_public_profile' response.responder.id %}">
+                                    {{ response.responder.agent_profile.display_name|default:response.responder.display_name|default:response.responder.username }}
+                                </a>
+                            {% else %}
+                                <a href="{% url 'client_public_profile' response.responder.id %}">
+                                    {{ response.responder.display_name|default:response.responder.username }}
+                                </a>
+                            {% endif %}
+                        </div>
                         <div class="response-date">
                             <i class="bi bi-calendar3"></i> {{ response.created_at|date:"d.m.Y H:i" }}
                         </div>

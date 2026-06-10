@@ -17,6 +17,7 @@ urlpatterns = [
     path('profile/video/add/', views.add_video, name='add_video'),
     path('profile/video/<int:video_id>/delete/', views.delete_video, name='delete_video'),
     path('admin/users/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),
+    path('admin/announcements/<int:announcement_id>/delete/', views.admin_delete_announcement, name='admin_delete_announcement'),
     path('client/<int:user_id>/', views.client_public_profile, name='client_public_profile'),
     path('agent/<int:user_id>/', views.agent_public_profile, name='agent_public_profile'),
 ]
