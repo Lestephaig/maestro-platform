@@ -4,6 +4,7 @@ from django.contrib import messages as django_messages
 from django.http import HttpResponseForbidden
 from django.db.models import Count, Max, Q
 from django.db.models.functions import Coalesce
+from django.urls import reverse
 from .models import ChatRoom, Message
 from accounts.models import User
 from performers.models import PerformerProfile
@@ -26,6 +27,33 @@ def _get_or_create_chat_room(user_a, user_b):
     return room, created
 
 
+def _get_user_public_name(user):
+    """Возвращает отображаемое имя собеседника с безопасными fallback-ами."""
+    if hasattr(user, 'performer_profile') and getattr(user.performer_profile, 'full_name', ''):
+        return user.performer_profile.full_name
+    if hasattr(user, 'agent_profile') and getattr(user.agent_profile, 'display_name', ''):
+        return user.agent_profile.display_name
+    if hasattr(user, 'client_profile') and getattr(user.client_profile, 'company_name', ''):
+        return user.client_profile.company_name
+    if getattr(user, 'display_name', ''):
+        return user.display_name
+    if getattr(user, 'username', ''):
+        return user.username
+    if getattr(user, 'email', ''):
+        return user.email
+    return f'Пользователь #{user.id}'
+
+
+def _get_user_public_url(user):
+    if hasattr(user, 'performer_profile'):
+        return reverse('performers:performer_detail', args=[user.performer_profile.id])
+    if hasattr(user, 'agent_profile'):
+        return reverse('agent_public_profile', args=[user.id])
+    if hasattr(user, 'client_profile'):
+        return reverse('client_public_profile', args=[user.id])
+    return None
+
+
 @login_required
 def chat_list(request):
     # Показываем чаты пользователя, сначала самые активные.
@@ -42,7 +70,15 @@ def chat_list(request):
             filter=Q(messages__is_read=False) & ~Q(messages__sender=request.user),
         ),
     ).order_by('-last_activity_at', '-created_at')
-    return render(request, 'chat/chat_list.html', {'chats': chats})
+    chat_items = []
+    for chat in chats:
+        target = chat.client if request.user == chat.performer else chat.performer
+        chat.target_user = target
+        chat.target_display_name = _get_user_public_name(target)
+        chat.target_profile_url = _get_user_public_url(target)
+        chat_items.append(chat)
+
+    return render(request, 'chat/chat_list.html', {'chats': chat_items})
 
 @login_required
 def chat_room(request, room_id):
@@ -63,9 +99,13 @@ def chat_room(request, room_id):
         is_read=False
     ).update(is_read=True)
 
+    target = room.client if request.user == room.performer else room.performer
+
     return render(request, 'chat/chat_room.html', {
         'room': room,
         'chat_messages': chat_messages,
+        'target_display_name': _get_user_public_name(target),
+        'target_profile_url': _get_user_public_url(target),
     })
 
 

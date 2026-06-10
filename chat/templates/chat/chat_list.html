@@ -239,45 +239,13 @@
                             <i class="bi bi-person-fill"></i>
                         </div>
                         <div class="flex-grow-1">
-                            {% if user == chat.performer %}
-                                {% with target=chat.client %}
-                                    <h6>
-                                        {% if target.performer_profile %}
-                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.performer_profile.full_name|default:target.display_name|default:target.username }}</a>
-                                        {% elif target.agent_profile %}
-                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.agent_profile.display_name|default:target.display_name|default:target.username }}</a>
-                                        {% elif target.client_profile %}
-                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.client_profile.company_name|default:target.display_name|default:target.username }}</a>
-                                        {% else %}
-                                            {{ target.display_name|default:target.username }}
-                                        {% endif %}
-                                    </h6>
-                                    {% if target.get_full_name %}
-                                        <div class="username">
-                                            {{ target.get_full_name }}
-                                        </div>
-                                    {% endif %}
-                                {% endwith %}
-                            {% elif user == chat.client %}
-                                {% with target=chat.performer %}
-                                    <h6>
-                                        {% if target.performer_profile %}
-                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.performer_profile.full_name|default:target.display_name|default:target.username }}</a>
-                                        {% elif target.agent_profile %}
-                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.agent_profile.display_name|default:target.display_name|default:target.username }}</a>
-                                        {% elif target.client_profile %}
-                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.client_profile.company_name|default:target.display_name|default:target.username }}</a>
-                                        {% else %}
-                                            {{ target.display_name|default:target.username }}
-                                        {% endif %}
-                                    </h6>
-                                    {% if target.get_full_name %}
-                                        <div class="username">
-                                            {{ target.get_full_name }}
-                                        </div>
-                                    {% endif %}
-                                {% endwith %}
-                            {% endif %}
+                            <h6>
+                                {% if chat.target_profile_url %}
+                                    <a href="{{ chat.target_profile_url }}" class="text-decoration-none text-reset">{{ chat.target_display_name }}</a>
+                                {% else %}
+                                    {{ chat.target_display_name }}
+                                {% endif %}
+                            </h6>
                             <small>
                                 <i class="bi bi-clock"></i>
                                 {% if chat.last_message_at %}

@@ -305,30 +305,10 @@
         </div>
         <div class="flex-grow-1">
             <h5 class="mb-0">
-                {% if user == room.performer %}
-                    {% with target=room.client %}
-                        {% if target.performer_profile %}
-                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}">{{ target.performer_profile.full_name|default:target.display_name|default:target.username }}</a>
-                        {% elif target.agent_profile %}
-                            <a href="{% url 'agent_public_profile' target.id %}">{{ target.agent_profile.display_name|default:target.display_name|default:target.username }}</a>
-                        {% elif target.client_profile %}
-                            <a href="{% url 'client_public_profile' target.id %}">{{ target.client_profile.company_name|default:target.display_name|default:target.username }}</a>
-                        {% else %}
-                            {{ target.display_name|default:target.username }}
-                        {% endif %}
-                    {% endwith %}
-                {% elif user == room.client %}
-                    {% with target=room.performer %}
-                        {% if target.performer_profile %}
-                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}">{{ target.performer_profile.full_name|default:target.display_name|default:target.username }}</a>
-                        {% elif target.agent_profile %}
-                            <a href="{% url 'agent_public_profile' target.id %}">{{ target.agent_profile.display_name|default:target.display_name|default:target.username }}</a>
-                        {% elif target.client_profile %}
-                            <a href="{% url 'client_public_profile' target.id %}">{{ target.client_profile.company_name|default:target.display_name|default:target.username }}</a>
-                        {% else %}
-                            {{ target.display_name|default:target.username }}
-                        {% endif %}
-                    {% endwith %}
+                {% if target_profile_url %}
+                    <a href="{{ target_profile_url }}">{{ target_display_name }}</a>
+                {% else %}
+                    {{ target_display_name }}
                 {% endif %}
             </h5>
         </div>
