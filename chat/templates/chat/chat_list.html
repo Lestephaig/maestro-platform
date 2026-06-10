@@ -243,13 +243,13 @@
                                 {% with target=chat.client %}
                                     <h6>
                                         {% if target.performer_profile %}
-                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.performer_profile.full_name|default:target.display_name|default:target.username }}</a>
                                         {% elif target.agent_profile %}
-                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.agent_profile.display_name|default:target.display_name|default:target.username }}</a>
                                         {% elif target.client_profile %}
-                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.client_profile.company_name|default:target.display_name|default:target.username }}</a>
                                         {% else %}
-                                            {{ target.username }}
+                                            {{ target.display_name|default:target.username }}
                                         {% endif %}
                                     </h6>
                                     {% if target.get_full_name %}
@@ -262,13 +262,13 @@
                                 {% with target=chat.performer %}
                                     <h6>
                                         {% if target.performer_profile %}
-                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                            <a href="{% url 'performers:performer_detail' target.performer_profile.id %}" class="text-decoration-none text-reset">{{ target.performer_profile.full_name|default:target.display_name|default:target.username }}</a>
                                         {% elif target.agent_profile %}
-                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                            <a href="{% url 'agent_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.agent_profile.display_name|default:target.display_name|default:target.username }}</a>
                                         {% elif target.client_profile %}
-                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.username }}</a>
+                                            <a href="{% url 'client_public_profile' target.id %}" class="text-decoration-none text-reset">{{ target.client_profile.company_name|default:target.display_name|default:target.username }}</a>
                                         {% else %}
-                                            {{ target.username }}
+                                            {{ target.display_name|default:target.username }}
                                         {% endif %}
                                     </h6>
                                     {% if target.get_full_name %}
