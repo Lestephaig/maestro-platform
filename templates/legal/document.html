@@ -1,0 +1,100 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ document.title }} - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-page {
+        padding: 3rem 0;
+        color: var(--silver-light);
+    }
+
+    .legal-shell {
+        max-width: 920px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .legal-document {
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        border-radius: 12px;
+        padding: 2rem;
+    }
+
+    .legal-document h1 {
+        color: var(--gold);
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .legal-meta {
+        color: var(--silver);
+        border-bottom: 1px solid rgba(212, 175, 55, 0.24);
+        padding-bottom: 1rem;
+        margin-bottom: 1.5rem;
+    }
+
+    .legal-text p {
+        line-height: 1.75;
+        margin-bottom: 1rem;
+        white-space: pre-wrap;
+    }
+
+    .legal-nav {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.5rem;
+    }
+
+    .legal-nav a {
+        color: var(--gold);
+        border: 1px solid rgba(212, 175, 55, 0.4);
+        border-radius: 999px;
+        padding: 0.45rem 0.85rem;
+        text-decoration: none;
+    }
+
+    @media (max-width: 576px) {
+        .legal-page {
+            padding: 1.5rem 0;
+        }
+
+        .legal-document {
+            padding: 1.25rem;
+        }
+
+        .legal-document h1 {
+            font-size: 1.55rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="legal-page">
+    <div class="legal-shell">
+        <article class="legal-document">
+            <h1>{{ document.title }}</h1>
+            <div class="legal-meta">
+                <div>Версия: {{ document.version }}</div>
+            </div>
+
+            <div class="legal-text">
+                {% for paragraph in paragraphs %}
+                    <p>{{ paragraph }}</p>
+                {% endfor %}
+            </div>
+
+            <nav class="legal-nav" aria-label="Юридические документы">
+                {% for slug, item in legal_documents.items %}
+                    {% if slug != document_slug %}
+                        <a href="{% url 'legal_document' slug %}">{{ item.title }}</a>
+                    {% endif %}
+                {% endfor %}
+            </nav>
+        </article>
+    </div>
+</section>
+{% endblock %}

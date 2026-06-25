@@ -449,6 +449,43 @@
         font-size: 1.1rem;
         margin-bottom: 1.25rem;
     }
+
+    .legal-consents {
+        margin-bottom: 1.5rem;
+    }
+
+    .legal-consents .form-check {
+        display: flex;
+        align-items: flex-start;
+        gap: 0.95rem;
+        cursor: default;
+        margin-bottom: 1rem;
+        padding: 1.35rem 1.5rem;
+    }
+
+    .legal-consents .form-check-label {
+        display: block;
+        width: auto;
+        flex: 1 1 auto;
+        line-height: 1.55;
+    }
+
+    .legal-consents .form-check-input {
+        flex: 0 0 auto;
+        margin: 0.25rem 0 0;
+    }
+
+    .legal-consents a {
+        color: var(--gold-light);
+        font-weight: 700;
+    }
+
+    .btn-register:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+    }
 </style>
 {% endblock %}
 
@@ -546,7 +583,53 @@
                     {% endif %}
                 </div>
 
-                <button type="submit" class="btn btn-register w-100">
+                <div class="legal-consents">
+                    <div class="form-check">
+                        <input
+                            type="checkbox"
+                            name="{{ form.accept_terms.name }}"
+                            id="{{ form.accept_terms.id_for_label }}"
+                            class="form-check-input legal-consent-checkbox"
+                            required
+                            {% if form.accept_terms.value %}checked{% endif %}
+                        >
+                        <label class="form-check-label" for="{{ form.accept_terms.id_for_label }}">
+                            Я принимаю
+                            <a href="{% url 'legal_document' 'terms-of-use' %}" target="_blank" rel="noopener">Пользовательское соглашение</a>
+                            и
+                            <a href="{% url 'legal_document' 'content-rules' %}" target="_blank" rel="noopener">Правила использования материалов на сайте</a>.
+                        </label>
+                        {% if form.accept_terms.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.accept_terms.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="form-check">
+                        <input
+                            type="checkbox"
+                            name="{{ form.accept_personal_data.name }}"
+                            id="{{ form.accept_personal_data.id_for_label }}"
+                            class="form-check-input legal-consent-checkbox"
+                            required
+                            {% if form.accept_personal_data.value %}checked{% endif %}
+                        >
+                        <label class="form-check-label" for="{{ form.accept_personal_data.id_for_label }}">
+                            Я ознакомился(-ась) с
+                            <a href="{% url 'legal_document' 'privacy-policy' %}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>
+                            и даю
+                            <a href="{% url 'legal_document' 'personal-data-consent' %}" target="_blank" rel="noopener">согласие на обработку персональных данных</a>.
+                        </label>
+                        {% if form.accept_personal_data.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.accept_personal_data.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <button type="submit" class="btn btn-register w-100" id="registerSubmit" disabled>
                     <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
                 </button>
             </form>
@@ -559,4 +642,20 @@
         </div>
     </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const submitButton = document.getElementById('registerSubmit');
+        const checkboxes = document.querySelectorAll('.legal-consent-checkbox');
+
+        function syncRegisterButton() {
+            submitButton.disabled = !Array.from(checkboxes).every((checkbox) => checkbox.checked);
+        }
+
+        checkboxes.forEach((checkbox) => checkbox.addEventListener('change', syncRegisterButton));
+        syncRegisterButton();
+    });
+</script>
 {% endblock %}
