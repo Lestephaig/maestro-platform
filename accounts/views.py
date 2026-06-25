@@ -10,6 +10,7 @@ from clients.models import ClientProfile
 from agents.models import AgentProfile
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.db import transaction
 from performers.forms import PerformerProfileForm, PerformerPhotoForm, PerformerVideoForm
 from clients.forms import ClientProfileForm
 from agents.forms import AgentProfileForm
@@ -18,24 +19,46 @@ from django.db.models import Q, Count
 from django.core.paginator import Paginator
 from chat.models import ChatRoom
 from announcements.models import Announcement
+from core.legal import get_client_ip, get_required_documents, get_user_agent
+from .models import LegalAcceptance
 
 logger = logging.getLogger(__name__)
+
+
+def record_required_legal_acceptances(user, request):
+    ip_address = get_client_ip(request) or None
+    user_agent = get_user_agent(request)
+    acceptances = []
+    for slug, document in get_required_documents().items():
+        acceptances.append(
+            LegalAcceptance(
+                user=user,
+                document_slug=slug,
+                document_title=document['title'],
+                document_version=document['version'],
+                ip_address=ip_address,
+                user_agent=user_agent,
+            )
+        )
+    LegalAcceptance.objects.bulk_create(acceptances, ignore_conflicts=True)
 
 def register(request):
     if request.method == 'POST':
         form = CustomUserCreationForm(request.POST)
         if form.is_valid():
-            user = form.save()
-            # Создаём профиль в зависимости от роли
-            role = form.cleaned_data.get('role')
-            # Используем display_name, если оно есть, иначе email
-            display_name = user.display_name or user.email
-            if role == 'performer':
-                PerformerProfile.objects.create(user=user, full_name=display_name)
-            elif role == 'client':
-                ClientProfile.objects.create(user=user, company_name=display_name)
-            elif role == 'agent':
-                AgentProfile.objects.create(user=user, display_name=display_name)
+            with transaction.atomic():
+                user = form.save()
+                # Создаём профиль в зависимости от роли
+                role = form.cleaned_data.get('role')
+                # Используем display_name, если оно есть, иначе email
+                display_name = user.display_name or user.email
+                if role == 'performer':
+                    PerformerProfile.objects.create(user=user, full_name=display_name)
+                elif role == 'client':
+                    ClientProfile.objects.create(user=user, company_name=display_name)
+                elif role == 'agent':
+                    AgentProfile.objects.create(user=user, display_name=display_name)
+                record_required_legal_acceptances(user, request)
 
             # Отправляем email для подтверждения
             try:

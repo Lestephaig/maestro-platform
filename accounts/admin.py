@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
-from .models import User
+from .models import CookieConsent, LegalAcceptance, User
 
 class CustomUserAdmin(UserAdmin):
     # Поля, которые будут отображаться в списке пользователей
@@ -28,3 +28,19 @@ class CustomUserAdmin(UserAdmin):
 
 # Зарегистрируем нашу модель с кастомной админкой
 admin.site.register(User, CustomUserAdmin)
+
+
+@admin.register(LegalAcceptance)
+class LegalAcceptanceAdmin(admin.ModelAdmin):
+    list_display = ('user', 'document_title', 'document_version', 'accepted_at', 'ip_address')
+    list_filter = ('document_slug', 'document_version', 'accepted_at')
+    search_fields = ('user__email', 'user__display_name', 'document_title')
+    readonly_fields = ('accepted_at',)
+
+
+@admin.register(CookieConsent)
+class CookieConsentAdmin(admin.ModelAdmin):
+    list_display = ('user', 'policy_version', 'accepted_at', 'ip_address')
+    list_filter = ('policy_version', 'accepted_at')
+    search_fields = ('user__email', 'user__display_name', 'user_agent')
+    readonly_fields = ('accepted_at',)

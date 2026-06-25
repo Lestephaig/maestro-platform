@@ -20,6 +20,18 @@ class CustomUserCreationForm(UserCreationForm):
         required=True,
         label="Email"
     )
+
+    accept_terms = forms.BooleanField(
+        required=True,
+        label="Я принимаю Пользовательское соглашение и Правила использования материалов на сайте.",
+        error_messages={'required': 'Необходимо принять пользовательское соглашение и правила использования материалов.'},
+    )
+
+    accept_personal_data = forms.BooleanField(
+        required=True,
+        label="Я ознакомился(-ась) с Политикой обработки персональных данных и даю согласие на обработку персональных данных.",
+        error_messages={'required': 'Необходимо дать согласие на обработку персональных данных.'},
+    )
     
     display_name = forms.CharField(
         max_length=150,
@@ -29,7 +41,7 @@ class CustomUserCreationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ("email", "display_name", "password1", "password2", "role")
+        fields = ("email", "display_name", "password1", "password2", "role", "accept_terms", "accept_personal_data")
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

@@ -1,0 +1,166 @@
+{% extends 'base.html' %}
+
+{% block title %}Ознакомление с документами - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-gate {
+        min-height: calc(100vh - 220px);
+        display: flex;
+        align-items: center;
+        padding: 2rem 1rem;
+    }
+
+    .legal-gate-card {
+        width: 100%;
+        max-width: 760px;
+        margin: 0 auto;
+        background: linear-gradient(135deg, var(--gray), var(--gray-dark));
+        border: 2px solid var(--gold);
+        border-radius: 16px;
+        padding: 2rem;
+        box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+    }
+
+    .legal-gate-card h1 {
+        color: var(--gold);
+        font-size: 1.8rem;
+        font-weight: 800;
+        margin-bottom: 1rem;
+    }
+
+    .legal-gate-card p {
+        color: var(--silver-light);
+    }
+
+    .legal-consent-option {
+        display: flex;
+        gap: 0.95rem;
+        align-items: flex-start;
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(212, 175, 55, 0.28);
+        border-radius: 12px;
+        padding: 1.1rem 1.2rem;
+        margin-bottom: 1rem;
+        color: var(--white);
+        cursor: pointer;
+        transition: background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .legal-consent-option:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(212, 175, 55, 0.5);
+    }
+
+    .legal-consent-option:has(input:checked) {
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.18), rgba(212, 175, 55, 0.08));
+        border-color: var(--gold);
+        box-shadow: 0 0 18px rgba(212, 175, 55, 0.18);
+    }
+
+    .legal-consent-option input {
+        flex: 0 0 auto;
+        margin: 0.2rem 0 0;
+        width: 1.25rem;
+        height: 1.25rem;
+        accent-color: var(--gold);
+        cursor: pointer;
+    }
+
+    .legal-consent-option span {
+        display: block;
+        line-height: 1.55;
+    }
+
+    .legal-consent-option a {
+        color: var(--gold-light);
+        font-weight: 700;
+    }
+
+    .legal-gate-actions {
+        margin-top: 1.25rem;
+    }
+
+    .legal-gate-actions .btn {
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        color: var(--black);
+        border: none;
+        font-weight: 800;
+        padding: 0.9rem 1.4rem;
+    }
+
+    .legal-gate-actions .btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
+
+    @media (max-width: 576px) {
+        .legal-gate-card {
+            padding: 1.25rem;
+        }
+
+        .legal-gate-card h1 {
+            font-size: 1.45rem;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="legal-gate">
+    <div class="legal-gate-card">
+        <h1>Ознакомление с документами</h1>
+        <p>Для продолжения работы на сайте необходимо принять актуальные условия и согласие на обработку персональных данных.</p>
+
+        {% if error %}
+            <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+
+        <form method="post" action="{% url 'accept_required_legal' %}" id="legalAcceptanceForm">
+            {% csrf_token %}
+            <input type="hidden" name="next" value="{{ request.GET.next|default:'profile' }}">
+
+            <label class="legal-consent-option">
+                <input type="checkbox" name="accept_terms" id="id_gate_accept_terms" required>
+                <span>
+                    Я принимаю
+                    <a href="{% url 'legal_document' 'terms-of-use' %}" target="_blank" rel="noopener">Пользовательское соглашение</a>
+                    и
+                    <a href="{% url 'legal_document' 'content-rules' %}" target="_blank" rel="noopener">Правила использования материалов на сайте</a>.
+                </span>
+            </label>
+
+            <label class="legal-consent-option">
+                <input type="checkbox" name="accept_personal_data" id="id_gate_accept_personal_data" required>
+                <span>
+                    Я ознакомился(-ась) с
+                    <a href="{% url 'legal_document' 'privacy-policy' %}" target="_blank" rel="noopener">Политикой обработки персональных данных</a>
+                    и даю
+                    <a href="{% url 'legal_document' 'personal-data-consent' %}" target="_blank" rel="noopener">согласие на обработку персональных данных</a>.
+                </span>
+            </label>
+
+            <div class="legal-gate-actions">
+                <button type="submit" class="btn" id="legalAcceptanceSubmit" disabled>Я ознакомился</button>
+            </div>
+        </form>
+    </div>
+</section>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('legalAcceptanceForm');
+        const button = document.getElementById('legalAcceptanceSubmit');
+        const checkboxes = form.querySelectorAll('input[type="checkbox"]');
+
+        function syncButton() {
+            button.disabled = !Array.from(checkboxes).every((checkbox) => checkbox.checked);
+        }
+
+        checkboxes.forEach((checkbox) => checkbox.addEventListener('change', syncButton));
+        syncButton();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block title %}Политика конфиденциальности - Maestro Platform{% endblock %}
+
+{% block extra_css %}
+<style>
+    .legal-index-page {
+        padding: 3rem 0;
+        color: var(--silver-light);
+    }
+
+    .legal-index-shell {
+        max-width: 980px;
+        margin: 0 auto;
+        padding: 0 1rem;
+    }
+
+    .legal-index-header {
+        margin-bottom: 1.5rem;
+    }
+
+    .legal-index-header h1 {
+        color: var(--gold);
+        font-weight: 800;
+        margin-bottom: 0.75rem;
+    }
+
+    .legal-index-header p {
+        margin: 0;
+        max-width: 720px;
+        line-height: 1.6;
+    }
+
+    .legal-documents-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .legal-document-link {
+        display: block;
+        min-height: 100%;
+        padding: 1.25rem;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(212, 175, 55, 0.35);
+        border-radius: 12px;
+        color: var(--silver-light);
+        text-decoration: none;
+        transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+    }
+
+    .legal-document-link:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: var(--gold);
+        color: var(--silver-light);
+        transform: translateY(-2px);
+    }
+
+    .legal-document-title {
+        display: block;
+        color: var(--gold-light);
+        font-weight: 800;
+        line-height: 1.35;
+        margin-bottom: 0.5rem;
+    }
+
+    .legal-document-meta {
+        color: var(--silver);
+        font-size: 0.92rem;
+    }
+
+    @media (max-width: 768px) {
+        .legal-index-page {
+            padding: 1.5rem 0;
+        }
+
+        .legal-documents-grid {
+            grid-template-columns: 1fr;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<section class="legal-index-page">
+    <div class="legal-index-shell">
+        <header class="legal-index-header">
+            <h1>Политика конфиденциальности</h1>
+            <p>В этом разделе собраны юридические документы, правила и согласия, регулирующие работу сайта Maestro Platform.</p>
+        </header>
+
+        <div class="legal-documents-grid">
+            {% for slug, document in legal_documents.items %}
+                <a class="legal-document-link" href="{% url 'legal_document' slug %}">
+                    <span class="legal-document-title">{{ document.title }}</span>
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+{% endblock %}
