@@ -292,7 +292,7 @@
             </div>
             
             <div class="announcement-description">
-                {{ announcement.description|linebreaks }}
+                {{ announcement.description|urlize|linebreaks }}
             </div>
             
             {% if announcement.tags.all %}
