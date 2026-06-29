@@ -372,58 +372,63 @@
     // Прокручиваем в конец при загрузке
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-    // Подключаемся к WebSocket
-    const chatSocket = new WebSocket(
-        'ws://' + window.location.host + '/ws/chat/' + room_id + '/'
-    );
+    const websocketProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
+    let chatSocket = null;
 
-    chatSocket.onopen = function(e) {
-        console.log('WebSocket connection established');
-    };
+    try {
+        chatSocket = new WebSocket(
+            websocketProtocol + '://' + window.location.host + '/ws/chat/' + room_id + '/'
+        );
 
-    chatSocket.onmessage = function(e) {
-        const data = JSON.parse(e.data);
-        const message = data['message'];
-        const sender_id = data['sender_id'];
+        chatSocket.onopen = function(e) {
+            console.log('WebSocket connection established');
+        };
 
-        // Создаём элемент сообщения
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message');
-        if (sender_id == user_id) {
-            messageDiv.classList.add('sent');
-        } else {
-            messageDiv.classList.add('received');
-        }
+        chatSocket.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            const message = data['message'];
+            const sender_id = data['sender_id'];
 
-        const contentDiv = document.createElement('div');
-        contentDiv.classList.add('message-content');
+            // Создаём элемент сообщения
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message');
+            if (sender_id == user_id) {
+                messageDiv.classList.add('sent');
+            } else {
+                messageDiv.classList.add('received');
+            }
 
-        const textDiv = document.createElement('div');
-        textDiv.classList.add('message-text');
-        appendLinkedText(textDiv, message);
+            const contentDiv = document.createElement('div');
+            contentDiv.classList.add('message-content');
 
-        const timeDiv = document.createElement('div');
-        timeDiv.classList.add('message-time');
-        const now = new Date();
-        timeDiv.textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
+            const textDiv = document.createElement('div');
+            textDiv.classList.add('message-text');
+            appendLinkedText(textDiv, message);
 
-        contentDiv.appendChild(textDiv);
-        contentDiv.appendChild(timeDiv);
-        messageDiv.appendChild(contentDiv);
-        messagesContainer.appendChild(messageDiv);
+            const timeDiv = document.createElement('div');
+            timeDiv.classList.add('message-time');
+            const now = new Date();
+            timeDiv.textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
 
-        // Плавная прокрутка вниз
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
-    };
+            contentDiv.appendChild(textDiv);
+            contentDiv.appendChild(timeDiv);
+            messageDiv.appendChild(contentDiv);
+            messagesContainer.appendChild(messageDiv);
 
-    chatSocket.onclose = function(e) {
-        console.log('WebSocket closed - working without Redis/Daphne');
-        // При работе без WebSocket можно добавить периодическое обновление страницы
-    };
+            // Плавная прокрутка вниз
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        };
 
-    chatSocket.onerror = function(e) {
-        console.log('WebSocket not available - working without Redis/Daphne');
-    };
+        chatSocket.onclose = function(e) {
+            console.log('WebSocket closed - working without Redis/Daphne');
+        };
+
+        chatSocket.onerror = function(e) {
+            console.log('WebSocket not available - working without Redis/Daphne');
+        };
+    } catch (error) {
+        console.log('WebSocket unavailable - working with POST fallback', error);
+    }
 
     // Отправка сообщения
     function sendMessage() {
@@ -431,7 +436,7 @@
         if (!message) return;
 
         // Если WebSocket работает, используем его
-        if (chatSocket.readyState === WebSocket.OPEN) {
+        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
             chatSocket.send(JSON.stringify({
                 'message': message
             }));
