@@ -130,6 +130,7 @@
         align-items: flex-end;
         gap: 0.5rem;
         animation: slideIn 0.3s ease;
+        min-width: 0;
     }
     
     @keyframes slideIn {
@@ -145,12 +146,19 @@
     
     .message.sent {
         flex-direction: row-reverse;
+        justify-content: flex-start;
+    }
+
+    .message.received {
+        justify-content: flex-start;
     }
     
     .message-content {
         max-width: 65%;
+        width: fit-content;
         display: flex;
         flex-direction: column;
+        min-width: 0;
     }
     
     .message.sent .message-content {
@@ -165,8 +173,18 @@
         padding: 0.875rem 1.125rem;
         border-radius: 18px;
         word-wrap: break-word;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+        white-space: pre-wrap;
         line-height: 1.5;
         box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        max-width: 100%;
+    }
+
+    .message-text a {
+        color: inherit;
+        text-decoration: underline;
+        text-underline-offset: 0.15em;
     }
     
     .message.sent .message-text {
@@ -320,9 +338,7 @@
             {% for message in chat_messages %}
                 <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
                     <div class="message-content">
-                        <div class="message-text">
-                            {{ message.text }}
-                        </div>
+                        <div class="message-text">{{ message.text|urlize }}</div>
                         <div class="message-time">
                             {{ message.timestamp|date:"H:i" }}
                         </div>
@@ -384,7 +400,7 @@
 
         const textDiv = document.createElement('div');
         textDiv.classList.add('message-text');
-        textDiv.textContent = message;
+        appendLinkedText(textDiv, message);
 
         const timeDiv = document.createElement('div');
         timeDiv.classList.add('message-time');
@@ -440,6 +456,30 @@
                     window.location.reload();
                 }
             });
+        }
+    }
+
+    // Безопасно превращает URL в кликабельные ссылки.
+    function appendLinkedText(container, text) {
+        const urlPattern = /(\bhttps?:\/\/[^\s<]+|\bwww\.[^\s<]+)/gi;
+        let lastIndex = 0;
+        let match;
+
+        while ((match = urlPattern.exec(text)) !== null) {
+            if (match.index > lastIndex) {
+                container.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+            }
+
+            const urlText = match[0];
+            const link = document.createElement('a');
+            link.textContent = urlText;
+            link.href = urlText.startsWith('www.') ? `https://${urlText}` : urlText;
+            container.appendChild(link);
+            lastIndex = match.index + urlText.length;
+        }
+
+        if (lastIndex < text.length) {
+            container.appendChild(document.createTextNode(text.slice(lastIndex)));
         }
     }
 
