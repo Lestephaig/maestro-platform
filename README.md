@@ -2,48 +2,59 @@
 
 MVP платформы для классических музыкантов и заказчиков.
 
-## Local development
+## Возможности
 
-1. Создайте и активируйте виртуальное окружение.
-2. Установите зависимости:
-   - `pip install -r requirements.txt`
-3. Скопируйте `.env.example` в `.env` и заполните значения.
-4. Примените миграции:
-   - `python manage.py migrate`
-5. Запустите сервер:
-   - `python manage.py runserver`
+- профили исполнителей, агентов и заказчиков;
+- объявления и отклики;
+- проекты и взаимодействие участников;
+- чат через Django Channels;
+- уведомления в интерфейсе и по email;
+- публикация и фиксация принятия юридических документов.
 
-## Production checklist
+## Локальная разработка
 
-- `DEBUG=False`
-- корректный `SECRET_KEY` (длинный случайный ключ)
-- заполнены `ALLOWED_HOSTS` и `CSRF_TRUSTED_ORIGINS`
-- настроен `DATABASE_URL` (PostgreSQL)
-- настроен `REDIS_URL` для Channels
-- настроен SMTP (`EMAIL_*`)
-- задан `SITE_URL` (https URL вашего домена)
+Требуется Python 3.10+.
 
-## Deployment notes
+```powershell
+Copy-Item .env.example .env
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe manage.py migrate
+.\.venv\Scripts\python.exe manage.py runserver
+```
 
-- Приложение запускается как ASGI через Daphne (см. `Procfile`).
-- В `release` команде выполняются:
-  - миграции
-  - `collectstatic`
-- Для раздачи статики включен WhiteNoise (`USE_WHITENOISE=True` по умолчанию).
+В Linux/macOS активируйте окружение обычным способом и используйте `python`
+вместо пути к `python.exe`. Без `DATABASE_URL` приложение использует SQLite.
+Redis нужен для WebSocket-чата; PostgreSQL и Redis можно запустить командой:
 
-## Security
+```shell
+docker compose up -d db redis
+```
 
-При `DEBUG=False` автоматически включаются:
+## Проверки
 
-- secure cookies (`SESSION_COOKIE_SECURE`, `CSRF_COOKIE_SECURE`)
-- HSTS
-- защита от sniffing (`SECURE_CONTENT_TYPE_NOSNIFF`)
-- `X_FRAME_OPTIONS=DENY`
+```shell
+python manage.py check
+python manage.py test
+python manage.py makemigrations --check --dry-run
+```
 
-Дополнительно управляется через `.env`:
+## Структура
 
-- `SECURE_SSL_REDIRECT`
-- `SECURE_HSTS_SECONDS`
-- `SECURE_HSTS_INCLUDE_SUBDOMAINS`
-- `SECURE_HSTS_PRELOAD`
-- `USE_X_FORWARDED_HOST`
+- `core/` — настройки проекта, общие URL, middleware и юридические документы;
+- `accounts/`, `performers/`, `agents/`, `clients/` — пользователи и профили;
+- `announcements/`, `interactions/`, `chat/`, `notifications/` — предметные
+  приложения;
+- `templates/`, `static/` — общий серверный интерфейс;
+- `docs/maestro/` — DOCX-файлы, которые приложение отображает как юридические
+  документы.
+
+Подробные правила для Codex и других coding agents находятся в
+[`AGENTS.md`](AGENTS.md).
+
+## Развёртывание
+
+Приложение запускается как ASGI через Daphne. Инструкции и production checklist:
+
+- [`DEPLOYMENT.md`](DEPLOYMENT.md);
+- [`DEPLOYMENT_CHECKLIST.md`](DEPLOYMENT_CHECKLIST.md).

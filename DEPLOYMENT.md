@@ -6,7 +6,7 @@
 
 #### 🔒 **Безопасность**
 - ✅ Настроены переменные окружения с помощью `python-decouple`
-- ✅ Создан файл `env.example` с примерами настроек
+- ✅ Создан файл `.env.example` с примерами настроек
 - ✅ Обновлены настройки Django для безопасности
 - ✅ Добавлена поддержка медиа файлов
 
@@ -33,7 +33,7 @@ pip install django channels channels-redis python-decouple
 ### 2. Настройка переменных окружения
 ```bash
 # Скопируйте файл примера
-cp env.example .env
+cp .env.example .env
 
 # Отредактируйте .env файл
 # Установите SECRET_KEY, DEBUG=True, ALLOWED_HOSTS

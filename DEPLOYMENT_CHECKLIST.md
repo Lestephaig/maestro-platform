@@ -161,7 +161,7 @@
 
 5. **Создайте .env файл**:
    ```bash
-   cp env.example .env
+   cp .env.example .env
    nano .env
    # Заполните все необходимые переменные
    ```
