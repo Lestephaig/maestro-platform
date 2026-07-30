@@ -43,6 +43,7 @@ services:
     volumes:
       - static_volume:/app/staticfiles
       - media_volume:/app/media
+      - private_media_volume:/app/private_media
       - ./logs:/app/logs
     ports:
       - "8000:8000"
@@ -65,3 +66,4 @@ volumes:
   redis_data:
   static_volume:
   media_volume:
+  private_media_volume:

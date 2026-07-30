@@ -185,11 +185,14 @@ if USE_WHITENOISE:
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
+PRIVATE_MEDIA_ROOT = BASE_DIR / 'private_media'
 
 # Upload limits (tunable via .env to avoid 413 on mobile uploads)
 MAX_UPLOAD_SIZE_MB = config('MAX_UPLOAD_SIZE_MB', default=35, cast=int)
 DATA_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
 FILE_UPLOAD_MAX_MEMORY_SIZE = MAX_UPLOAD_SIZE_MB * 1024 * 1024
+CHAT_ATTACHMENT_MAX_SIZE_MB = config('CHAT_ATTACHMENT_MAX_SIZE_MB', default=25, cast=int)
+CHAT_ATTACHMENT_MAX_COUNT = config('CHAT_ATTACHMENT_MAX_COUNT', default=10, cast=int)
 
 # Email (SMTP)
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')

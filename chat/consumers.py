@@ -42,12 +42,17 @@ class ChatConsumer(AsyncWebsocketConsumer):
         )
 
     async def receive(self, text_data):
-        data = json.loads(text_data)
-        message = data['message']
+        try:
+            data = json.loads(text_data)
+        except json.JSONDecodeError:
+            return
+        message = str(data.get('message', '')).strip()
+        if not message:
+            return
         user_id = self.scope['user'].id
 
         # Сохраним сообщение в БД
-        await self.save_message(self.room_id, user_id, message)
+        saved_message = await self.save_message(self.room_id, user_id, message)
 
         # Рассылка всем в группе
         await self.channel_layer.group_send(
@@ -56,6 +61,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 'type': 'chat_message',
                 'message': message,
                 'sender_id': user_id,
+                'id': saved_message['id'],
+                'timestamp': saved_message['timestamp'],
+                'attachments': [],
             }
         )
 
@@ -67,6 +75,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
         await self.send(text_data=json.dumps({
             'message': message,
             'sender_id': sender_id,
+            'id': event.get('id'),
+            'timestamp': event.get('timestamp'),
+            'attachments': event.get('attachments', []),
         }))
 
     @sync_to_async
@@ -85,4 +96,7 @@ class ChatConsumer(AsyncWebsocketConsumer):
             is_read=False
         ).update(is_read=True)
         
-        return message
+        return {
+            'id': message.id,
+            'timestamp': message.timestamp.isoformat(),
+        }

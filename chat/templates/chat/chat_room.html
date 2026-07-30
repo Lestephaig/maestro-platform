@@ -209,6 +209,80 @@
         margin-top: 0.25rem;
         padding: 0 0.5rem;
     }
+
+    .message-attachments {
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+        width: min(100%, 360px);
+        margin-top: 0.45rem;
+    }
+
+    .attachment-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.7rem;
+        width: 100%;
+        padding: 0.7rem;
+        border: 1px solid var(--silver-dark);
+        border-radius: 12px;
+        background: white;
+        color: var(--gray-dark);
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    }
+
+    .attachment-icon {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.3rem;
+        height: 2.3rem;
+        border-radius: 10px;
+        background: rgba(212, 175, 55, 0.16);
+        color: var(--gold-dark);
+        font-size: 1.15rem;
+    }
+
+    .attachment-info {
+        min-width: 0;
+    }
+
+    .attachment-name {
+        display: block;
+        overflow: hidden;
+        color: var(--gray-dark);
+        font-size: 0.88rem;
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .attachment-meta {
+        color: #707070;
+        font-size: 0.73rem;
+    }
+
+    .attachment-actions {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .attachment-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 8px;
+        color: var(--gold-dark);
+        text-decoration: none;
+    }
+
+    .attachment-action:hover {
+        background: rgba(212, 175, 55, 0.16);
+        color: var(--black);
+    }
     
     .message-input-area {
         background: linear-gradient(135deg, #f8f8f8 0%, var(--white) 100%);
@@ -221,6 +295,71 @@
         display: flex;
         gap: 0.75rem;
         align-items: flex-end;
+    }
+
+    .btn-attach {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 3rem;
+        height: 3rem;
+        flex: 0 0 3rem;
+        border: 1px solid var(--silver-dark);
+        border-radius: 12px;
+        background: var(--white);
+        color: var(--gold-dark);
+        font-size: 1.2rem;
+    }
+
+    .btn-attach:hover,
+    .btn-attach:focus-visible {
+        border-color: var(--gold);
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--black);
+    }
+
+    .selected-files {
+        display: none;
+        align-items: flex-start;
+        justify-content: space-between;
+        gap: 0.75rem;
+        margin-bottom: 0.7rem;
+        padding: 0.65rem 0.8rem;
+        border: 1px solid rgba(212, 175, 55, 0.45);
+        border-radius: 10px;
+        background: rgba(212, 175, 55, 0.08);
+    }
+
+    .selected-files.visible {
+        display: flex;
+    }
+
+    .selected-file-list {
+        min-width: 0;
+        max-height: 8rem;
+        overflow-y: auto;
+        margin: 0;
+        padding-left: 1.1rem;
+        color: var(--gray-dark);
+        font-size: 0.8rem;
+    }
+
+    .selected-file-list li {
+        overflow-wrap: anywhere;
+    }
+
+    .clear-files {
+        border: 0;
+        background: transparent;
+        color: #7a650c;
+        white-space: nowrap;
+    }
+
+    .upload-error {
+        min-height: 1.2rem;
+        margin-top: 0.35rem;
+        color: #a61b1b;
+        font-size: 0.8rem;
     }
     
     .message-input {
@@ -280,6 +419,7 @@
     @media (max-width: 768px) {
         .chat-room-container {
             height: calc(100vh - 80px);
+            height: calc(100dvh - 80px);
             margin: 0;
         }
         
@@ -297,7 +437,7 @@
         }
         
         .message-content {
-            max-width: 80%;
+            max-width: 88%;
         }
         
         .message-input-area {
@@ -305,7 +445,36 @@
         }
         
         .btn-send {
-            padding: 0.75rem 1rem;
+            width: 3rem;
+            height: 3rem;
+            justify-content: center;
+            padding: 0;
+        }
+
+        .btn-send span {
+            display: none;
+        }
+
+        .message-input-wrapper {
+            gap: 0.45rem;
+        }
+
+        .message-input {
+            min-width: 0;
+        }
+
+        .attachment-card {
+            gap: 0.45rem;
+            padding: 0.6rem;
+        }
+
+        .attachment-icon {
+            width: 2rem;
+            height: 2rem;
+        }
+
+        .attachment-actions {
+            flex-direction: column;
         }
     }
 </style>
@@ -336,9 +505,32 @@
     <div class="messages-card">
         <div id="messages" class="messages-area">
             {% for message in chat_messages %}
-                <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}">
+                <div class="message {% if message.sender == user %}sent{% else %}received{% endif %}" data-message-id="{{ message.id }}">
                     <div class="message-content">
-                        <div class="message-text">{{ message.text|urlize }}</div>
+                        {% if message.text %}
+                            <div class="message-text">{{ message.text|urlize }}</div>
+                        {% endif %}
+                        {% if message.attachments.all %}
+                            <div class="message-attachments">
+                                {% for attachment in message.attachments.all %}
+                                    <div class="attachment-card">
+                                        <span class="attachment-icon"><i class="bi bi-file-earmark"></i></span>
+                                        <span class="attachment-info">
+                                            <span class="attachment-name" title="{{ attachment.original_name }}">{{ attachment.original_name }}</span>
+                                            <span class="attachment-meta">{{ attachment.extension }} · {{ attachment.size|filesizeformat }}</span>
+                                        </span>
+                                        <span class="attachment-actions">
+                                            <a class="attachment-action" href="{% url 'open_chat_attachment' attachment.id %}" target="_blank" rel="noopener" title="Открыть" aria-label="Открыть {{ attachment.original_name }}">
+                                                <i class="bi bi-box-arrow-up-right"></i>
+                                            </a>
+                                            <a class="attachment-action" href="{% url 'download_chat_attachment' attachment.id %}" title="Скачать" aria-label="Скачать {{ attachment.original_name }}">
+                                                <i class="bi bi-download"></i>
+                                            </a>
+                                        </span>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
                         <div class="message-time">
                             {{ message.timestamp|date:"H:i" }}
                         </div>
@@ -349,13 +541,22 @@
         
         <!-- Message Input -->
         <div class="message-input-area">
+            <div id="selectedFiles" class="selected-files">
+                <ul id="selectedFileList" class="selected-file-list"></ul>
+                <button id="clearFiles" type="button" class="clear-files">Очистить</button>
+            </div>
             <div class="message-input-wrapper">
+                <input id="fileInput" type="file" name="attachments" multiple accept="{{ attachment_accept }}" hidden>
+                <button id="attachBtn" type="button" class="btn-attach" title="Прикрепить файлы — до {{ attachment_max_count }} шт., {{ attachment_max_size_mb }} МБ каждый" aria-label="Прикрепить файлы">
+                    <i class="bi bi-paperclip"></i>
+                </button>
                 <textarea id="messageInput" class="message-input" placeholder="Введите сообщение..." rows="2"></textarea>
-                <button id="sendBtn" class="btn btn-send">
+                <button id="sendBtn" type="button" class="btn btn-send">
                     <i class="bi bi-send-fill"></i>
                     <span>Отправить</span>
                 </button>
             </div>
+            <div id="uploadError" class="upload-error" role="alert" aria-live="polite"></div>
         </div>
     </div>
 </div>
@@ -368,8 +569,22 @@
     const messageInput = document.getElementById('messageInput');
     const sendBtn = document.getElementById('sendBtn');
     const messagesContainer = document.getElementById('messages');
+    const fileInput = document.getElementById('fileInput');
+    const attachBtn = document.getElementById('attachBtn');
+    const selectedFiles = document.getElementById('selectedFiles');
+    const selectedFileList = document.getElementById('selectedFileList');
+    const clearFiles = document.getElementById('clearFiles');
+    const uploadError = document.getElementById('uploadError');
+    const maxFileSize = {{ attachment_max_size_mb }} * 1024 * 1024;
+    const maxFileCount = {{ attachment_max_count }};
+    const sendUrl = "{% url 'send_message' room.id %}";
+    const renderedMessageIds = new Set(
+        Array.from(document.querySelectorAll('[data-message-id]')).map(
+            node => String(node.dataset.messageId)
+        )
+    );
+    let isSending = false;
 
-    // Прокручиваем в конец при загрузке
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
     const websocketProtocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
@@ -386,37 +601,7 @@
 
         chatSocket.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            const message = data['message'];
-            const sender_id = data['sender_id'];
-
-            // Создаём элемент сообщения
-            const messageDiv = document.createElement('div');
-            messageDiv.classList.add('message');
-            if (sender_id == user_id) {
-                messageDiv.classList.add('sent');
-            } else {
-                messageDiv.classList.add('received');
-            }
-
-            const contentDiv = document.createElement('div');
-            contentDiv.classList.add('message-content');
-
-            const textDiv = document.createElement('div');
-            textDiv.classList.add('message-text');
-            appendLinkedText(textDiv, message);
-
-            const timeDiv = document.createElement('div');
-            timeDiv.classList.add('message-time');
-            const now = new Date();
-            timeDiv.textContent = String(now.getHours()).padStart(2, '0') + ':' + String(now.getMinutes()).padStart(2, '0');
-
-            contentDiv.appendChild(textDiv);
-            contentDiv.appendChild(timeDiv);
-            messageDiv.appendChild(contentDiv);
-            messagesContainer.appendChild(messageDiv);
-
-            // Плавная прокрутка вниз
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            renderMessage(data);
         };
 
         chatSocket.onclose = function(e) {
@@ -430,38 +615,176 @@
         console.log('WebSocket unavailable - working with POST fallback', error);
     }
 
-    // Отправка сообщения
-    function sendMessage() {
+    async function sendMessage() {
         const message = messageInput.value.trim();
-        if (!message) return;
+        const files = Array.from(fileInput.files);
+        if ((!message && files.length === 0) || isSending) return;
+        uploadError.textContent = '';
 
-        // Если WebSocket работает, используем его
-        if (chatSocket && chatSocket.readyState === WebSocket.OPEN) {
+        if (files.length === 0 && chatSocket && chatSocket.readyState === WebSocket.OPEN) {
             chatSocket.send(JSON.stringify({
                 'message': message
             }));
             messageInput.value = '';
             messageInput.style.height = 'auto';
-        } else {
-            // Иначе используем обычный POST запрос (fallback без Redis)
-            const formData = new FormData();
-            formData.append('text', message);
-            
-            fetch(`/chat/${room_id}/send/`, {
+            return;
+        }
+
+        const clientError = validateSelectedFiles(files);
+        if (clientError) {
+            uploadError.textContent = clientError;
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('text', message);
+        files.forEach(file => formData.append('attachments', file));
+
+        isSending = true;
+        sendBtn.disabled = true;
+        try {
+            const response = await fetch(sendUrl, {
                 method: 'POST',
                 headers: {
                     'X-CSRFToken': getCookie('csrftoken')
                 },
                 body: formData
-            }).then(response => {
-                if (response.ok) {
-                    messageInput.value = '';
-                    messageInput.style.height = 'auto';
-                    // Перезагружаем страницу чтобы увидеть новое сообщение
-                    window.location.reload();
-                }
             });
+            const data = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(data.error || 'Не удалось отправить сообщение.');
+            }
+            renderMessage(data);
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+            resetFiles();
+        } catch (error) {
+            uploadError.textContent = error.message || 'Не удалось отправить сообщение.';
+        } finally {
+            isSending = false;
+            sendBtn.disabled = false;
         }
+    }
+
+    function renderMessage(data) {
+        const messageId = data.id == null ? null : String(data.id);
+        if (messageId && renderedMessageIds.has(messageId)) return;
+        if (messageId) renderedMessageIds.add(messageId);
+
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${data.sender_id == user_id ? 'sent' : 'received'}`;
+        if (messageId) messageDiv.dataset.messageId = messageId;
+
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add('message-content');
+
+        if (data.message) {
+            const textDiv = document.createElement('div');
+            textDiv.classList.add('message-text');
+            appendLinkedText(textDiv, data.message);
+            contentDiv.appendChild(textDiv);
+        }
+
+        if (Array.isArray(data.attachments) && data.attachments.length) {
+            const attachmentsDiv = document.createElement('div');
+            attachmentsDiv.classList.add('message-attachments');
+            data.attachments.forEach(attachment => {
+                attachmentsDiv.appendChild(createAttachmentCard(attachment));
+            });
+            contentDiv.appendChild(attachmentsDiv);
+        }
+
+        const timeDiv = document.createElement('div');
+        timeDiv.classList.add('message-time');
+        const timestamp = data.timestamp ? new Date(data.timestamp) : new Date();
+        timeDiv.textContent = String(timestamp.getHours()).padStart(2, '0') + ':' +
+            String(timestamp.getMinutes()).padStart(2, '0');
+
+        contentDiv.appendChild(timeDiv);
+        messageDiv.appendChild(contentDiv);
+        messagesContainer.appendChild(messageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    }
+
+    function createAttachmentCard(attachment) {
+        const card = document.createElement('div');
+        card.classList.add('attachment-card');
+
+        const icon = document.createElement('span');
+        icon.classList.add('attachment-icon');
+        const iconGlyph = document.createElement('i');
+        iconGlyph.className = 'bi bi-file-earmark';
+        icon.appendChild(iconGlyph);
+
+        const info = document.createElement('span');
+        info.classList.add('attachment-info');
+        const name = document.createElement('span');
+        name.classList.add('attachment-name');
+        name.textContent = attachment.name;
+        name.title = attachment.name;
+        const meta = document.createElement('span');
+        meta.classList.add('attachment-meta');
+        meta.textContent = `${attachment.extension || 'ФАЙЛ'} · ${formatFileSize(attachment.size)}`;
+        info.append(name, meta);
+
+        const actions = document.createElement('span');
+        actions.classList.add('attachment-actions');
+        actions.append(
+            createAttachmentLink(attachment.open_url, 'bi-box-arrow-up-right', 'Открыть', true),
+            createAttachmentLink(attachment.download_url, 'bi-download', 'Скачать', false)
+        );
+        card.append(icon, info, actions);
+        return card;
+    }
+
+    function createAttachmentLink(url, iconClass, label, newTab) {
+        const link = document.createElement('a');
+        link.classList.add('attachment-action');
+        link.href = url;
+        link.title = label;
+        link.setAttribute('aria-label', label);
+        if (newTab) {
+            link.target = '_blank';
+            link.rel = 'noopener';
+        }
+        const icon = document.createElement('i');
+        icon.className = `bi ${iconClass}`;
+        link.appendChild(icon);
+        return link;
+    }
+
+    function formatFileSize(bytes) {
+        if (bytes < 1024) return `${bytes} Б`;
+        if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} КБ`;
+        return `${(bytes / (1024 * 1024)).toFixed(1)} МБ`;
+    }
+
+    function validateSelectedFiles(files) {
+        if (files.length > maxFileCount) {
+            return `Можно прикрепить не более ${maxFileCount} файлов.`;
+        }
+        const oversized = files.find(file => file.size > maxFileSize);
+        if (oversized) {
+            return `Файл «${oversized.name}» превышает лимит {{ attachment_max_size_mb }} МБ.`;
+        }
+        return '';
+    }
+
+    function showSelectedFiles() {
+        const files = Array.from(fileInput.files);
+        selectedFileList.replaceChildren();
+        files.forEach(file => {
+            const item = document.createElement('li');
+            item.textContent = `${file.name} · ${formatFileSize(file.size)}`;
+            selectedFileList.appendChild(item);
+        });
+        selectedFiles.classList.toggle('visible', files.length > 0);
+        uploadError.textContent = validateSelectedFiles(files);
+    }
+
+    function resetFiles() {
+        fileInput.value = '';
+        showSelectedFiles();
     }
 
     // Безопасно превращает URL в кликабельные ссылки.
@@ -505,6 +828,9 @@
     }
 
     sendBtn.addEventListener('click', sendMessage);
+    attachBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', showSelectedFiles);
+    clearFiles.addEventListener('click', resetFiles);
 
     // Отправка по Enter (без Shift)
     messageInput.addEventListener('keydown', function(e) {
