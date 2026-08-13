@@ -19,21 +19,33 @@
                   hx-encoding="multipart/form-data">
                 {% csrf_token %}
 
+                {% include 'accounts/_profile_completion.html' %}
+
                 <div class="row g-4 profile-edit-columns">
                     <div class="col-md-6 form-column">
                         <!-- Основные поля -->
                         {% if user.performer_profile %}
-                            <!-- Поле "Полное имя" -->
                             <div class="mb-3">
-                                <label for="{{ form.full_name.id_for_label }}" class="form-label">
-                                    <i class="bi bi-person me-2"></i>{{ form.full_name.label }}
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person me-2"></i>{{ form.first_name.label }}
                                 </label>
-                                {{ form.full_name }}
-                                {% if form.full_name.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.full_name.errors.0 }}
-                                    </div>
-                                {% endif %}
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}<div class="invalid-feedback d-block">{{ form.country.errors.0 }}</div>{% endif %}
+                            </div>
+                            <div class="mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">{{ form.city.label }}</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>{% endif %}
                             </div>
 
                             <!-- Тип исполнителя -->
@@ -131,6 +143,16 @@
                                 {% endif %}
                             </div>
 
+                            <div class="mb-3">
+                                <label for="{{ form.video_url.id_for_label }}" class="form-label">
+                                    <i class="bi bi-camera-video me-2"></i>{{ form.video_url.label }}
+                                </label>
+                                {{ form.video_url }}
+                                {% if form.video_url.errors %}
+                                    <div class="invalid-feedback d-block">{{ form.video_url.errors.0 }}</div>
+                                {% endif %}
+                            </div>
+
                         {% elif user.client_profile %}
                             <!-- Поля для площадки -->
                             <div class="mb-3">
@@ -146,6 +168,18 @@
                                         {{ form.company_name.errors.0 }}
                                     </div>
                                 {% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}<div class="invalid-feedback d-block">{{ form.country.errors.0 }}</div>{% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">{{ form.city.label }}</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>{% endif %}
                             </div>
 
                             <div class="mb-3">
@@ -222,15 +256,29 @@
                         {% elif user.agent_profile %}
                             <!-- Поля для организатора -->
                             <div class="mb-3">
-                                <label for="{{ form.display_name.id_for_label }}" class="form-label">
-                                    <i class="bi bi-person-badge me-2"></i>{{ form.display_name.label }}
+                                <label for="{{ form.first_name.id_for_label }}" class="form-label">
+                                    <i class="bi bi-person-badge me-2"></i>{{ form.first_name.label }}
                                 </label>
-                                {{ form.display_name }}
-                                {% if form.display_name.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.display_name.errors.0 }}
-                                    </div>
-                                {% endif %}
+                                {{ form.first_name }}
+                                {% if form.first_name.errors %}<div class="invalid-feedback d-block">{{ form.first_name.errors.0 }}</div>{% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.last_name.id_for_label }}" class="form-label">{{ form.last_name.label }}</label>
+                                {{ form.last_name }}
+                                {% if form.last_name.errors %}<div class="invalid-feedback d-block">{{ form.last_name.errors.0 }}</div>{% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.country.id_for_label }}" class="form-label">{{ form.country.label }}</label>
+                                {{ form.country }}
+                                {% if form.country.errors %}<div class="invalid-feedback d-block">{{ form.country.errors.0 }}</div>{% endif %}
+                            </div>
+
+                            <div class="mb-3">
+                                <label for="{{ form.city.id_for_label }}" class="form-label">{{ form.city.label }}</label>
+                                {{ form.city }}
+                                {% if form.city.errors %}<div class="invalid-feedback d-block">{{ form.city.errors.0 }}</div>{% endif %}
                             </div>
 
                             <div class="mb-3">
@@ -457,10 +505,12 @@
 
                 <!-- Кнопки действий -->
                 <div class="d-flex gap-3 justify-content-end">
-                    <button type="button" class="btn btn-outline-light" 
-                            hx-get="{% url 'profile_view' %}" hx-target="#profile-content" hx-swap="innerHTML">
-                        <i class="bi bi-x-circle me-2"></i>Отмена
-                    </button>
+                    {% if not profile_is_incomplete %}
+                        <button type="button" class="btn btn-outline-light"
+                                hx-get="{% url 'profile_view' %}" hx-target="#profile-content" hx-swap="innerHTML">
+                            <i class="bi bi-x-circle me-2"></i>Отмена
+                        </button>
+                    {% endif %}
                     <button type="submit" class="btn" style="background: #f39c12; color: #2c3e50; font-weight: 600;">
                         <i class="bi bi-check-circle me-2"></i>Сохранить изменения
                     </button>
@@ -564,6 +614,21 @@
     box-shadow: 0 0 0 0.25rem rgba(243, 156, 18, 0.25);
     background: rgba(0, 0, 0, 0.45);
     color: #ffffff !important;
+}
+
+.profile-edit-section .form-control.is-invalid,
+.profile-edit-section .form-select.is-invalid {
+    border-color: #ff6b6b;
+    box-shadow: 0 0 0 0.25rem rgba(255, 107, 107, 0.2);
+}
+
+.profile-edit-section .validation-scroll-target {
+    animation: validation-target-pulse 1.1s ease-out;
+}
+
+@keyframes validation-target-pulse {
+    0%, 55% { border-color: rgba(255, 107, 107, 0.9); box-shadow: 0 0 28px rgba(255, 107, 107, 0.28); }
+    100% { border-color: rgba(255, 255, 255, 0.08); box-shadow: 0 14px 35px rgba(0, 0, 0, 0.25); }
 }
 
 /* Убедимся, что текст в input и textarea всегда белый */
@@ -742,6 +807,36 @@
         }
         if (target.id === 'profile-content' || target.closest?.('#profile-content')) {
             initDateClear(target);
+        }
+    });
+})();
+
+// После ответа с ошибкой переводим пользователя к первому проблемному полю.
+(function () {
+    function scrollToFirstProfileError(root) {
+        const context = root || document;
+        const firstError = context.querySelector('.invalid-feedback.d-block');
+        if (!firstError) {
+            return;
+        }
+
+        firstError.setAttribute('role', 'alert');
+        const fieldContainer = firstError.closest('.mb-3, .mb-4, .form-wide-block');
+        const field = fieldContainer?.querySelector('input:not([type="hidden"]), select, textarea');
+        field?.classList.add('is-invalid');
+        field?.setAttribute('aria-invalid', 'true');
+        fieldContainer?.classList.add('validation-scroll-target');
+
+        window.setTimeout(() => {
+            (fieldContainer || firstError).scrollIntoView({ behavior: 'smooth', block: 'center' });
+            field?.focus({ preventScroll: true });
+        }, 100);
+    }
+
+    document.addEventListener('htmx:afterSwap', (event) => {
+        const target = event.detail?.target || event.target;
+        if (target?.id === 'profile-content') {
+            scrollToFirstProfileError(target);
         }
     });
 })();

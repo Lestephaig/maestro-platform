@@ -17,6 +17,7 @@ class AnnouncementForm(forms.ModelForm):
             'announcement_type',
             'description',
             'tags',
+            'country',
             'city',
             'location',
             'is_online',
@@ -38,6 +39,10 @@ class AnnouncementForm(forms.ModelForm):
             'description': forms.Textarea(attrs={
                 'class': 'form-control',
                 'rows': 6
+            }),
+            'country': forms.TextInput(attrs={
+                'class': 'form-control',
+                'placeholder': 'Страна'
             }),
             'city': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -95,4 +100,3 @@ class AnnouncementResponseForm(forms.ModelForm):
         labels = {
             'message': 'Сообщение'
         }
-

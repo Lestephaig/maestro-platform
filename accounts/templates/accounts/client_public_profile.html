@@ -289,6 +289,14 @@
                 <div class="info-item">
                     <div class="info-label">
                         <i class="bi bi-geo-alt"></i>
+                        Страна и город
+                    </div>
+                    <div class="info-value">{{ client_user.client_profile.country }}, {{ client_user.client_profile.city }}</div>
+                </div>
+
+                <div class="info-item">
+                    <div class="info-label">
+                        <i class="bi bi-pin-map"></i>
                         Адрес площадки
                     </div>
                     <div class="info-value">{{ client_user.client_profile.address|default:"Не указано" }}</div>

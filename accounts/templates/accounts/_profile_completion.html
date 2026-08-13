@@ -1,0 +1,45 @@
+{% if profile_completion.percentage < 100 %}
+<div class="profile-completion profile-completion--{{ profile_completion.level }}" role="status">
+    <div class="profile-completion__heading">
+        <span>Ваш профиль заполнен на {{ profile_completion.percentage }}%</span>
+        <strong>{{ profile_completion.completed }}/{{ profile_completion.total }}</strong>
+    </div>
+    <div class="profile-completion__track" aria-hidden="true">
+        <div class="profile-completion__bar" style="width: {{ profile_completion.percentage }}%"></div>
+    </div>
+</div>
+<style>
+    .profile-completion {
+        --completion-color: #ff6b6b;
+        margin-bottom: 1.5rem;
+        padding: 1.1rem 1.25rem;
+        border: 1px solid color-mix(in srgb, var(--completion-color) 60%, transparent);
+        border-radius: 16px;
+        color: var(--completion-color);
+        background: color-mix(in srgb, var(--completion-color) 12%, rgba(15, 15, 17, 0.92));
+        box-shadow: 0 12px 30px color-mix(in srgb, var(--completion-color) 15%, transparent);
+    }
+    .profile-completion--medium { --completion-color: #f1c40f; }
+    .profile-completion--high { --completion-color: #2ecc71; }
+    .profile-completion__heading {
+        display: flex;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.75rem;
+        font-weight: 800;
+    }
+    .profile-completion__track {
+        height: 10px;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.12);
+    }
+    .profile-completion__bar {
+        height: 100%;
+        min-width: 3px;
+        border-radius: inherit;
+        background: var(--completion-color);
+        box-shadow: 0 0 14px var(--completion-color);
+    }
+</style>
+{% endif %}

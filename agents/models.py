@@ -11,6 +11,8 @@ class AgentProfile(models.Model):
     display_name = models.CharField('Отображаемое имя', max_length=200)
     agency_name = models.CharField('Агентство', max_length=200, blank=True)
     bio = models.TextField('Описание', blank=True)
+    country = models.CharField('Страна', max_length=120, blank=False, default='')
+    city = models.CharField('Город', max_length=120, blank=False, default='')
     specialization = models.CharField('Специализация', max_length=200, blank=True)
     experience_years = models.PositiveIntegerField('Опыт (лет)', default=0)
     website = models.URLField('Сайт или портфолио', blank=True)

@@ -1216,6 +1216,13 @@
                     </div>
                         {% endif %}
                     {% endif %}
+
+                    {% if performer.country or performer.city %}
+                    <div class="detail-item">
+                        <span class="detail-label"><i class="bi bi-geo-alt me-2"></i>Местоположение:</span>
+                        <span class="detail-value">{% if performer.country %}{{ performer.country }}{% endif %}{% if performer.country and performer.city %}, {% endif %}{% if performer.city %}{{ performer.city }}{% endif %}</span>
+                    </div>
+                    {% endif %}
                     
                     {% if performer.birth_date %}
                     <div class="detail-item">

@@ -49,6 +49,8 @@ def announcement_list(request):
     announcement_type = request.GET.get('type', '').strip()
     tag_slug = request.GET.get('tag', '').strip()
     location_query = request.GET.get('location', '').strip()
+    country = request.GET.get('country', '').strip()
+    city = request.GET.get('city', '').strip()
     is_online = request.GET.get('is_online')
     is_paid = request.GET.get('is_paid')
     budget_from = request.GET.get('budget_from', '').strip()
@@ -62,6 +64,7 @@ def announcement_list(request):
         announcements = announcements.filter(
             Q(title__icontains=search_query) |
             Q(description__icontains=search_query) |
+            Q(country__icontains=search_query) |
             Q(city__icontains=search_query) |
             Q(location__icontains=search_query)
         )
@@ -80,6 +83,12 @@ def announcement_list(request):
             Q(city__icontains=location_query) |
             Q(location__icontains=location_query)
         )
+
+    if country:
+        announcements = announcements.filter(country__iexact=country)
+
+    if city:
+        announcements = announcements.filter(city__iexact=city)
 
     # Фильтр онлайн/офлайн
     if is_online == 'true':
@@ -151,17 +160,34 @@ def announcement_list(request):
         announcement_count=Count('announcements', filter=Q(announcements__status=Announcement.STATUS_PUBLISHED))
     ).order_by('-announcement_count', 'name')
 
+    country_choices = sorted(set(
+        Announcement.objects.filter(
+            status__in=[Announcement.STATUS_PUBLISHED, Announcement.STATUS_COMPLETED],
+            is_approved=True,
+        ).exclude(country='').values_list('country', flat=True).distinct()
+    ), key=str.casefold)
+    city_choices = sorted(set(
+        Announcement.objects.filter(
+            status__in=[Announcement.STATUS_PUBLISHED, Announcement.STATUS_COMPLETED],
+            is_approved=True,
+        ).exclude(city='').values_list('city', flat=True).distinct()
+    ), key=str.casefold)
+
     context = {
         'page_obj': page_obj,
         'announcements': page_obj,
         'all_tags': all_tags,
         'announcement_types': Announcement.TYPE_CHOICES,
         'currencies': Announcement.CURRENCY_CHOICES,
+        'country_choices': country_choices,
+        'city_choices': city_choices,
         # Сохраняем параметры фильтров для формы
         'search_query': search_query,
         'announcement_type': announcement_type,
         'tag_slug': tag_slug,
         'location_query': location_query,
+        'country': country,
+        'city': city,
         'is_online': is_online,
         'is_paid': is_paid,
         'budget_from': budget_from,

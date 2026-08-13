@@ -8,6 +8,89 @@
         background: linear-gradient(135deg, var(--gray-dark) 0%, var(--black) 100%);
         min-height: 100vh;
     }
+
+    body.profile-completion-modal-open {
+        overflow: hidden;
+    }
+
+    .profile-completion-backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 2000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 1.25rem;
+        background: rgba(5, 5, 7, 0.68);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+    }
+
+    .profile-completion-backdrop.is-hidden {
+        display: none;
+    }
+
+    .profile-completion-dialog {
+        width: min(620px, 100%);
+        padding: 2.25rem;
+        border: 2px solid var(--gold);
+        border-radius: 24px;
+        color: var(--white);
+        text-align: center;
+        background: linear-gradient(145deg, rgba(35, 35, 38, 0.98), rgba(15, 15, 17, 0.98));
+        box-shadow: 0 30px 90px rgba(0, 0, 0, 0.75), 0 0 45px rgba(212, 175, 55, 0.24);
+    }
+
+    .profile-completion-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 72px;
+        height: 72px;
+        margin-bottom: 1.25rem;
+        border-radius: 50%;
+        color: var(--black);
+        font-size: 2rem;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        box-shadow: 0 0 28px rgba(212, 175, 55, 0.4);
+    }
+
+    .profile-completion-dialog h2 {
+        margin-bottom: 1rem;
+        color: var(--gold-light);
+        font-weight: 800;
+    }
+
+    .profile-completion-dialog p {
+        color: var(--silver-light);
+        line-height: 1.6;
+    }
+
+    .profile-completion-missing {
+        margin: 1.4rem 0;
+        padding: 1rem 1.25rem;
+        border: 1px solid rgba(212, 175, 55, 0.45);
+        border-radius: 14px;
+        color: var(--white);
+        background: rgba(212, 175, 55, 0.1);
+    }
+
+    .profile-completion-button {
+        width: 100%;
+        padding: 0.95rem 1.25rem;
+        border: 0;
+        border-radius: 14px;
+        color: var(--black);
+        font-weight: 800;
+        background: linear-gradient(135deg, var(--gold-dark), var(--gold-light));
+        box-shadow: 0 10px 28px rgba(212, 175, 55, 0.3);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+
+    .profile-completion-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 14px 35px rgba(212, 175, 55, 0.45);
+    }
     
     .profile-container {
         max-width: 1400px;
@@ -502,4 +585,47 @@
         </div>
     </div>
 </div>
+
+{% if profile_is_incomplete %}
+<div class="profile-completion-backdrop"
+     id="profileCompletionModal"
+     role="dialog"
+     aria-modal="true"
+     aria-labelledby="profileCompletionTitle">
+    <div class="profile-completion-dialog">
+        <div class="profile-completion-icon"><i class="bi bi-exclamation-triangle-fill"></i></div>
+        <h2 id="profileCompletionTitle">Заполните обязательные поля</h2>
+        <p>До заполнения профиля остальные разделы сайта недоступны.</p>
+        <div class="profile-completion-missing">
+            <strong>Не заполнено:</strong> {{ profile_missing_fields|join:", " }}
+        </div>
+        <button type="button"
+                class="profile-completion-button"
+                hx-get="{% url 'profile_edit' %}"
+                hx-target="#profile-content"
+                hx-swap="innerHTML"
+                onclick="openIncompleteProfileEditor()">
+            <i class="bi bi-pencil-square me-2"></i>Перейти к настройкам профиля
+        </button>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if profile_is_incomplete %}
+<script>
+    function openIncompleteProfileEditor() {
+        document.getElementById('profileCompletionModal')?.classList.add('is-hidden');
+        document.querySelector('.profile-container')?.removeAttribute('inert');
+        document.body.classList.remove('profile-completion-modal-open');
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        document.body.classList.add('profile-completion-modal-open');
+        document.querySelector('.profile-container')?.setAttribute('inert', '');
+        document.querySelector('.profile-completion-button')?.focus();
+    });
+</script>
+{% endif %}
 {% endblock %}

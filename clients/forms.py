@@ -7,6 +7,8 @@ class ClientProfileForm(forms.ModelForm):
         model = ClientProfile
         fields = [
             'company_name',
+            'country',
+            'city',
             'address',
             'venue_type',
             'hall_capacity',
@@ -28,6 +30,8 @@ class ClientProfileForm(forms.ModelForm):
                 'class': 'form-control',
                 'placeholder': 'Название площадки или организации'
             }),
+            'country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Страна'}),
+            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Город'}),
             'address': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Город, улица, дом'
@@ -88,3 +92,8 @@ class ClientProfileForm(forms.ModelForm):
                 'class': 'form-check-input'
             }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in ('company_name', 'country', 'city', 'address', 'contact_person'):
+            self.fields[field_name].required = True

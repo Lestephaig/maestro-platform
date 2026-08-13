@@ -1,6 +1,13 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import PerformerProfile, PerformerAvailability, PerformerPhoto, PerformerVideo, RepertoireItem
+from .models import MusicInstrument, PerformerProfile, PerformerAvailability, PerformerPhoto, PerformerVideo, RepertoireItem
+
+
+@admin.register(MusicInstrument)
+class MusicInstrumentAdmin(admin.ModelAdmin):
+    list_display = ('name',)
+    search_fields = ('name',)
+    ordering = ('name',)
 
 @admin.register(PerformerProfile)
 class PerformerProfileAdmin(admin.ModelAdmin):
@@ -11,7 +18,7 @@ class PerformerProfileAdmin(admin.ModelAdmin):
     readonly_fields = ('photo_preview',)
     fieldsets = (
         ('Основная информация', {
-            'fields': ('user', 'full_name', 'birth_date', 'photo', 'photo_preview')
+            'fields': ('user', 'full_name', 'country', 'city', 'birth_date', 'photo', 'photo_preview')
         }),
         ('Образование и достижения', {
             'fields': ('education', 'achievements')

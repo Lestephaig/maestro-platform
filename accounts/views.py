@@ -21,6 +21,7 @@ from chat.models import ChatRoom
 from announcements.models import Announcement
 from core.legal import get_client_ip, get_required_documents, get_user_agent
 from .models import LegalAcceptance
+from .profile_completion import get_missing_profile_fields, get_profile_completion
 
 logger = logging.getLogger(__name__)
 
@@ -50,14 +51,31 @@ def register(request):
                 user = form.save()
                 # Создаём профиль в зависимости от роли
                 role = form.cleaned_data.get('role')
-                # Используем display_name, если оно есть, иначе email
-                display_name = user.display_name or user.email
                 if role == 'performer':
-                    PerformerProfile.objects.create(user=user, full_name=display_name)
+                    PerformerProfile.objects.create(
+                        user=user,
+                        full_name=f'{user.first_name} {user.last_name}'.strip(),
+                        bio=form.cleaned_data['bio'].strip(),
+                        country=form.cleaned_data['country'].strip(),
+                        city=form.cleaned_data['city'].strip(),
+                    )
                 elif role == 'client':
-                    ClientProfile.objects.create(user=user, company_name=display_name)
+                    ClientProfile.objects.create(
+                        user=user,
+                        company_name=form.cleaned_data['company_name'].strip(),
+                        country=form.cleaned_data['country'].strip(),
+                        city=form.cleaned_data['city'].strip(),
+                        address=form.cleaned_data['address'].strip(),
+                        contact_person=form.cleaned_data['contact_person'].strip(),
+                    )
                 elif role == 'agent':
-                    AgentProfile.objects.create(user=user, display_name=display_name)
+                    AgentProfile.objects.create(
+                        user=user,
+                        display_name=f'{user.first_name} {user.last_name}'.strip(),
+                        bio=form.cleaned_data['bio'].strip(),
+                        country=form.cleaned_data['country'].strip(),
+                        city=form.cleaned_data['city'].strip(),
+                    )
                 record_required_legal_acceptances(user, request)
 
             # Отправляем email для подтверждения
@@ -136,7 +154,12 @@ def resend_verification_email(request):
 
 
 def _build_profile_context(user, request=None):
-    context = {}
+    missing_fields = get_missing_profile_fields(user)
+    context = {
+        'profile_missing_fields': missing_fields,
+        'profile_is_incomplete': bool(missing_fields),
+        'profile_completion': get_profile_completion(user),
+    }
     base_queryset = Interaction.objects.select_related('created_by').prefetch_related('participant_links__user')
 
     if hasattr(user, 'agent_profile'):
@@ -363,7 +386,11 @@ def profile_edit(request):
         form = form_class(instance=profile)
 
     # Возвращаем только частичный шаблон редактирования
-    return render(request, 'accounts/_profile_edit.html', {'form': form})
+    return render(request, 'accounts/_profile_edit.html', {
+        'form': form,
+        'profile_is_incomplete': bool(get_missing_profile_fields(request.user)),
+        'profile_completion': get_profile_completion(request.user),
+    })
 
 
 @login_required

@@ -1,6 +1,18 @@
 from django.db import models
 from accounts.models import User
 
+
+class MusicInstrument(models.Model):
+    name = models.CharField('Название', max_length=100, unique=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Музыкальный инструмент'
+        verbose_name_plural = 'Музыкальные инструменты'
+
+    def __str__(self):
+        return self.name
+
 class PerformerProfile(models.Model):
     CALENDAR_MODE_CHOICES = [
         ('mark_available', 'Отмечать доступные даты'),
@@ -69,6 +81,8 @@ class PerformerProfile(models.Model):
     achievements = models.TextField(blank=True)
     repertoire = models.TextField(blank=True)
     bio = models.TextField(blank=True)
+    country = models.CharField('Страна', max_length=120, blank=False, default='')
+    city = models.CharField('Город', max_length=120, blank=False, default='')
     video_url = models.URLField(blank=True)
     photo = models.ImageField(upload_to='performers/photos/', blank=True, null=True)
     photo_position = models.CharField(

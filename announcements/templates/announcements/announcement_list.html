@@ -347,6 +347,22 @@
                 <div class="col-md-2">
                     <input type="text" name="location" class="form-control" placeholder="Локация" value="{{ location_query }}">
                 </div>
+                <div class="col-md-2">
+                    <select name="country" class="form-select" aria-label="Страна">
+                        <option value="">Все страны</option>
+                        {% for country_name in country_choices %}
+                        <option value="{{ country_name }}" {% if country == country_name %}selected{% endif %}>{{ country_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2">
+                    <select name="city" class="form-select" aria-label="Город">
+                        <option value="">Все города</option>
+                        {% for city_name in city_choices %}
+                        <option value="{{ city_name }}" {% if city == city_name %}selected{% endif %}>{{ city_name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
                 <div class="col-md-1">
                     <select name="is_online" class="form-select">
                         <option value="">Все</option>
@@ -403,12 +419,14 @@
                             </span>
                         </div>
                         {% endif %}
-                        {% if announcement.city or announcement.location %}
+                        {% if announcement.country or announcement.city or announcement.location %}
                         <div class="announcement-meta-item">
                             <i class="bi bi-geo-alt"></i>
                             <span>
+                                {% if announcement.country %}{{ announcement.country }}{% endif %}
+                                {% if announcement.country and announcement.city %}, {% endif %}
                                 {% if announcement.city %}{{ announcement.city }}{% endif %}
-                                {% if announcement.city and announcement.location %}, {% endif %}
+                                {% if announcement.location and announcement.country or announcement.location and announcement.city %}, {% endif %}
                                 {% if announcement.location %}{{ announcement.location }}{% endif %}
                             </span>
                         </div>
@@ -492,4 +510,3 @@
     </div>
 </div>
 {% endblock %}
-

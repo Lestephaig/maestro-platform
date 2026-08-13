@@ -1,23 +1,23 @@
 from django import forms
+from accounts.form_mixins import UserNameProfileFormMixin
 from .models import AgentProfile
 
 
-class AgentProfileForm(forms.ModelForm):
+class AgentProfileForm(UserNameProfileFormMixin, forms.ModelForm):
     class Meta:
         model = AgentProfile
         fields = [
-            'display_name',
+            'first_name',
+            'last_name',
             'agency_name',
             'bio',
+            'country',
+            'city',
             'specialization',
             'experience_years',
             'website',
         ]
         widgets = {
-            'display_name': forms.TextInput(attrs={
-                'class': 'form-control',
-                'placeholder': 'Имя или псевдоним организатора',
-            }),
             'agency_name': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Название агентства (если есть)',
@@ -27,6 +27,8 @@ class AgentProfileForm(forms.ModelForm):
                 'rows': 4,
                 'placeholder': 'Расскажите о своем опыте, ключевых проектах и ценностях',
             }),
+            'country': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Страна'}),
+            'city': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Город'}),
             'specialization': forms.TextInput(attrs={
                 'class': 'form-control',
                 'placeholder': 'Специализация (жанры, типы проектов)',
@@ -41,3 +43,10 @@ class AgentProfileForm(forms.ModelForm):
             }),
         }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name in ('bio', 'country', 'city'):
+            self.fields[field_name].required = True
+
+    def sync_display_name(self, profile, user):
+        profile.display_name = f'{user.first_name} {user.last_name}'.strip()

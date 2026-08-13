@@ -256,12 +256,14 @@
                         <i class="bi bi-clock"></i>
                         <span>Часовой пояс: UTC</span>
                     </div>
-                    {% if announcement.city or announcement.location %}
+                    {% if announcement.country or announcement.city or announcement.location %}
                     <div class="announcement-meta-item">
                         <i class="bi bi-geo-alt"></i>
                         <span>
+                            {% if announcement.country %}{{ announcement.country }}{% endif %}
+                            {% if announcement.country and announcement.city %}, {% endif %}
                             {% if announcement.city %}{{ announcement.city }}{% endif %}
-                            {% if announcement.city and announcement.location %}, {% endif %}
+                            {% if announcement.location and announcement.country or announcement.location and announcement.city %}, {% endif %}
                             {% if announcement.location %}{{ announcement.location }}{% endif %}
                         </span>
                     </div>
@@ -381,4 +383,3 @@
     </div>
 </div>
 {% endblock %}
-

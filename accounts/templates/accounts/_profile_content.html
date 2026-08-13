@@ -1,4 +1,6 @@
 {% load interaction_extras %}
+{% include 'accounts/_profile_completion.html' %}
+
     {% if user.is_staff or user.is_superuser %}
     <div class="admin-users-card">
         <div class="admin-users-header">

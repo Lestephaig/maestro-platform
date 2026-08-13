@@ -2,6 +2,7 @@ from django.shortcuts import redirect
 from django.urls import reverse
 
 from .legal import user_has_required_legal_acceptances
+from accounts.profile_completion import get_missing_profile_fields
 
 
 class RequiredLegalAcceptanceMiddleware:
@@ -32,3 +33,29 @@ class RequiredLegalAcceptanceMiddleware:
             return False
 
         return not user_has_required_legal_acceptances(user)
+
+
+class RequiredProfileCompletionMiddleware:
+    ALLOWED_PATHS = {
+        '/accounts/profile/',
+        '/accounts/profile/view/',
+        '/accounts/profile/edit/',
+        '/logout/',
+    }
+    ALLOWED_PREFIXES = ('/legal/', '/admin/', '/grappelli/', '/static/', '/media/', '/favicon.ico')
+
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        user = getattr(request, 'user', None)
+        if (
+            user
+            and user.is_authenticated
+            and not user.is_staff
+            and request.path not in self.ALLOWED_PATHS
+            and not any(request.path.startswith(prefix) for prefix in self.ALLOWED_PREFIXES)
+            and get_missing_profile_fields(user)
+        ):
+            return redirect('profile')
+        return self.get_response(request)

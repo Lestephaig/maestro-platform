@@ -10,6 +10,7 @@ class User(AbstractUser):
     ]
 
     email = models.EmailField(unique=True, blank=False, null=False)
+    first_name = models.CharField('Имя', max_length=200, blank=True)
     display_name = models.CharField('Имя пользователя', max_length=150, blank=True, help_text='Отображаемое имя пользователя')
     is_verified = models.BooleanField(default=False)
     is_email_verified = models.BooleanField('Email подтвержден', default=False)

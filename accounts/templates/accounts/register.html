@@ -450,6 +450,99 @@
         margin-bottom: 1.25rem;
     }
 
+    .role-options {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 1rem;
+    }
+
+    .role-option {
+        position: relative;
+    }
+
+    .role-option input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    .role-card {
+        min-height: 132px;
+        padding: 1.25rem 0.8rem;
+        border: 2px solid rgba(255, 255, 255, 0.14);
+        border-radius: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        color: var(--white);
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.7rem;
+        text-align: center;
+        font-weight: 700;
+        transition: all 0.25s ease;
+    }
+
+    .role-card i {
+        color: var(--gold);
+        font-size: 2rem;
+    }
+
+    .role-card:hover {
+        transform: translateY(-3px);
+        border-color: rgba(212, 175, 55, 0.65);
+        background: rgba(212, 175, 55, 0.1);
+    }
+
+    .role-option input:checked + .role-card {
+        border-color: var(--gold);
+        color: var(--gold-light);
+        background: linear-gradient(135deg, rgba(212, 175, 55, 0.24), rgba(212, 175, 55, 0.08));
+        box-shadow: 0 0 24px rgba(212, 175, 55, 0.3);
+    }
+
+    .role-option input:focus-visible + .role-card {
+        outline: 3px solid rgba(212, 175, 55, 0.45);
+        outline-offset: 3px;
+    }
+
+    .role-fields {
+        margin-bottom: 2rem;
+    }
+
+    .role-fields[hidden] {
+        display: none !important;
+    }
+
+    .field-wide {
+        grid-column: 1 / -1;
+    }
+
+    .form-control:-webkit-autofill,
+    .form-control:-webkit-autofill:hover,
+    .form-control:-webkit-autofill:focus {
+        -webkit-text-fill-color: #fff;
+        -webkit-box-shadow: 0 0 0 1000px #292929 inset;
+        caret-color: #fff;
+    }
+
+    textarea.form-control {
+        resize: vertical;
+        min-height: 120px;
+    }
+
+    @media (max-width: 576px) {
+        .role-options {
+            grid-template-columns: 1fr;
+        }
+
+        .role-card {
+            min-height: 88px;
+            flex-direction: row;
+        }
+    }
+
     .legal-consents {
         margin-bottom: 1.5rem;
     }
@@ -486,6 +579,19 @@
         transform: none;
         box-shadow: none;
     }
+
+    .btn-register.is-submitting {
+        opacity: 0.85;
+        cursor: wait;
+    }
+
+    .registration-progress {
+        min-height: 1.5rem;
+        margin-top: 0.85rem;
+        color: var(--silver-light);
+        text-align: center;
+        font-size: 0.9rem;
+    }
 </style>
 {% endblock %}
 
@@ -500,79 +606,27 @@
         </div>
 
         <div class="register-body">
-            <form method="post">
+            <form method="post" id="registrationForm">
                         {% csrf_token %}
-
-                        <div class="form-fields-grid">
-                            <div class="form-group">
-                                <label for="{{ form.display_name.id_for_label }}" class="form-label">
-                                    <i class="bi bi-person"></i>Имя пользователя
-                                </label>
-                                {{ form.display_name }}
-                                {% if form.display_name.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.display_name.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.email.id_for_label }}" class="form-label">
-                                    <i class="bi bi-envelope"></i>Email
-                                </label>
-                                {{ form.email }}
-                                {% if form.email.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.email.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.password1.id_for_label }}" class="form-label">
-                                    <i class="bi bi-lock"></i>Пароль
-                                </label>
-                                {{ form.password1 }}
-                                {% if form.password1.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.password1.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-
-                            <div class="form-group">
-                                <label for="{{ form.password2.id_for_label }}" class="form-label">
-                                    <i class="bi bi-lock-fill"></i>Подтверждение пароля
-                                </label>
-                                {{ form.password2 }}
-                                {% if form.password2.errors %}
-                                    <div class="invalid-feedback d-block">
-                                        {{ form.password2.errors.0 }}
-                                    </div>
-                                {% endif %}
-                            </div>
-                        </div>
 
                 <div class="mb-4 role-section">
                     <label class="form-label mb-3">
                         <i class="bi bi-person-badge me-2"></i>Тип аккаунта
                     </label>
-                    <div class="row g-3">
+                    <div class="role-options">
                         {% for radio in form.role %}
-                            <div class="col-md-6">
-                                <div class="form-check">
-                                    {{ radio.tag }}
-                                    <label class="form-check-label" for="{{ radio.id_for_label }}">
+                            <div class="role-option">
+                                {{ radio.tag }}
+                                <label class="role-card" for="{{ radio.id_for_label }}">
                                         {% if radio.choice_value == 'performer' %}
-                                            <i class="bi bi-music-note me-2"></i>
+                                            <i class="bi bi-music-note-beamed"></i>
                                         {% elif radio.choice_value == 'client' %}
-                                            <i class="bi bi-building me-2"></i>
+                                            <i class="bi bi-building"></i>
                                         {% elif radio.choice_value == 'agent' %}
-                                            <i class="bi bi-people me-2"></i>
+                                            <i class="bi bi-people"></i>
                                         {% endif %}
                                         {{ radio.choice_label }}
-                                    </label>
-                                </div>
+                                </label>
                             </div>
                         {% endfor %}
                     </div>
@@ -581,6 +635,45 @@
                             {{ form.role.errors.0 }}
                         </div>
                     {% endif %}
+                </div>
+
+                <div class="role-fields" data-roles="performer agent" hidden>
+                    <div class="form-fields-grid">
+                        {% include 'accounts/_register_field.html' with field=form.first_name icon='bi-person' %}
+                        {% include 'accounts/_register_field.html' with field=form.last_name icon='bi-person-vcard' %}
+                    </div>
+                </div>
+
+                <div class="role-fields" data-roles="client" hidden>
+                    <div class="form-fields-grid">
+                        {% include 'accounts/_register_field.html' with field=form.company_name icon='bi-building' wide=True %}
+                    </div>
+                </div>
+
+                <div class="role-fields" data-roles="performer agent client" hidden>
+                    <div class="form-fields-grid">
+                        {% include 'accounts/_register_field.html' with field=form.country icon='bi-globe' %}
+                        {% include 'accounts/_register_field.html' with field=form.city icon='bi-geo-alt' %}
+                    </div>
+                </div>
+
+                <div class="role-fields" data-roles="performer agent" hidden>
+                    <div class="form-fields-grid">
+                        {% include 'accounts/_register_field.html' with field=form.bio icon='bi-journal-text' wide=True %}
+                    </div>
+                </div>
+
+                <div class="role-fields" data-roles="client" hidden>
+                    <div class="form-fields-grid">
+                        {% include 'accounts/_register_field.html' with field=form.address icon='bi-pin-map' %}
+                        {% include 'accounts/_register_field.html' with field=form.contact_person icon='bi-person-lines-fill' %}
+                    </div>
+                </div>
+
+                <div class="form-fields-grid">
+                    {% include 'accounts/_register_field.html' with field=form.email icon='bi-envelope' %}
+                    {% include 'accounts/_register_field.html' with field=form.password1 icon='bi-lock' %}
+                    {% include 'accounts/_register_field.html' with field=form.password2 icon='bi-lock-fill' %}
                 </div>
 
                 <div class="legal-consents">
@@ -632,6 +725,7 @@
                 <button type="submit" class="btn btn-register w-100" id="registerSubmit" disabled>
                     <i class="bi bi-person-plus me-2"></i>Зарегистрироваться
                 </button>
+                <div class="registration-progress" id="registrationProgress" role="status" aria-live="polite"></div>
             </form>
         </div>
         
@@ -649,12 +743,45 @@
     document.addEventListener('DOMContentLoaded', function () {
         const submitButton = document.getElementById('registerSubmit');
         const checkboxes = document.querySelectorAll('.legal-consent-checkbox');
+        const roleInputs = document.querySelectorAll('input[name="role"]');
+        const roleSections = document.querySelectorAll('.role-fields');
+        const registrationForm = document.getElementById('registrationForm');
+        const registrationProgress = document.getElementById('registrationProgress');
+        let registrationIsSubmitting = false;
+
+        function syncRoleFields() {
+            const selectedRole = document.querySelector('input[name="role"]:checked')?.value || '';
+            roleSections.forEach((section) => {
+                const roles = section.dataset.roles.split(' ');
+                const isVisible = roles.includes(selectedRole);
+                section.hidden = !isVisible;
+                section.querySelectorAll('input, textarea, select').forEach((field) => {
+                    field.required = isVisible;
+                    field.disabled = !isVisible;
+                });
+            });
+        }
 
         function syncRegisterButton() {
             submitButton.disabled = !Array.from(checkboxes).every((checkbox) => checkbox.checked);
         }
 
         checkboxes.forEach((checkbox) => checkbox.addEventListener('change', syncRegisterButton));
+        roleInputs.forEach((input) => input.addEventListener('change', syncRoleFields));
+        registrationForm.addEventListener('submit', function (event) {
+            if (registrationIsSubmitting) {
+                event.preventDefault();
+                return;
+            }
+
+            registrationIsSubmitting = true;
+            registrationForm.setAttribute('aria-busy', 'true');
+            submitButton.disabled = true;
+            submitButton.classList.add('is-submitting');
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2" aria-hidden="true"></span>Регистрация…';
+            registrationProgress.textContent = 'Создаём аккаунт и отправляем письмо подтверждения. Пожалуйста, подождите.';
+        });
+        syncRoleFields();
         syncRegisterButton();
     });
 </script>

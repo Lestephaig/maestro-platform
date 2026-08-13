@@ -81,6 +81,7 @@ class Announcement(models.Model):
         related_name='announcements',
         blank=True,
     )
+    country = models.CharField('Страна', max_length=120, blank=True)
     city = models.CharField('Город', max_length=255, blank=True)
     location = models.CharField('Локация', max_length=255, blank=True)
     is_online = models.BooleanField('Онлайн', default=False)

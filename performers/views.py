@@ -7,7 +7,7 @@ from django.core.paginator import Paginator
 from django.db.models import Q
 import json
 from datetime import datetime, timedelta
-from .models import PerformerProfile, PerformerAvailability, RepertoireItem
+from .models import MusicInstrument, PerformerProfile, PerformerAvailability, RepertoireItem
 from .forms import RepertoireItemForm
 
 def performer_detail(request, performer_id):
@@ -28,6 +28,8 @@ def specialists_list(request):
     availability_date_str = request.GET.get('availability_date', '').strip()
     performer_type = request.GET.get('performer_type', '').strip()
     instrument = request.GET.get('instrument', '').strip()
+    country = request.GET.get('country', '').strip()
+    city = request.GET.get('city', '').strip()
     birth_date_from = request.GET.get('birth_date_from', '').strip()
     birth_date_to = request.GET.get('birth_date_to', '').strip()
     sort_option = request.GET.get('sort', 'newest')
@@ -37,6 +39,8 @@ def specialists_list(request):
             Q(full_name__icontains=search_query) |
             Q(voice_type__icontains=search_query) |
             Q(instrument__icontains=search_query) |
+            Q(country__icontains=search_query) |
+            Q(city__icontains=search_query) |
             Q(bio__icontains=search_query) |
             Q(education__icontains=search_query) |
             Q(repertoire_items__composer__icontains=search_query) |
@@ -52,6 +56,12 @@ def specialists_list(request):
 
     if instrument:
         performers = performers.filter(instrument__iexact=instrument)
+
+    if country:
+        performers = performers.filter(country__iexact=country)
+
+    if city:
+        performers = performers.filter(city__iexact=city)
 
     selected_availability_date = None
     if availability_date_str:
@@ -123,8 +133,8 @@ def specialists_list(request):
         .distinct()
     )
 
-    instrument_choices = merge_options(
-        PerformerProfile.DEFAULT_INSTRUMENTS,
+    instrument_choices = sorted(set(merge_options(
+        MusicInstrument.objects.values_list('name', flat=True),
         PerformerProfile.objects.filter(
             performer_type__in=[
                 PerformerProfile.PERFORMER_TYPE_INSTRUMENTALIST,
@@ -135,7 +145,14 @@ def specialists_list(request):
         .exclude(instrument='')
         .values_list('instrument', flat=True)
         .distinct()
-    )
+    )), key=str.casefold)
+
+    country_choices = sorted(set(
+        PerformerProfile.objects.exclude(country='').values_list('country', flat=True).distinct()
+    ), key=str.casefold)
+    city_choices = sorted(set(
+        PerformerProfile.objects.exclude(city='').values_list('city', flat=True).distinct()
+    ), key=str.casefold)
 
     paginator = Paginator(performers, 12)  # 12 артистов на страницу
     page_number = request.GET.get('page')
@@ -150,11 +167,15 @@ def specialists_list(request):
         'performers': page_obj,
         'voice_types': voice_types,
         'instrument_choices': instrument_choices,
+        'country_choices': country_choices,
+        'city_choices': city_choices,
         'total_count': paginator.count,
         'query_params': query_params.urlencode(),
         'search_query': search_query,
         'selected_performer_type': performer_type,
         'selected_instrument': instrument,
+        'selected_country': country,
+        'selected_city': city,
         'availability_date': availability_date_str,
     }
     return render(request, 'performers/specialists_list.html', context)

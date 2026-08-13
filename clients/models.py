@@ -4,6 +4,8 @@ from accounts.models import User
 class ClientProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='client_profile')
     company_name = models.CharField('Наименование площадки', max_length=200)
+    country = models.CharField('Страна', max_length=120, blank=False, default='')
+    city = models.CharField('Город', max_length=120, blank=False, default='')
     address = models.CharField('Адрес площадки', max_length=255, blank=True)
     venue_type = models.CharField('Тип площадки', max_length=120, blank=True)
     hall_capacity = models.PositiveIntegerField('Вместимость зала', null=True, blank=True)

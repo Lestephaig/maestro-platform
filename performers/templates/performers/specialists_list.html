@@ -492,6 +492,24 @@
                                     {% endfor %}
                                 </select>
                             </div>
+                            <div class="col-md-4 col-lg-3">
+                                <label for="country" class="form-label">Страна</label>
+                                <select class="form-select" id="country" name="country">
+                                    <option value="">Все страны</option>
+                                    {% for country_name in country_choices %}
+                                        <option value="{{ country_name }}" {% if selected_country == country_name %}selected{% endif %}>{{ country_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="col-md-4 col-lg-3">
+                                <label for="city" class="form-label">Город</label>
+                                <select class="form-select" id="city" name="city">
+                                    <option value="">Все города</option>
+                                    {% for city_name in city_choices %}
+                                        <option value="{{ city_name }}" {% if selected_city == city_name %}selected{% endif %}>{{ city_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
                             <div class="col-md-6 col-lg-3">
                                 <label for="availability_date" class="form-label">Доступен</label>
                                 <input type="date"
@@ -575,6 +593,11 @@
                             {% endif %}
                             
                             <div class="specialist-meta">
+                                {% if performer.country or performer.city %}
+                                    <span class="specialist-year">
+                                        <i class="bi bi-geo-alt me-1"></i>{% if performer.country %}{{ performer.country }}{% endif %}{% if performer.country and performer.city %}, {% endif %}{% if performer.city %}{{ performer.city }}{% endif %}
+                                    </span>
+                                {% endif %}
                                 {% if performer.birth_date %}
                                     <span class="specialist-year">
                                         <i class="bi bi-calendar3 me-1"></i>{{ performer.birth_date|date:"d.m.Y" }}
