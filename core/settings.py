@@ -67,6 +67,7 @@ INSTALLED_APPS = [
     'channels',
     'chat',
     'notifications',
+    'telegram_bot',
 ]
 if USE_WHITENOISE:
     INSTALLED_APPS.insert(0, 'whitenoise.runserver_nostatic')
@@ -224,6 +225,16 @@ LOGIN_URL = 'login'
 # Site URL для генерации ссылок в email
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 
+# Telegram bot
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='')
+TELEGRAM_BOT_NAME = config('TELEGRAM_BOT_NAME', default='MaestroBot')
+MAESTRO_BASE_URL = config('MAESTRO_BASE_URL', default=SITE_URL).rstrip('/')
+TELEGRAM_CONNECT_TIMEOUT = config('TELEGRAM_CONNECT_TIMEOUT', default=5, cast=float)
+TELEGRAM_READ_TIMEOUT = config('TELEGRAM_READ_TIMEOUT', default=20, cast=float)
+TELEGRAM_WRITE_TIMEOUT = config('TELEGRAM_WRITE_TIMEOUT', default=20, cast=float)
+TELEGRAM_POOL_TIMEOUT = config('TELEGRAM_POOL_TIMEOUT', default=5, cast=float)
+TELEGRAM_POLL_TIMEOUT = config('TELEGRAM_POLL_TIMEOUT', default=30, cast=int)
+
 # Channels
 ASGI_APPLICATION = 'core.asgi.application'
 
@@ -266,11 +277,18 @@ LOGGING = {
             'format': '{levelname} {message}',
             'style': '{',
         },
+        'json': {
+            '()': 'telegram_bot.logging.TelegramJsonFormatter',
+        },
     },
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'verbose',
+        },
+        'telegram_console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'json',
         },
         'file': {
             'class': 'logging.FileHandler',
@@ -296,6 +314,18 @@ LOGGING = {
         'notifications': {
             'handlers': ['console', 'file'],
             'level': 'INFO',
+            'propagate': False,
+        },
+        'telegram_bot': {
+            'handlers': ['telegram_console'],
+            'level': 'INFO',
+            'propagate': False,
+        },
+        # httpx includes request URLs in INFO records. Telegram API URLs contain
+        # the bot token, so they must never reach application logs.
+        'httpx': {
+            'handlers': ['console'],
+            'level': 'WARNING',
             'propagate': False,
         },
     },
