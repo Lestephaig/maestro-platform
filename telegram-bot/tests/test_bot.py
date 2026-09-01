@@ -1,16 +1,22 @@
 import json
 import logging
+import os
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest import IsolatedAsyncioTestCase, TestCase
+from unittest.mock import AsyncMock, patch
 
-from django.core.management import call_command
-from django.core.management.base import CommandError
-from django.test import SimpleTestCase, override_settings
 from telegram.error import NetworkError
 
-from .handlers import help_command, start_command, unknown_command
-from .logging import TelegramJsonFormatter
-from .service import TelegramButton, send_telegram_message
+from maestro_bot.config import BotSettings, ConfigurationError, load_settings
+from maestro_bot.handlers import help_command, start_command, unknown_command
+from maestro_bot.logging_config import SafeJsonFormatter
+from maestro_bot.service import TelegramButton, send_telegram_message
+
+SETTINGS = BotSettings(
+    token='123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi',
+    name='MaestroTestBot',
+    maestro_base_url='https://maestro.test',
+)
 
 
 def make_update():
@@ -18,7 +24,7 @@ def make_update():
     return SimpleNamespace(effective_message=message), message
 
 
-class TelegramHandlerTests(SimpleTestCase):
+class TelegramHandlerTests(IsolatedAsyncioTestCase):
     async def test_start_returns_welcome_without_deep_link(self):
         update, message = make_update()
 
@@ -38,11 +44,11 @@ class TelegramHandlerTests(SimpleTestCase):
         self.assertIn('Параметр ссылки получен', reply)
         self.assertNotIn(secret_parameter, reply)
 
-    @override_settings(TELEGRAM_BOT_NAME='MaestroTestBot', MAESTRO_BASE_URL='https://maestro.test')
     async def test_help_describes_bot(self):
         update, message = make_update()
+        context = SimpleNamespace(bot_data={'settings': SETTINGS})
 
-        await help_command(update, SimpleNamespace())
+        await help_command(update, context)
 
         reply = message.reply_text.await_args.args[0]
         self.assertIn('@MaestroTestBot', reply)
@@ -57,12 +63,14 @@ class TelegramHandlerTests(SimpleTestCase):
         self.assertIn('/help', message.reply_text.await_args.args[0])
 
 
-class TelegramMessageServiceTests(SimpleTestCase):
+class TelegramMessageServiceTests(IsolatedAsyncioTestCase):
     async def test_sends_message_with_inline_button(self):
         bot = SimpleNamespace(send_message=AsyncMock())
         buttons = [[TelegramButton('Открыть Maestro', 'https://maestro.test')]]
 
-        result = await send_telegram_message(12345, 'Тест', buttons, bot=bot)
+        result = await send_telegram_message(
+            SETTINGS, 12345, 'Тест', buttons, bot=bot
+        )
 
         self.assertTrue(result)
         call = bot.send_message.await_args.kwargs
@@ -74,15 +82,34 @@ class TelegramMessageServiceTests(SimpleTestCase):
     async def test_telegram_api_error_does_not_escape(self):
         bot = SimpleNamespace(send_message=AsyncMock(side_effect=NetworkError('unavailable')))
 
-        result = await send_telegram_message(12345, 'Тест', bot=bot)
+        result = await send_telegram_message(SETTINGS, 12345, 'Тест', bot=bot)
 
         self.assertFalse(result)
 
 
-class TelegramSafetyTests(SimpleTestCase):
-    def test_structured_formatter_does_not_include_log_message(self):
+class TelegramConfigurationTests(TestCase):
+    def test_loads_own_environment(self):
+        environment = {
+            'TELEGRAM_BOT_TOKEN': SETTINGS.token,
+            'TELEGRAM_BOT_NAME': '@MaestroTestBot',
+            'MAESTRO_BASE_URL': 'https://maestro.test/',
+        }
+        with patch.dict(os.environ, environment, clear=True):
+            settings = load_settings()
+
+        self.assertEqual(settings.name, 'MaestroTestBot')
+        self.assertEqual(settings.maestro_base_url, 'https://maestro.test')
+
+    def test_rejects_missing_required_environment(self):
+        with patch.dict(os.environ, {}, clear=True):
+            with self.assertRaises(ConfigurationError):
+                load_settings()
+
+
+class TelegramLoggingTests(TestCase):
+    def test_formatter_does_not_include_message_or_token(self):
         record = logging.LogRecord(
-            name='telegram_bot.test',
+            name='maestro_bot.test',
             level=logging.ERROR,
             pathname=__file__,
             lineno=1,
@@ -92,18 +119,7 @@ class TelegramSafetyTests(SimpleTestCase):
         )
         record.event = 'safe_event'
 
-        payload = json.loads(TelegramJsonFormatter().format(record))
+        payload = json.loads(SafeJsonFormatter().format(record))
 
         self.assertEqual(payload['event'], 'safe_event')
         self.assertNotIn('secret-token', json.dumps(payload))
-
-    @override_settings(TELEGRAM_BOT_TOKEN='')
-    def test_run_command_requires_token(self):
-        with self.assertRaisesMessage(CommandError, 'TELEGRAM_BOT_TOKEN is required'):
-            call_command('run_telegram_bot')
-
-    @override_settings(TELEGRAM_BOT_TOKEN='')
-    async def test_missing_token_returns_false(self):
-        result = await send_telegram_message(12345, 'Тест')
-
-        self.assertFalse(result)

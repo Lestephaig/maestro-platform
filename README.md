@@ -58,4 +58,4 @@ python manage.py makemigrations --check --dry-run
 
 - [`DEPLOYMENT.md`](DEPLOYMENT.md);
 - [`DEPLOYMENT_CHECKLIST.md`](DEPLOYMENT_CHECKLIST.md).
-- [`docs/telegram-bot.md`](docs/telegram-bot.md) — запуск и конфигурация Telegram-бота.
+- [`telegram-bot/README.md`](telegram-bot/README.md) — отдельный сервис Telegram-бота.

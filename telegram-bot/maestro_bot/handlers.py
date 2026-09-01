@@ -1,10 +1,15 @@
 import logging
 
-from django.conf import settings
 from telegram import BotCommand, Update
 from telegram.ext import ContextTypes
 
+from .config import BotSettings
+
 logger = logging.getLogger(__name__)
+
+
+def _settings(context: ContextTypes.DEFAULT_TYPE) -> BotSettings:
+    return context.bot_data['settings']
 
 
 async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -31,18 +36,17 @@ async def start_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 async def help_command(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    del context
     message = update.effective_message
     if message is None:
         return
 
-    bot_name = settings.TELEGRAM_BOT_NAME.lstrip('@')
+    settings = _settings(context)
     await message.reply_text(
-        f'@{bot_name} — бот платформы Maestro.\n\n'
+        f'@{settings.name} — бот платформы Maestro.\n\n'
         'Команды:\n'
         '/start — начать работу\n'
         '/help — показать эту справку\n\n'
-        f'Сайт: {settings.MAESTRO_BASE_URL}'
+        f'Сайт: {settings.maestro_base_url}'
     )
     logger.info('telegram_help_handled', extra={'event': 'telegram_help_handled'})
 

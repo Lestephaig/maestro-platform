@@ -1,12 +1,13 @@
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import Sequence
 
-from asgiref.sync import async_to_sync
-from django.conf import settings
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.error import TelegramError
 from telegram.request import HTTPXRequest
+
+from .config import BotSettings
 
 logger = logging.getLogger(__name__)
 
@@ -29,28 +30,28 @@ def _build_keyboard(buttons: ButtonRows | None):
     ])
 
 
-def _make_bot():
+def _make_bot(settings: BotSettings):
     request = HTTPXRequest(
-        connect_timeout=settings.TELEGRAM_CONNECT_TIMEOUT,
-        read_timeout=settings.TELEGRAM_READ_TIMEOUT,
-        write_timeout=settings.TELEGRAM_WRITE_TIMEOUT,
-        pool_timeout=settings.TELEGRAM_POOL_TIMEOUT,
+        connect_timeout=settings.connect_timeout,
+        read_timeout=settings.read_timeout,
+        write_timeout=settings.write_timeout,
+        pool_timeout=settings.pool_timeout,
     )
-    return Bot(token=settings.TELEGRAM_BOT_TOKEN, request=request)
+    return Bot(token=settings.token, request=request)
 
 
-async def send_telegram_message(chat_id, text: str, buttons: ButtonRows | None = None, *, bot=None):
+async def send_telegram_message(
+    settings: BotSettings,
+    chat_id,
+    text: str,
+    buttons: ButtonRows | None = None,
+    *,
+    bot=None,
+):
     """Send one message without leaking its content or recipient into logs."""
-    if not settings.TELEGRAM_BOT_TOKEN and bot is None:
-        logger.error(
-            'telegram_not_configured',
-            extra={'event': 'telegram_not_configured'},
-        )
-        return False
-
     keyboard = _build_keyboard(buttons)
     owns_bot = bot is None
-    bot = bot or _make_bot()
+    bot = bot or _make_bot(settings)
     try:
         if owns_bot:
             async with bot:
@@ -88,6 +89,11 @@ async def send_telegram_message(chat_id, text: str, buttons: ButtonRows | None =
     return True
 
 
-def send_telegram_message_sync(chat_id, text: str, buttons: ButtonRows | None = None):
-    """Synchronous adapter for regular Django views, signals and commands."""
-    return async_to_sync(send_telegram_message)(chat_id, text, buttons)
+def send_telegram_message_sync(
+    settings: BotSettings,
+    chat_id,
+    text: str,
+    buttons: ButtonRows | None = None,
+):
+    """Synchronous adapter; call the async function from an active event loop."""
+    return asyncio.run(send_telegram_message(settings, chat_id, text, buttons))

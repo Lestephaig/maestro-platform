@@ -53,23 +53,6 @@ services:
       - maestro_network
     command: daphne -b 0.0.0.0 -p 8000 core.asgi:application
 
-  telegram-bot:
-    build: .
-    restart: unless-stopped
-    env_file:
-      - .env
-    volumes:
-      - ./logs:/app/logs
-    networks:
-      - maestro_network
-    command: python manage.py run_telegram_bot
-    healthcheck:
-      test: ["CMD", "python", "-c", "from pathlib import Path; import sys, time; p = Path('/tmp/maestro-telegram-bot.heartbeat'); sys.exit(0 if p.is_file() and time.time() - p.stat().st_mtime < 90 else 1)"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-      start_period: 30s
-
   nginx:
     image: nginx:alpine
     restart: unless-stopped
