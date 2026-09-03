@@ -15,6 +15,7 @@ class BotSettings:
     token: str
     name: str
     maestro_base_url: str
+    maestro_api_token: str
     connect_timeout: float = 5
     read_timeout: float = 20
     write_timeout: float = 20
@@ -27,6 +28,7 @@ def load_settings() -> BotSettings:
     token = config('TELEGRAM_BOT_TOKEN', default='').strip()
     name = config('TELEGRAM_BOT_NAME', default='').strip().lstrip('@')
     maestro_base_url = config('MAESTRO_BASE_URL', default='').strip().rstrip('/')
+    maestro_api_token = config('MAESTRO_API_TOKEN', default='').strip()
 
     missing = [
         variable
@@ -34,6 +36,7 @@ def load_settings() -> BotSettings:
             ('TELEGRAM_BOT_TOKEN', token),
             ('TELEGRAM_BOT_NAME', name),
             ('MAESTRO_BASE_URL', maestro_base_url),
+            ('MAESTRO_API_TOKEN', maestro_api_token),
         )
         if not value
     ]
@@ -46,6 +49,7 @@ def load_settings() -> BotSettings:
         token=token,
         name=name,
         maestro_base_url=maestro_base_url,
+        maestro_api_token=maestro_api_token,
         connect_timeout=config('TELEGRAM_CONNECT_TIMEOUT', default=5, cast=float),
         read_timeout=config('TELEGRAM_READ_TIMEOUT', default=20, cast=float),
         write_timeout=config('TELEGRAM_WRITE_TIMEOUT', default=20, cast=float),

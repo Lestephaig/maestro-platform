@@ -9,6 +9,7 @@ from telegram.error import NetworkError
 
 from maestro_bot.config import BotSettings, ConfigurationError, load_settings
 from maestro_bot.handlers import help_command, start_command, unknown_command
+from maestro_bot.link_client import complete_account_link
 from maestro_bot.logging_config import SafeJsonFormatter
 from maestro_bot.service import TelegramButton, send_telegram_message
 
@@ -16,12 +17,14 @@ SETTINGS = BotSettings(
     token='123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi',
     name='MaestroTestBot',
     maestro_base_url='https://maestro.test',
+    maestro_api_token='test-platform-api-token',
 )
 
 
-def make_update():
+def make_update(chat_type='private'):
     message = SimpleNamespace(reply_text=AsyncMock())
-    return SimpleNamespace(effective_message=message), message
+    chat = SimpleNamespace(id=12345, type=chat_type)
+    return SimpleNamespace(effective_message=message, effective_chat=chat), message
 
 
 class TelegramHandlerTests(IsolatedAsyncioTestCase):
@@ -34,15 +37,43 @@ class TelegramHandlerTests(IsolatedAsyncioTestCase):
         self.assertIn('Добро пожаловать', reply)
         self.assertNotIn('Параметр ссылки', reply)
 
-    async def test_start_acknowledges_deep_link_without_echoing_it(self):
+    @patch('maestro_bot.handlers.complete_account_link', new_callable=AsyncMock)
+    async def test_start_links_deep_link_without_echoing_it(self, complete_link):
         update, message = make_update()
         secret_parameter = 'secret-deep-link-value'
+        complete_link.return_value = 'linked'
+        context = SimpleNamespace(args=[secret_parameter], bot_data={'settings': SETTINGS})
 
-        await start_command(update, SimpleNamespace(args=[secret_parameter]))
+        await start_command(update, context)
 
         reply = message.reply_text.await_args.args[0]
-        self.assertIn('Параметр ссылки получен', reply)
+        self.assertIn('успешно привязан', reply)
         self.assertNotIn(secret_parameter, reply)
+        complete_link.assert_awaited_once_with(SETTINGS, secret_parameter, 12345)
+
+    @patch('maestro_bot.handlers.complete_account_link', new_callable=AsyncMock)
+    async def test_start_explains_expired_link(self, complete_link):
+        update, message = make_update()
+        complete_link.return_value = 'expired_token'
+
+        await start_command(
+            update,
+            SimpleNamespace(args=['expired'], bot_data={'settings': SETTINGS}),
+        )
+
+        self.assertIn('истёк', message.reply_text.await_args.args[0])
+
+    @patch('maestro_bot.handlers.complete_account_link', new_callable=AsyncMock)
+    async def test_start_rejects_linking_from_group(self, complete_link):
+        update, message = make_update(chat_type='group')
+
+        await start_command(
+            update,
+            SimpleNamespace(args=['secret'], bot_data={'settings': SETTINGS}),
+        )
+
+        self.assertIn('личном чате', message.reply_text.await_args.args[0])
+        complete_link.assert_not_awaited()
 
     async def test_help_describes_bot(self):
         update, message = make_update()
@@ -87,12 +118,38 @@ class TelegramMessageServiceTests(IsolatedAsyncioTestCase):
         self.assertFalse(result)
 
 
+class MaestroLinkClientTests(IsolatedAsyncioTestCase):
+    async def test_sends_link_to_authenticated_platform_endpoint(self):
+        response = SimpleNamespace(json=lambda: {'status': 'linked'})
+        client = SimpleNamespace(post=AsyncMock(return_value=response))
+
+        result = await complete_account_link(
+            SETTINGS,
+            'one-time-token',
+            12345,
+            client=client,
+        )
+
+        self.assertEqual(result, 'linked')
+        call = client.post.await_args
+        self.assertEqual(
+            call.args[0],
+            'https://maestro.test/accounts/api/telegram/link/complete/',
+        )
+        self.assertEqual(
+            call.kwargs['headers']['Authorization'],
+            'Bearer test-platform-api-token',
+        )
+        self.assertEqual(call.kwargs['json']['telegram_chat_id'], 12345)
+
+
 class TelegramConfigurationTests(TestCase):
     def test_loads_own_environment(self):
         environment = {
             'TELEGRAM_BOT_TOKEN': SETTINGS.token,
             'TELEGRAM_BOT_NAME': '@MaestroTestBot',
             'MAESTRO_BASE_URL': 'https://maestro.test/',
+            'MAESTRO_API_TOKEN': 'test-platform-api-token',
         }
         with patch.dict(os.environ, environment, clear=True):
             settings = load_settings()

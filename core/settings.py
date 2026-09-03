@@ -12,7 +12,6 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 
 from pathlib import Path
 from decouple import config
-import os
 from email.utils import parseaddr
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -223,6 +222,10 @@ LOGIN_URL = 'login'
 
 # Site URL для генерации ссылок в email
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
+
+# Telegram account linking. The API token is shared only with the separate bot service.
+TELEGRAM_BOT_NAME = config('TELEGRAM_BOT_NAME', default='').strip().lstrip('@')
+TELEGRAM_LINK_API_TOKEN = config('TELEGRAM_LINK_API_TOKEN', default='').strip()
 
 # Channels
 ASGI_APPLICATION = 'core.asgi.application'

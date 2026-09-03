@@ -235,6 +235,38 @@
         box-shadow: 0 8px 18px rgba(212, 175, 55, 0.6);
         color: var(--black);
     }
+
+    .telegram-settings-card {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        border: 1px solid rgba(83, 169, 235, 0.65);
+        border-radius: 18px;
+        color: var(--white);
+        background: linear-gradient(135deg, rgba(34, 158, 217, 0.2), rgba(0, 0, 0, 0.35));
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.35);
+    }
+
+    .telegram-settings-card__title {
+        margin-bottom: 0.35rem;
+        color: #7cc8f2;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
+
+    .telegram-settings-card__status {
+        margin: 0;
+        color: rgba(255, 255, 255, 0.82);
+    }
+
+    .telegram-settings-card__actions {
+        display: flex;
+        gap: 0.75rem;
+        flex-shrink: 0;
+    }
     
     .profile-main-header {
         background: linear-gradient(135deg, var(--black) 0%, var(--gray-dark) 100%);
@@ -425,9 +457,18 @@
             padding: 1.25rem 1.5rem;
         }
 
-        .email-alert {
+        .email-alert,
+        .telegram-settings-card {
             flex-direction: column;
             align-items: flex-start;
+        }
+
+        .telegram-settings-card__actions {
+            width: 100%;
+        }
+
+        .telegram-settings-card__actions .btn {
+            flex: 1;
         }
         
         .profile-main-header h2 {
@@ -567,6 +608,43 @@
         
     </div>
 
+    <div class="telegram-settings-card"
+         id="telegram-settings"
+         data-status-url="{% url 'telegram_link_status' %}"
+         data-create-url="{% url 'telegram_link_create' %}"
+         data-unlink-url="{% url 'telegram_link_unlink' %}">
+        <div>
+            <div class="telegram-settings-card__title">
+                <i class="bi bi-telegram me-2"></i>Telegram
+            </div>
+            <p class="telegram-settings-card__status" id="telegram-link-status">
+                {% if telegram_connection %}
+                    Telegram привязан
+                {% elif not telegram_link_available %}
+                    Привязка Telegram временно недоступна
+                {% else %}
+                    Telegram не привязан
+                {% endif %}
+            </p>
+        </div>
+        <div class="telegram-settings-card__actions">
+            <button type="button"
+                    class="btn btn-info"
+                    id="telegram-link-button"
+                    {% if telegram_connection or not telegram_link_available %}hidden{% endif %}
+                    {% if not telegram_link_available %}disabled{% endif %}>
+                Привязать Telegram
+            </button>
+            <button type="button"
+                    class="btn btn-outline-light"
+                    id="telegram-unlink-button"
+                    {% if not telegram_connection %}hidden{% endif %}>
+                Отвязать
+            </button>
+        </div>
+    </div>
+    <form hidden aria-hidden="true">{% csrf_token %}</form>
+
     <!-- Main Profile Content -->
     <div class="profile-main-card">
         <div class="profile-main-header">
@@ -613,6 +691,79 @@
 {% endblock %}
 
 {% block extra_js %}
+<script>
+    (function () {
+        const card = document.getElementById('telegram-settings');
+        if (!card) return;
+
+        const status = document.getElementById('telegram-link-status');
+        const linkButton = document.getElementById('telegram-link-button');
+        const unlinkButton = document.getElementById('telegram-unlink-button');
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value;
+
+        function render(linked) {
+            status.textContent = linked ? 'Telegram привязан' : 'Telegram не привязан';
+            if (!linkButton.disabled) linkButton.hidden = linked;
+            unlinkButton.hidden = !linked;
+        }
+
+        async function readJson(response) {
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.message || 'Не удалось выполнить запрос.');
+            return data;
+        }
+
+        async function refreshStatus() {
+            try {
+                const response = await fetch(card.dataset.statusUrl, {
+                    headers: {'Accept': 'application/json'},
+                    credentials: 'same-origin',
+                });
+                const data = await readJson(response);
+                render(data.linked);
+            } catch (error) {
+                status.textContent = error.message;
+            }
+        }
+
+        linkButton.addEventListener('click', async function () {
+            linkButton.disabled = true;
+            status.textContent = 'Создаём безопасную ссылку…';
+            try {
+                const response = await fetch(card.dataset.createUrl, {
+                    method: 'POST',
+                    headers: {'Accept': 'application/json', 'X-CSRFToken': csrfToken},
+                    credentials: 'same-origin',
+                });
+                const data = await readJson(response);
+                window.location.assign(data.url);
+            } catch (error) {
+                status.textContent = error.message;
+                linkButton.disabled = false;
+            }
+        });
+
+        unlinkButton.addEventListener('click', async function () {
+            if (!window.confirm('Отвязать Telegram от аккаунта Maestro?')) return;
+            unlinkButton.disabled = true;
+            try {
+                const response = await fetch(card.dataset.unlinkUrl, {
+                    method: 'POST',
+                    headers: {'Accept': 'application/json', 'X-CSRFToken': csrfToken},
+                    credentials: 'same-origin',
+                });
+                await readJson(response);
+                render(false);
+            } catch (error) {
+                status.textContent = error.message;
+            } finally {
+                unlinkButton.disabled = false;
+            }
+        });
+
+        window.addEventListener('focus', refreshStatus);
+    }());
+</script>
 {% if profile_is_incomplete %}
 <script>
     function openIncompleteProfileEditor() {
