@@ -8,15 +8,19 @@ from django.test import TestCase, override_settings
 
 from accounts.models import TelegramConnection
 from chat.models import ChatRoom, Message, MessageAttachment
+from notifications.channels import get_active_channels
 from notifications.deliveries import (
     _send_telegram,
     build_message_preview,
     build_telegram_preview,
     enqueue_chat_message_deliveries,
-    get_active_channels,
     process_pending_deliveries,
 )
-from notifications.models import Notification, NotificationDelivery, NotificationPreference
+from notifications.models import (
+    Notification,
+    NotificationChannelPreference,
+    NotificationDelivery,
+)
 
 
 @override_settings(
@@ -43,9 +47,8 @@ class ChatMessageDeliveryTests(TestCase):
             performer=self.sender,
             client=self.recipient,
         )
-        self.preference = NotificationPreference.get_or_create_for(
+        self.preference = NotificationChannelPreference.get_or_create_for(
             self.recipient,
-            Notification.NOTIFICATION_TYPE_CHAT_MESSAGE,
         )
 
     def _message(self, text='Новое сообщение'):

@@ -2,9 +2,11 @@ import logging
 
 from django.core.mail import send_mail
 from django.conf import settings
+from django.template import TemplateDoesNotExist
 from django.template.loader import render_to_string
 from django.utils import timezone
 from datetime import timedelta
+from .channels import EMAIL_CHANNEL, get_active_channels
 from .models import Notification, NotificationPreference
 
 logger = logging.getLogger(__name__)
@@ -30,12 +32,11 @@ def get_user_display_name(user):
 
 def send_new_message_email(user, sender, message_text, platform_url=None, related_object_id=None, related_object_type='chat.message'):
     """Отправляет письмо о новом сообщении в едином шаблоне платформы."""
-    if not user.email:
-        return False
-
     notification_type = Notification.NOTIFICATION_TYPE_CHAT_MESSAGE
     preference = NotificationPreference.get_or_create_for(user, notification_type)
-    if not preference.in_app_enabled and not preference.email_enabled:
+    active_channels = get_active_channels(user, notification_type)
+    should_send_email = EMAIL_CHANNEL in active_channels
+    if not preference.in_app_enabled and not should_send_email:
         return False
 
     sender_name = get_user_display_name(sender)
@@ -65,7 +66,6 @@ def send_new_message_email(user, sender, message_text, platform_url=None, relate
     text_message = render_to_string('notifications/emails/chat_message.txt', context)
     html_message = render_to_string('notifications/emails/chat_message.html', context)
 
-    should_send_email = preference.email_enabled and getattr(user, 'is_email_verified', False)
     email_sent = False
     if should_send_email:
         try:
@@ -102,7 +102,9 @@ def send_new_message_email(user, sender, message_text, platform_url=None, relate
 def send_notification_email(user, notification_type, title, message, context=None, related_object_id=None, related_object_type=None):
     """Создает системное уведомление и, при настройке, отправляет email."""
     preference = NotificationPreference.get_or_create_for(user, notification_type)
-    if not preference.in_app_enabled and not preference.email_enabled:
+    active_channels = get_active_channels(user, notification_type)
+    should_send_email = EMAIL_CHANNEL in active_channels
+    if not preference.in_app_enabled and not should_send_email:
         return False
     
     # Проверяем, не отправляли ли мы уже такое уведомление
@@ -140,12 +142,11 @@ def send_notification_email(user, notification_type, title, message, context=Non
     try:
         message_text = render_to_string(text_template, template_context)
         html_message = render_to_string(html_template, template_context)
-    except:
+    except TemplateDoesNotExist:
         # Если шаблона нет, используем базовый
         message_text = message
         html_message = None
     
-    should_send_email = preference.email_enabled and getattr(user, 'is_email_verified', False)
     in_app_sent = preference.in_app_enabled
     email_sent = False
     if should_send_email:

@@ -137,12 +137,9 @@ def consume_telegram_link(raw_token: str, telegram_chat_id: int) -> TelegramLink
 
     # A successful explicit link opts the user into Telegram chat notifications.
     # Import locally to keep the accounts models independent from notifications.
-    from notifications.models import Notification, NotificationPreference
+    from notifications.models import NotificationChannelPreference
 
-    preference = NotificationPreference.get_or_create_for(
-        link_token.user,
-        Notification.NOTIFICATION_TYPE_CHAT_MESSAGE,
-    )
+    preference = NotificationChannelPreference.get_or_create_for(link_token.user)
     if not preference.telegram_enabled:
         preference.telegram_enabled = True
         preference.save(update_fields=['telegram_enabled', 'updated_at'])

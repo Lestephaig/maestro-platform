@@ -83,8 +83,6 @@ class NotificationPreference(models.Model):
         choices=Notification.NOTIFICATION_TYPE_CHOICES,
     )
     in_app_enabled = models.BooleanField('В приложении', default=True)
-    email_enabled = models.BooleanField('Email', default=True)
-    telegram_enabled = models.BooleanField('Telegram', default=False)
     updated_at = models.DateTimeField('Обновлено', auto_now=True)
 
     class Meta:
@@ -105,6 +103,37 @@ class NotificationPreference(models.Model):
             notification_type=notification_type,
             defaults={
                 'in_app_enabled': True,
+            },
+        )
+        return preference
+
+
+class NotificationChannelPreference(models.Model):
+    user = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notification_channel_preference',
+        verbose_name='Пользователь',
+    )
+    email_enabled = models.BooleanField('Получать уведомления по email', default=True)
+    telegram_enabled = models.BooleanField(
+        'Получать уведомления в Telegram',
+        default=False,
+    )
+    updated_at = models.DateTimeField('Обновлено', auto_now=True)
+
+    class Meta:
+        verbose_name = 'Настройка каналов уведомлений'
+        verbose_name_plural = 'Настройки каналов уведомлений'
+
+    def __str__(self):
+        return f'Каналы уведомлений: {self.user}'
+
+    @classmethod
+    def get_or_create_for(cls, user):
+        preference, _ = cls.objects.get_or_create(
+            user=user,
+            defaults={
                 'email_enabled': True,
                 'telegram_enabled': False,
             },

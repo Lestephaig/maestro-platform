@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.html import escape
 from django.utils.text import Truncator
 
-from accounts.models import TelegramConnection
+from .channels import get_active_channels
 from .models import Notification, NotificationDelivery, NotificationPreference
 
 logger = logging.getLogger(__name__)
@@ -35,17 +35,6 @@ def get_user_display_name(user):
     if hasattr(user, 'client_profile') and user.client_profile.company_name:
         return user.client_profile.company_name
     return user.get_full_name() or user.username or user.email
-
-
-def get_active_channels(user, notification_type):
-    """Return external channels which are enabled and currently usable."""
-    preference = NotificationPreference.get_or_create_for(user, notification_type)
-    channels = set()
-    if preference.email_enabled and user.email and user.is_email_verified:
-        channels.add(NotificationDelivery.CHANNEL_EMAIL)
-    if preference.telegram_enabled and TelegramConnection.objects.filter(user=user).exists():
-        channels.add(NotificationDelivery.CHANNEL_TELEGRAM)
-    return channels
 
 
 def build_message_preview(message):

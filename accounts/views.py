@@ -12,6 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.utils import timezone
 from django.utils.crypto import constant_time_compare
 import json
 import re
@@ -327,6 +328,15 @@ def telegram_link_create(request):
 @require_POST
 def telegram_link_unlink(request):
     deleted, _ = TelegramConnection.objects.filter(user=request.user).delete()
+    from notifications.models import NotificationChannelPreference
+
+    NotificationChannelPreference.objects.filter(
+        user=request.user,
+        telegram_enabled=True,
+    ).update(
+        telegram_enabled=False,
+        updated_at=timezone.now(),
+    )
     return JsonResponse({'linked': False, 'unlinked': bool(deleted)})
 
 
