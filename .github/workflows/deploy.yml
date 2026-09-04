@@ -28,13 +28,17 @@ jobs:
           echo "📥 Pulling latest changes..."
           git pull origin main
           
-          # Копируем .env файл из секретов
-          echo "${{ secrets.ENV_FILE }}" > .env
+          # Production-конфигурация хранится локально на сервере и не
+          # перезаписывается при деплое.
+          if [ ! -f .env ]; then
+            echo "❌ Production .env file is missing on the server"
+            exit 1
+          fi
 
           # Проверяем обязательную Telegram-конфигурацию до остановки текущей версии.
           for variable in TELEGRAM_BOT_NAME TELEGRAM_LINK_API_TOKEN TELEGRAM_BOT_TOKEN; do
             if ! grep -qE "^${variable}=.+$" .env; then
-              echo "❌ Required variable ${variable} is missing or empty in ENV_FILE"
+              echo "❌ Required variable ${variable} is missing or empty in server .env"
               exit 1
             fi
           done
