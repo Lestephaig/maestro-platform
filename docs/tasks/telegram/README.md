@@ -9,12 +9,15 @@
 3. `04-notification-channel-settings.md`
 4. `03-new-message-notifications.md`
 5. `05-telegram-link-banner.md`
-6. `06-ad-subscription-settings.md`
-7. `07-ad-creation-notifications.md`
-8. `08-musician-subscription-settings.md`
-9. `09-new-musician-notifications.md`
+6. `06-route-notifications-through-bot-server.md`
+7. `07-ad-subscription-settings.md`
+8. `08-ad-creation-notifications.md`
+9. `09-musician-subscription-settings.md`
+10. `10-new-musician-notifications.md`
 
 Задача №4 выполняется перед №3, потому что отправка уведомлений должна сразу учитывать общие настройки каналов пользователя.
+Задача №6 выполняется сразу после №5, чтобы все последующие Telegram-уведомления
+сразу использовали зарубежный шлюз и не обращались к Telegram API с сервера платформы.
 
 ## Общие правила для всех этапов
 
