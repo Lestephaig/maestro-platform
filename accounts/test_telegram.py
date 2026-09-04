@@ -8,6 +8,7 @@ from django.urls import reverse
 from django.utils import timezone
 
 from .models import TelegramConnection, TelegramLinkToken, User
+from notifications.models import Notification, NotificationPreference
 
 TEST_MIDDLEWARE = [
     middleware
@@ -68,6 +69,11 @@ class TelegramLinkApiTests(TestCase):
                 telegram_chat_id=123456789,
             ).exists()
         )
+        preference = NotificationPreference.objects.get(
+            user=self.user,
+            notification_type=Notification.NOTIFICATION_TYPE_CHAT_MESSAGE,
+        )
+        self.assertTrue(preference.telegram_enabled)
         status = self.client.get(reverse('telegram_link_status'))
         self.assertEqual(status.status_code, 200)
         self.assertTrue(status.json()['linked'])

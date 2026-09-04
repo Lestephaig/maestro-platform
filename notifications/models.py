@@ -84,6 +84,7 @@ class NotificationPreference(models.Model):
     )
     in_app_enabled = models.BooleanField('В приложении', default=True)
     email_enabled = models.BooleanField('Email', default=True)
+    telegram_enabled = models.BooleanField('Telegram', default=False)
     updated_at = models.DateTimeField('Обновлено', auto_now=True)
 
     class Meta:
@@ -102,7 +103,73 @@ class NotificationPreference(models.Model):
         preference, _ = cls.objects.get_or_create(
             user=user,
             notification_type=notification_type,
-            defaults={'in_app_enabled': True, 'email_enabled': True},
+            defaults={
+                'in_app_enabled': True,
+                'email_enabled': True,
+                'telegram_enabled': False,
+            },
         )
         return preference
+
+
+class NotificationDelivery(models.Model):
+    """Durable, idempotent delivery of a chat message to an external channel."""
+
+    CHANNEL_EMAIL = 'email'
+    CHANNEL_TELEGRAM = 'telegram'
+    CHANNEL_CHOICES = [
+        (CHANNEL_EMAIL, 'Email'),
+        (CHANNEL_TELEGRAM, 'Telegram'),
+    ]
+
+    STATUS_PENDING = 'pending'
+    STATUS_PROCESSING = 'processing'
+    STATUS_SENT = 'sent'
+    STATUS_FAILED = 'failed'
+    STATUS_SKIPPED = 'skipped'
+    STATUS_CHOICES = [
+        (STATUS_PENDING, 'Ожидает отправки'),
+        (STATUS_PROCESSING, 'Отправляется'),
+        (STATUS_SENT, 'Отправлено'),
+        (STATUS_FAILED, 'Ошибка'),
+        (STATUS_SKIPPED, 'Пропущено'),
+    ]
+
+    message = models.ForeignKey(
+        'chat.Message',
+        on_delete=models.CASCADE,
+        related_name='notification_deliveries',
+    )
+    recipient = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='notification_deliveries',
+    )
+    channel = models.CharField(max_length=20, choices=CHANNEL_CHOICES)
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default=STATUS_PENDING,
+    )
+    attempts = models.PositiveSmallIntegerField(default=0)
+    next_attempt_at = models.DateTimeField(default=timezone.now)
+    sent_at = models.DateTimeField(blank=True, null=True)
+    last_error = models.CharField(max_length=100, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ('created_at', 'id')
+        constraints = [
+            models.UniqueConstraint(
+                fields=('message', 'recipient', 'channel'),
+                name='unique_message_recipient_channel_delivery',
+            ),
+        ]
+        indexes = [
+            models.Index(fields=('status', 'next_attempt_at')),
+        ]
+
+    def __str__(self):
+        return f'{self.channel} delivery for message {self.message_id}'
 

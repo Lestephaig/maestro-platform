@@ -88,6 +88,16 @@
                         >
                         <span>Email</span>
                     </label>
+                    <label class="notification-channel">
+                        <input
+                            type="checkbox"
+                            class="form-check-input"
+                            name="telegram_{{ row.notification_type }}"
+                            {% if row.telegram_enabled %}checked{% endif %}
+                            {% if not telegram_linked %}disabled{% endif %}
+                        >
+                        <span>Telegram{% if not telegram_linked %} (сначала привяжите аккаунт){% endif %}</span>
+                    </label>
                 </div>
             </div>
         {% endfor %}

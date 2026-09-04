@@ -4,6 +4,7 @@ from django.db import transaction
 from announcements.models import AnnouncementResponse
 from interactions.models import Interaction, InteractionParticipant
 from chat.models import Message
+from .deliveries import enqueue_chat_message_deliveries
 from .models import Notification
 from .utils import send_new_message_email, send_notification_email
 
@@ -93,22 +94,10 @@ def notify_project_status_change(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Message)
 def schedule_chat_notification(sender, instance, created, **kwargs):
-    """Отправляет email получателю при создании нового сообщения в чате."""
+    """Queue external notifications only after the message transaction commits."""
     if not created:
         return
-
-    recipient = instance.room.client if instance.sender == instance.room.performer else instance.room.performer
-    if recipient == instance.sender:
-        return
-
-    transaction.on_commit(lambda: send_new_message_email(
-        user=recipient,
-        sender=instance.sender,
-        message_text=instance.text,
-        platform_url=f'/chat/{instance.room.id}/',
-        related_object_id=instance.id,
-        related_object_type='chat.message',
-    ))
+    transaction.on_commit(lambda: enqueue_chat_message_deliveries(instance.pk))
 
 
 @receiver(post_save, sender=AnnouncementResponse)

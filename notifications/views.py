@@ -73,12 +73,16 @@ def notification_settings(request):
         for notification_type, _ in Notification.NOTIFICATION_TYPE_CHOICES:
             in_app_enabled = bool(request.POST.get(f'in_app_{notification_type}'))
             email_enabled = bool(request.POST.get(f'email_{notification_type}'))
+            telegram_enabled = bool(request.POST.get(f'telegram_{notification_type}'))
+            if not hasattr(request.user, 'telegram_connection'):
+                telegram_enabled = False
             NotificationPreference.objects.update_or_create(
                 user=request.user,
                 notification_type=notification_type,
                 defaults={
                     'in_app_enabled': in_app_enabled,
                     'email_enabled': email_enabled,
+                    'telegram_enabled': telegram_enabled,
                 },
             )
         messages.success(request, 'Настройки уведомлений сохранены.')
@@ -96,8 +100,10 @@ def notification_settings(request):
             'label': label,
             'in_app_enabled': True if preference is None else preference.in_app_enabled,
             'email_enabled': True if preference is None else preference.email_enabled,
+            'telegram_enabled': False if preference is None else preference.telegram_enabled,
         })
 
     return render(request, 'notifications/notification_settings.html', {
         'rows': rows,
+        'telegram_linked': hasattr(request.user, 'telegram_connection'),
     })

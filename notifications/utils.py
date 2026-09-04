@@ -179,8 +179,9 @@ def send_notification_email(user, notification_type, title, message, context=Non
 
 
 def check_unread_chat_messages():
-    """Проверяет непрочитанные сообщения в чате и отправляет уведомления через 5 минут"""
+    """Queue missed unread-message events and process pending deliveries."""
     from chat.models import Message
+    from .deliveries import enqueue_chat_message_deliveries, process_pending_deliveries
     from datetime import timedelta
     
     # Находим сообщения, которые не прочитаны более 5 минут
@@ -192,27 +193,9 @@ def check_unread_chat_messages():
     ).select_related('room', 'sender', 'room__performer', 'room__client')
     
     for message in unread_messages:
-        # Определяем получателя (не отправителя)
-        recipient = message.room.client if message.sender == message.room.performer else message.room.performer
-        
-        # Проверяем, не отправляли ли уже уведомление для этого сообщения
-        notification_exists = Notification.objects.filter(
-            user=recipient,
-            notification_type=Notification.NOTIFICATION_TYPE_CHAT_MESSAGE,
-            related_object_id=message.id,
-            related_object_type='chat.message',
-            email_sent=True
-        ).exists()
-        
-        if not notification_exists:
-            send_new_message_email(
-                user=recipient,
-                sender=message.sender,
-                message_text=message.text,
-                platform_url=f'/chat/{message.room.id}/',
-                related_object_id=message.id,
-                related_object_type='chat.message'
-            )
+        enqueue_chat_message_deliveries(message.pk)
+
+    return process_pending_deliveries()
 
 
 def notify_performers_about_announcement_by_tags(announcement):

@@ -202,6 +202,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=float)
 _raw_default_from_email = config('DEFAULT_FROM_EMAIL', default='')
 _fallback_from_email = EMAIL_HOST_USER or 'noreply@localhost'
 DEFAULT_FROM_EMAIL = _raw_default_from_email or _fallback_from_email
@@ -226,6 +227,14 @@ SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 # Telegram account linking. The API token is shared only with the separate bot service.
 TELEGRAM_BOT_NAME = config('TELEGRAM_BOT_NAME', default='').strip().lstrip('@')
 TELEGRAM_LINK_API_TOKEN = config('TELEGRAM_LINK_API_TOKEN', default='').strip()
+TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='').strip()
+TELEGRAM_SEND_TIMEOUT = config('TELEGRAM_SEND_TIMEOUT', default=10, cast=float)
+NOTIFICATION_DELIVERY_MAX_ATTEMPTS = config(
+    'NOTIFICATION_DELIVERY_MAX_ATTEMPTS', default=3, cast=int
+)
+NOTIFICATION_DELIVERY_RETRY_SECONDS = config(
+    'NOTIFICATION_DELIVERY_RETRY_SECONDS', default=60, cast=int
+)
 
 # Channels
 ASGI_APPLICATION = 'core.asgi.application'

@@ -19,6 +19,8 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
+          set -eu
+
           # Переходим в папку проекта
           cd /home/${{ secrets.SERVER_USER }}/maestro-platform || exit
           
@@ -28,19 +30,34 @@ jobs:
           
           # Копируем .env файл из секретов
           echo "${{ secrets.ENV_FILE }}" > .env
+
+          # Проверяем обязательную Telegram-конфигурацию до остановки текущей версии.
+          for variable in TELEGRAM_BOT_NAME TELEGRAM_LINK_API_TOKEN TELEGRAM_BOT_TOKEN; do
+            if ! grep -qE "^${variable}=.+$" .env; then
+              echo "❌ Required variable ${variable} is missing or empty in ENV_FILE"
+              exit 1
+            fi
+          done
           
-          # Запускаем через Docker Compose
-          echo "🐳 Building and starting containers..."
+          # Собираем новую версию до остановки текущих контейнеров.
+          echo "🐳 Building containers..."
+          docker-compose build
+
+          # Останавливаем старую версию и запускаем только инфраструктуру.
           docker-compose down
-          docker-compose up -d --build
+          docker-compose up -d db redis
           
-          # Применяем миграции
+          # Применяем миграции до запуска web и фонового worker-а.
           echo "🗄️ Applying database migrations..."
-          docker-compose exec -T web python manage.py migrate
+          docker-compose run --rm --no-deps web python manage.py migrate --noinput
           
           # Собираем статику
           echo "🎨 Collecting static files..."
-          docker-compose exec -T web python manage.py collectstatic --noinput
+          docker-compose run --rm --no-deps web python manage.py collectstatic --noinput
+
+          # Только после успешной подготовки БД запускаем приложение и worker.
+          echo "🚀 Starting application services..."
+          docker-compose up -d web notification-worker nginx
           
           # Проверяем статус
           echo "🔍 Checking container status..."
