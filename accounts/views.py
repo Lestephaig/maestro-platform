@@ -15,7 +15,6 @@ from django.conf import settings
 from django.utils import timezone
 from django.utils.crypto import constant_time_compare
 import json
-import re
 from django.db import transaction
 from performers.forms import PerformerProfileForm, PerformerPhotoForm, PerformerVideoForm
 from clients.forms import ClientProfileForm
@@ -29,10 +28,12 @@ from core.legal import get_client_ip, get_required_documents, get_user_agent
 from .models import LegalAcceptance, TelegramConnection
 from .profile_completion import get_missing_profile_fields, get_profile_completion
 from .telegram import (
+    TELEGRAM_LINK_BANNER_DISMISSED_SESSION_KEY,
     TelegramLinkRateLimited,
     TelegramLinkResult,
     consume_telegram_link,
     create_telegram_link,
+    telegram_link_is_available,
 )
 
 logger = logging.getLogger(__name__)
@@ -172,7 +173,7 @@ def _build_profile_context(user, request=None):
         'profile_is_incomplete': bool(missing_fields),
         'profile_completion': get_profile_completion(user),
         'telegram_connection': getattr(user, 'telegram_connection', None),
-        'telegram_link_available': bool(settings.TELEGRAM_BOT_NAME),
+        'telegram_link_available': telegram_link_is_available(settings.TELEGRAM_BOT_NAME),
     }
     base_queryset = Interaction.objects.select_related('created_by').prefetch_related('participant_links__user')
 
@@ -300,7 +301,7 @@ def telegram_link_status(request):
 @require_POST
 def telegram_link_create(request):
     bot_name = settings.TELEGRAM_BOT_NAME
-    if not re.fullmatch(r'[A-Za-z0-9_]{5,32}', bot_name):
+    if not telegram_link_is_available(bot_name):
         return JsonResponse(
             {'error': 'telegram_not_configured', 'message': 'Привязка Telegram временно недоступна.'},
             status=503,
@@ -322,6 +323,13 @@ def telegram_link_create(request):
         'url': link.url,
         'expires_at': link.expires_at.isoformat(),
     }, status=201)
+
+
+@login_required
+@require_POST
+def telegram_link_banner_dismiss(request):
+    request.session[TELEGRAM_LINK_BANNER_DISMISSED_SESSION_KEY] = True
+    return JsonResponse({'dismissed': True})
 
 
 @login_required

@@ -18,6 +18,7 @@ urlpatterns = [
     path('profile/video/<int:video_id>/delete/', views.delete_video, name='delete_video'),
     path('api/telegram/link/status/', views.telegram_link_status, name='telegram_link_status'),
     path('api/telegram/link/create/', views.telegram_link_create, name='telegram_link_create'),
+    path('api/telegram/link/banner/dismiss/', views.telegram_link_banner_dismiss, name='telegram_link_banner_dismiss'),
     path('api/telegram/link/unlink/', views.telegram_link_unlink, name='telegram_link_unlink'),
     path('api/telegram/link/complete/', views.telegram_link_complete, name='telegram_link_complete'),
     path('admin/users/<int:user_id>/delete/', views.admin_delete_user, name='admin_delete_user'),

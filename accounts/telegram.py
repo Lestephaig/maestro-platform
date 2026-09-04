@@ -1,4 +1,5 @@
 import hashlib
+import re
 import secrets
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -13,6 +14,11 @@ from .models import TelegramConnection, TelegramLinkToken, User
 TOKEN_TTL = timedelta(minutes=15)
 RATE_LIMIT_WINDOW = timedelta(minutes=15)
 RATE_LIMIT_COUNT = 5
+TELEGRAM_LINK_BANNER_DISMISSED_SESSION_KEY = 'telegram_link_banner_dismissed'
+
+
+def telegram_link_is_available(bot_name: str) -> bool:
+    return bool(re.fullmatch(r'[A-Za-z0-9_]{5,32}', bot_name))
 
 
 class TelegramLinkRateLimited(Exception):

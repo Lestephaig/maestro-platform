@@ -189,3 +189,61 @@ class TelegramLinkApiTests(TestCase):
 
         self.assertEqual(csrf_client.post(reverse('telegram_link_create')).status_code, 403)
         self.assertEqual(csrf_client.post(reverse('telegram_link_unlink')).status_code, 403)
+        self.assertEqual(csrf_client.post(reverse('telegram_link_banner_dismiss')).status_code, 403)
+
+
+@override_settings(
+    MIDDLEWARE=TEST_MIDDLEWARE,
+    TELEGRAM_BOT_NAME='MaestroTestBot',
+)
+class TelegramLinkBannerTemplateTests(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='banner-user',
+            email='banner@example.com',
+            password='test-password',
+        )
+
+    def test_banner_is_only_rendered_for_authenticated_unlinked_user(self):
+        anonymous = self.client.get(reverse('home'))
+        self.assertNotContains(anonymous, 'id="telegramLinkBanner"')
+
+        self.client.force_login(self.user)
+        unlinked = self.client.get(reverse('home'))
+        self.assertContains(unlinked, 'id="telegramLinkBanner"')
+        self.assertContains(unlinked, 'оперативные уведомления о сообщениях и новых публикациях')
+        self.assertContains(unlinked, reverse('telegram_link_create'))
+
+        TelegramConnection.objects.create(user=self.user, telegram_chat_id=12345)
+        linked = self.client.get(reverse('home'))
+        self.assertNotContains(linked, 'id="telegramLinkBanner"')
+
+    def test_banner_is_not_rendered_on_profile_linking_screen(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('profile'))
+
+        self.assertNotContains(response, 'id="telegramLinkBanner"')
+        self.assertContains(response, 'id="telegram-settings"')
+
+    def test_dismissal_is_stored_for_current_authenticated_session(self):
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get(reverse('home')), 'id="telegramLinkBanner"')
+
+        response = self.client.post(reverse('telegram_link_banner_dismiss'))
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['dismissed'])
+        self.assertNotContains(self.client.get(reverse('home')), 'id="telegramLinkBanner"')
+
+        self.client.logout()
+        self.client.force_login(self.user)
+        self.assertContains(self.client.get(reverse('home')), 'id="telegramLinkBanner"')
+
+    @override_settings(TELEGRAM_BOT_NAME='')
+    def test_banner_is_not_rendered_when_linking_is_unavailable(self):
+        self.client.force_login(self.user)
+
+        response = self.client.get(reverse('home'))
+
+        self.assertNotContains(response, 'id="telegramLinkBanner"')

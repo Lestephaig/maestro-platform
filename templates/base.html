@@ -366,6 +366,74 @@
             background: rgba(212, 175, 55, 0.12);
         }
 
+        .telegram-link-banner {
+            margin: 1rem auto 0;
+            padding: 1rem 1.1rem;
+            background: linear-gradient(135deg, rgba(30, 136, 229, 0.2), rgba(26, 26, 26, 0.98));
+            border: 1px solid rgba(84, 169, 235, 0.8);
+            border-radius: 12px;
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32);
+        }
+
+        .telegram-link-banner__content,
+        .telegram-link-banner__actions {
+            display: flex;
+            align-items: center;
+        }
+
+        .telegram-link-banner__content {
+            gap: 0.9rem;
+        }
+
+        .telegram-link-banner__icon {
+            flex: 0 0 auto;
+            color: #54a9eb;
+            font-size: 2rem;
+        }
+
+        .telegram-link-banner__text {
+            flex: 1 1 auto;
+        }
+
+        .telegram-link-banner__text strong {
+            display: block;
+            color: var(--white);
+            margin-bottom: 0.15rem;
+        }
+
+        .telegram-link-banner__text p {
+            margin: 0;
+            color: var(--silver-light);
+        }
+
+        .telegram-link-banner__actions {
+            flex: 0 0 auto;
+            gap: 0.55rem;
+        }
+
+        .telegram-link-banner__cta {
+            border: 1px solid #54a9eb;
+            border-radius: 9px;
+            padding: 0.6rem 0.95rem;
+            background: #54a9eb;
+            color: var(--black);
+            font-weight: 800;
+        }
+
+        .telegram-link-banner__close {
+            border: 1px solid transparent;
+            border-radius: 8px;
+            padding: 0.45rem 0.6rem;
+            background: transparent;
+            color: var(--silver-light);
+            font-size: 1.2rem;
+        }
+
+        .telegram-link-banner button:focus-visible {
+            outline: 3px solid var(--gold-light);
+            outline-offset: 3px;
+        }
+
         .cookie-banner {
             position: fixed;
             left: 1rem;
@@ -542,6 +610,24 @@
                 align-items: stretch;
                 text-align: left;
             }
+
+            .telegram-link-banner__content {
+                align-items: flex-start;
+                flex-wrap: wrap;
+            }
+
+            .telegram-link-banner__text {
+                flex-basis: calc(100% - 3rem);
+            }
+
+            .telegram-link-banner__actions {
+                width: 100%;
+                padding-left: 2.9rem;
+            }
+
+            .telegram-link-banner__cta {
+                flex: 1 1 auto;
+            }
             
             /* Prevent elements from overflowing */
             img, video, iframe {
@@ -690,6 +776,32 @@
         </div>
     </nav>
 
+    {% if show_telegram_link_banner %}
+        <aside class="telegram-link-banner container"
+               id="telegramLinkBanner"
+               aria-labelledby="telegramLinkBannerTitle"
+               data-status-url="{% url 'telegram_link_status' %}"
+               data-create-url="{% url 'telegram_link_create' %}"
+               data-dismiss-url="{% url 'telegram_link_banner_dismiss' %}"
+               data-csrf-token="{{ csrf_token }}">
+            <div class="telegram-link-banner__content">
+                <i class="bi bi-telegram telegram-link-banner__icon" aria-hidden="true"></i>
+                <div class="telegram-link-banner__text">
+                    <strong id="telegramLinkBannerTitle">Подключите Telegram</strong>
+                    <p id="telegramLinkBannerStatus" aria-live="polite">Получайте оперативные уведомления о сообщениях и новых публикациях.</p>
+                </div>
+                <div class="telegram-link-banner__actions">
+                    <button type="button" class="telegram-link-banner__cta" id="telegramLinkBannerCta">
+                        Подключить
+                    </button>
+                    <button type="button" class="telegram-link-banner__close" id="telegramLinkBannerClose" aria-label="Закрыть предложение подключить Telegram">
+                        <i class="bi bi-x-lg" aria-hidden="true"></i>
+                    </button>
+                </div>
+            </div>
+        </aside>
+    {% endif %}
+
     <!-- Main Content -->
     <main>
         {% block content %}{% endblock %}
@@ -727,6 +839,9 @@
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    {% if show_telegram_link_banner %}
+        <script src="{% static 'js/telegram-link-banner.js' %}"></script>
+    {% endif %}
     
     <script>
         // Bootstrap dropdown должен работать автоматически через data-атрибуты

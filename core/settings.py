@@ -97,6 +97,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.legal_documents',
+                'accounts.context_processors.telegram_link_banner',
             ],
         },
     },
