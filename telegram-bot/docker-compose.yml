@@ -7,7 +7,7 @@ services:
       - ./.env:/app/.env:ro
       - telegram_delivery_data:/app/data
     ports:
-      - "127.0.0.1:${TELEGRAM_DELIVERY_API_PORT:-8080}:${TELEGRAM_DELIVERY_API_PORT:-8080}"
+      - "${TELEGRAM_DELIVERY_PUBLISH_HOST:-127.0.0.1}:${TELEGRAM_DELIVERY_API_PORT:-8080}:${TELEGRAM_DELIVERY_API_PORT:-8080}"
     healthcheck:
       test: ["CMD", "python", "-m", "maestro_bot.healthcheck"]
       interval: 30s

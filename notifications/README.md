@@ -74,8 +74,12 @@ Worker не хранит BotFather-токен и не обращается к Te
 Он отправляет все текущие и будущие Telegram-уведомления в выделенный зарубежный
 сервис через `TELEGRAM_DELIVERY_API_URL`, используя отдельный Bearer-секрет
 `TELEGRAM_DELIVERY_API_TOKEN`. Таймаут задаёт
-`TELEGRAM_DELIVERY_API_TIMEOUT` (по умолчанию 10 секунд). В production URL обязан
-быть HTTPS.
+`TELEGRAM_DELIVERY_API_TIMEOUT` (по умолчанию 10 секунд). В production по
+умолчанию требуется HTTPS. Прямой HTTP к белому IP разрешается только при
+`TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True`; доменные, loopback и приватные
+HTTP-адреса при этом отклоняются. Такой endpoint необходимо ограничить firewall-
+правилом до публичного IP сервера платформы, поскольку Bearer-токен передаётся
+без транспортного шифрования.
 
 Ключ `TELEGRAM_LINK_API_TOKEN` предназначен только для завершения привязки
 аккаунта и не должен совпадать с delivery-секретом. Недоступность gateway не

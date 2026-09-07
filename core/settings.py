@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from ipaddress import ip_address
 from pathlib import Path
 from decouple import config
 from email.utils import parseaddr
@@ -21,6 +22,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 def _split_csv(value: str):
     return [item.strip() for item in value.split(',') if item.strip()]
+
+
+def validate_telegram_delivery_api_url(value, *, debug, allow_insecure_http):
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme not in {'http', 'https'}
+        or not parsed.netloc
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise ValueError('TELEGRAM_DELIVERY_API_URL must be an absolute HTTP(S) URL')
+    if parsed.scheme == 'https' or debug:
+        return
+    if not allow_insecure_http:
+        raise ValueError(
+            'HTTP TELEGRAM_DELIVERY_API_URL requires '
+            'TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True when DEBUG=False'
+        )
+    try:
+        gateway_ip = ip_address(parsed.hostname)
+    except (TypeError, ValueError):
+        raise ValueError(
+            'Insecure TELEGRAM_DELIVERY_API_URL must use a public IP address'
+        ) from None
+    if not gateway_ip.is_global:
+        raise ValueError(
+            'Insecure TELEGRAM_DELIVERY_API_URL must use a public IP address'
+        )
 
 
 # Quick-start development settings - unsuitable for production
@@ -231,6 +260,9 @@ TELEGRAM_BOT_NAME = config('TELEGRAM_BOT_NAME', default='').strip().lstrip('@')
 TELEGRAM_LINK_API_TOKEN = config('TELEGRAM_LINK_API_TOKEN', default='').strip()
 TELEGRAM_DELIVERY_API_URL = config('TELEGRAM_DELIVERY_API_URL', default='').strip()
 TELEGRAM_DELIVERY_API_TOKEN = config('TELEGRAM_DELIVERY_API_TOKEN', default='').strip()
+TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP = config(
+    'TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP', default=False, cast=bool
+)
 TELEGRAM_DELIVERY_API_TIMEOUT = config(
     'TELEGRAM_DELIVERY_API_TIMEOUT', default=10, cast=float
 )
@@ -245,11 +277,11 @@ if (
         'TELEGRAM_LINK_API_TOKEN and TELEGRAM_DELIVERY_API_TOKEN must be different'
     )
 if TELEGRAM_DELIVERY_API_URL:
-    telegram_delivery_url = urlsplit(TELEGRAM_DELIVERY_API_URL)
-    if telegram_delivery_url.scheme not in {'http', 'https'} or not telegram_delivery_url.netloc:
-        raise ValueError('TELEGRAM_DELIVERY_API_URL must be an absolute HTTP(S) URL')
-    if not DEBUG and telegram_delivery_url.scheme != 'https':
-        raise ValueError('TELEGRAM_DELIVERY_API_URL must use HTTPS when DEBUG=False')
+    validate_telegram_delivery_api_url(
+        TELEGRAM_DELIVERY_API_URL,
+        debug=DEBUG,
+        allow_insecure_http=TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP,
+    )
 if not DEBUG and (
     not TELEGRAM_DELIVERY_API_URL or not TELEGRAM_DELIVERY_API_TOKEN
 ):

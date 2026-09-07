@@ -56,3 +56,4 @@ Thumbs.db
 *.swp
 *~
 telegram-bot/tg-bot.tar
+cloudflared.exe

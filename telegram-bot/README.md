@@ -33,6 +33,9 @@ chmod 640 .env
   HTTP-сервера (по умолчанию `0.0.0.0:8080`).
 - `TELEGRAM_DELIVERY_DB_PATH` — SQLite-файл реестра идемпотентности на Docker
   volume (по умолчанию `/app/data/delivery.sqlite3`).
+- `TELEGRAM_DELIVERY_PUBLISH_HOST` — интерфейс публикации Docker-порта. По
+  умолчанию `127.0.0.1`; для прямого доступа по белому IP установите `0.0.0.0` и
+  ограничьте TCP/8080 firewall-правилом до IP платформы.
 
 Для production `MAESTRO_BASE_URL` должен использовать HTTPS: бот отправляет на
 платформу одноразовый токен привязки и числовой Telegram `chat_id`. Telegram bot
@@ -56,8 +59,8 @@ docker compose logs -f telegram-bot
 
 Контейнер запускается от непривилегированного пользователя, имеет политику
 `restart: unless-stopped`; healthcheck одновременно проверяет heartbeat polling
-и `GET /healthz`. Порт API публикуется на host только как `127.0.0.1:8080` и не
-должен быть открыт напрямую в интернет.
+и `GET /healthz`. По умолчанию порт API публикуется только как
+`127.0.0.1:8080`.
 
 После изменения `.env` пересобирать образ не нужно. Перезапустите процесс, чтобы он
 заново прочитал настройки из смонтированного файла:
@@ -122,6 +125,28 @@ location = /healthz {
 платформы дополнительно ограничьте доступ к маршруту по IP, не убирая Bearer-
 аутентификацию.
 
+### Прямой HTTP по белому IP
+
+Если DNS и TLS отсутствуют, в `telegram-bot/.env` задайте:
+
+```env
+TELEGRAM_DELIVERY_PUBLISH_HOST=0.0.0.0
+```
+
+После перезапуска API будет опубликован как `http://<PUBLIC_IP>:8080`. На
+firewall зарубежного сервера разрешите TCP/8080 только с публичного IP платформы;
+для остальных источников порт должен быть закрыт. На платформе задайте:
+
+```env
+TELEGRAM_DELIVERY_API_URL=http://<PUBLIC_IP>:8080/internal/v1/telegram/messages
+TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True
+```
+
+Production-проверка принимает такой opt-in только для глобального IP-адреса и
+отклоняет hostname, loopback и приватные адреса. Bearer-аутентификация остаётся
+обязательной. При этом HTTP не шифрует token, `chat_id` и текст на сетевом пути;
+IP allowlist уменьшает доступность endpoint, но не заменяет TLS.
+
 ## Внутренний сервис отправки
 
 Модуль `maestro_bot.service` формирует inline-клавиатуру, применяет таймауты и
@@ -134,8 +159,9 @@ location = /healthz {
 
 1. Создайте новый секрет (`openssl rand -hex 32`) и задайте его как
    `TELEGRAM_DELIVERY_API_TOKEN` на обоих серверах.
-2. Сначала разверните бот, volume и HTTPS reverse proxy; проверьте с платформы
-   `curl -fsS https://bot.example.com/healthz`.
+2. Сначала разверните бот и volume. Настройте либо HTTPS reverse proxy, либо
+   прямую публикацию по белому IP с firewall allowlist. Проверьте `/healthz` с
+   сервера платформы.
 3. Выполните авторизованный тестовый POST с новым уникальным
    `Idempotency-Key`; повтор того же POST должен вернуть `duplicate: true`.
 4. Только затем задайте `TELEGRAM_DELIVERY_API_URL`, token и timeout на

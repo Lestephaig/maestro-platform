@@ -42,6 +42,13 @@ jobs:
               exit 1
             fi
           done
+
+          # HTTP is permitted only as an explicit opt-in to a public IP gateway.
+          if grep -qE '^TELEGRAM_DELIVERY_API_URL=http://' .env && \
+             ! grep -qE '^TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True$' .env; then
+            echo "❌ HTTP Telegram gateway requires TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True"
+            exit 1
+          fi
           
           # Собираем новую версию до остановки текущих контейнеров.
           echo "🐳 Building containers..."

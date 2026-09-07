@@ -13,14 +13,20 @@
 - `SITE_URL` - полный URL вашего сайта, например: `https://yourdomain.com`
 - `TELEGRAM_BOT_NAME` и `TELEGRAM_LINK_API_TOKEN` — имя бота и отдельный секрет
   привязки аккаунтов
-- `TELEGRAM_DELIVERY_API_URL` — HTTPS endpoint зарубежного Telegram gateway
+- `TELEGRAM_DELIVERY_API_URL` — HTTPS endpoint либо явно разрешённый HTTP endpoint
+  на белом IP зарубежного Telegram gateway
 - `TELEGRAM_DELIVERY_API_TOKEN` — отдельный секрет доставки, не совпадающий с
   `TELEGRAM_LINK_API_TOKEN`
+- `TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True` — только для HTTP по белому IP;
+  при HTTPS оставить `False`
 
 `TELEGRAM_BOT_TOKEN` должен отсутствовать на сервере платформы и храниться только
 на зарубежном сервере бота. До перезапуска worker проверьте `GET /healthz` и
 авторизованный тестовый POST gateway; недоступность gateway не должна мешать
 сохранению сообщений и приводит к повтору записи `NotificationDelivery`.
+При прямом HTTP порт gateway должен принимать подключения только с публичного IP
+платформы. IP-фильтрация не шифрует Bearer-токен, поэтому HTTPS остаётся более
+безопасным вариантом.
 
 #### База данных:
 - `DATABASE_URL` - автоматически устанавливается на Heroku/Render, или вручную:
