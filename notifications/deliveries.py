@@ -1,6 +1,8 @@
 import json
 import logging
+import socket
 from datetime import timedelta
+from urllib import error as urllib_error
 from urllib import request as urllib_request
 
 from django.conf import settings
@@ -19,6 +21,16 @@ logger = logging.getLogger(__name__)
 
 PREVIEW_LENGTH = 160
 TELEGRAM_PREVIEW_LENGTH = 50
+GATEWAY_RESPONSE_LIMIT = 8192
+
+
+class TelegramDeliveryError(RuntimeError):
+    """A sanitized gateway failure with an explicit retry policy."""
+
+    def __init__(self, code, *, retryable):
+        super().__init__(code)
+        self.code = code
+        self.retryable = retryable
 
 
 def absolute_platform_url(path):
@@ -145,34 +157,88 @@ def _send_email(delivery):
     return sent_count > 0
 
 
-def _send_telegram(delivery):
-    token = settings.TELEGRAM_BOT_TOKEN
-    if not token:
-        raise RuntimeError('Telegram bot token is not configured')
-
+def build_telegram_payload(delivery):
     message = delivery.message
     sender_name = escape(get_user_display_name(message.sender))
     preview = escape(build_telegram_preview(message))
-    payload = json.dumps({
+    return {
         'chat_id': delivery.recipient.telegram_connection.telegram_chat_id,
         'text': f'Новое сообщение от <b>{sender_name}</b>\n\n<i>«{preview}»</i>',
         'parse_mode': 'HTML',
-        'reply_markup': {
-            'inline_keyboard': [[{
+        'buttons': [[{
                 'text': 'Открыть сообщение',
                 'url': build_chat_url(message),
             }]],
-        },
-    }).encode('utf-8')
+    }
+
+
+def _gateway_error_for_status(status):
+    permanent_codes = {
+        400: 'gateway_bad_request',
+        401: 'gateway_unauthorized',
+        403: 'gateway_forbidden',
+        413: 'gateway_payload_too_large',
+        422: 'gateway_rejected',
+    }
+    if status == 429:
+        return TelegramDeliveryError('gateway_rate_limited', retryable=True)
+    if 500 <= status <= 599:
+        return TelegramDeliveryError('gateway_unavailable', retryable=True)
+    return TelegramDeliveryError(
+        permanent_codes.get(status, 'gateway_permanent_error'),
+        retryable=False,
+    )
+
+
+def _send_telegram(delivery):
+    api_url = settings.TELEGRAM_DELIVERY_API_URL
+    api_token = settings.TELEGRAM_DELIVERY_API_TOKEN
+    if not api_url or not api_token:
+        raise TelegramDeliveryError('gateway_not_configured', retryable=False)
+
+    payload = json.dumps(build_telegram_payload(delivery)).encode('utf-8')
     api_request = urllib_request.Request(
-        f'https://api.telegram.org/bot{token}/sendMessage',
+        api_url,
         data=payload,
-        headers={'Content-Type': 'application/json'},
+        headers={
+            'Authorization': f'Bearer {api_token}',
+            'Content-Type': 'application/json',
+            'Idempotency-Key': f'notification-delivery-{delivery.pk}',
+        },
         method='POST',
     )
-    with urllib_request.urlopen(api_request, timeout=settings.TELEGRAM_SEND_TIMEOUT) as response:
-        result = json.loads(response.read().decode('utf-8'))
-    return bool(result.get('ok'))
+    try:
+        with urllib_request.urlopen(
+            api_request,
+            timeout=settings.TELEGRAM_DELIVERY_API_TIMEOUT,
+        ) as response:
+            status = response.getcode()
+            if status != 200:
+                raise _gateway_error_for_status(status)
+            response_body = response.read(GATEWAY_RESPONSE_LIMIT + 1)
+    except urllib_error.HTTPError as error:
+        raise _gateway_error_for_status(error.code) from None
+    except (TimeoutError, socket.timeout):
+        raise TelegramDeliveryError('gateway_timeout', retryable=True) from None
+    except urllib_error.URLError:
+        raise TelegramDeliveryError('gateway_unavailable', retryable=True) from None
+
+    if len(response_body) > GATEWAY_RESPONSE_LIMIT:
+        raise TelegramDeliveryError('gateway_invalid_response', retryable=True)
+    try:
+        result = json.loads(response_body.decode('utf-8'))
+    except (UnicodeDecodeError, json.JSONDecodeError):
+        raise TelegramDeliveryError('gateway_invalid_response', retryable=True) from None
+    if (
+        not isinstance(result, dict)
+        or result.get('ok') is not True
+        or not isinstance(result.get('telegram_message_id'), int)
+        or isinstance(result.get('telegram_message_id'), bool)
+        or result['telegram_message_id'] <= 0
+        or not isinstance(result.get('duplicate'), bool)
+    ):
+        raise TelegramDeliveryError('gateway_invalid_response', retryable=True)
+    return True
 
 
 def _channel_is_active(delivery):
@@ -234,8 +300,16 @@ def process_pending_deliveries(limit=100):
                         related_object_type='chat.message',
                     ).update(email_sent=True, is_sent=True)
         except Exception as error:
-            delivery.last_error = type(error).__name__[:100]
-            if delivery.attempts >= settings.NOTIFICATION_DELIVERY_MAX_ATTEMPTS:
+            if isinstance(error, TelegramDeliveryError):
+                delivery.last_error = error.code
+                retryable = error.retryable
+            else:
+                delivery.last_error = type(error).__name__[:100]
+                retryable = True
+            if (
+                not retryable
+                or delivery.attempts >= settings.NOTIFICATION_DELIVERY_MAX_ATTEMPTS
+            ):
                 delivery.status = NotificationDelivery.STATUS_FAILED
             else:
                 delivery.status = NotificationDelivery.STATUS_PENDING

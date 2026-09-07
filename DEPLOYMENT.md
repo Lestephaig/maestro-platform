@@ -39,6 +39,13 @@ cp .env.example .env
 # Установите SECRET_KEY, DEBUG=True, ALLOWED_HOSTS
 ```
 
+Для production Telegram-уведомления идут только через HTTPS gateway отдельного
+сервиса бота. На платформе обязательны `TELEGRAM_DELIVERY_API_URL` и отдельный
+`TELEGRAM_DELIVERY_API_TOKEN`; BotFather-токен здесь хранить нельзя. Сначала
+разверните и проверьте `/healthz` и авторизованный POST gateway, затем обновляйте
+`web` и `notification-worker`. Полный порядок и reverse-proxy пример приведены в
+[`telegram-bot/README.md`](telegram-bot/README.md).
+
 ### 3. Запуск сервера разработки
 ```bash
 # Применение миграций

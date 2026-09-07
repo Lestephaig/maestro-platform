@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from typing import Sequence
 
 from telegram import Bot, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.error import TelegramError
+from telegram.error import BadRequest, Forbidden, NetworkError, RetryAfter, TelegramError, TimedOut
 from telegram.request import HTTPXRequest
 
 from .config import BotSettings
@@ -19,6 +19,16 @@ class TelegramButton:
 
 
 ButtonRows = Sequence[Sequence[TelegramButton]]
+
+
+@dataclass(frozen=True)
+class TelegramSendResult:
+    ok: bool
+    message_id: int | None = None
+    error_kind: str | None = None
+
+    def __bool__(self):
+        return self.ok
 
 
 def _build_keyboard(buttons: ButtonRows | None):
@@ -46,6 +56,7 @@ async def send_telegram_message(
     text: str,
     buttons: ButtonRows | None = None,
     *,
+    parse_mode: str | None = None,
     bot=None,
 ):
     """Send one message without leaking its content or recipient into logs."""
@@ -55,10 +66,20 @@ async def send_telegram_message(
     try:
         if owns_bot:
             async with bot:
-                await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
+                sent_message = await bot.send_message(
+                    chat_id=chat_id,
+                    text=text,
+                    parse_mode=parse_mode,
+                    reply_markup=keyboard,
+                )
         else:
-            await bot.send_message(chat_id=chat_id, text=text, reply_markup=keyboard)
-    except (TelegramError, TimeoutError) as error:
+            sent_message = await bot.send_message(
+                chat_id=chat_id,
+                text=text,
+                parse_mode=parse_mode,
+                reply_markup=keyboard,
+            )
+    except RetryAfter as error:
         logger.warning(
             'telegram_send_failed',
             extra={
@@ -67,7 +88,27 @@ async def send_telegram_message(
                 'button_count': sum(len(row) for row in buttons or ()),
             },
         )
-        return False
+        return TelegramSendResult(False, error_kind='rate_limited')
+    except (BadRequest, Forbidden) as error:
+        logger.warning(
+            'telegram_send_failed',
+            extra={
+                'event': 'telegram_send_failed',
+                'error_type': type(error).__name__,
+                'button_count': sum(len(row) for row in buttons or ()),
+            },
+        )
+        return TelegramSendResult(False, error_kind='rejected')
+    except (NetworkError, TimedOut, TimeoutError, TelegramError) as error:
+        logger.warning(
+            'telegram_send_failed',
+            extra={
+                'event': 'telegram_send_failed',
+                'error_type': type(error).__name__,
+                'button_count': sum(len(row) for row in buttons or ()),
+            },
+        )
+        return TelegramSendResult(False, error_kind='temporary')
     except Exception as error:
         logger.error(
             'telegram_send_unexpected_error',
@@ -77,8 +118,15 @@ async def send_telegram_message(
                 'button_count': sum(len(row) for row in buttons or ()),
             },
         )
-        return False
+        return TelegramSendResult(False, error_kind='service_unavailable')
 
+    message_id = getattr(sent_message, 'message_id', None)
+    if not isinstance(message_id, int) or isinstance(message_id, bool) or message_id <= 0:
+        logger.error(
+            'telegram_send_invalid_result',
+            extra={'event': 'telegram_send_invalid_result'},
+        )
+        return TelegramSendResult(False, error_kind='temporary')
     logger.info(
         'telegram_message_sent',
         extra={
@@ -86,7 +134,7 @@ async def send_telegram_message(
             'button_count': sum(len(row) for row in buttons or ()),
         },
     )
-    return True
+    return TelegramSendResult(True, message_id=message_id)
 
 
 def send_telegram_message_sync(

@@ -26,6 +26,13 @@ chmod 640 .env
 - `MAESTRO_API_TOKEN` — отдельный случайный секрет для запросов привязки к
   платформе; значение должно совпадать с `TELEGRAM_LINK_API_TOKEN` в `.env`
   Django-приложения.
+- `TELEGRAM_DELIVERY_API_TOKEN` — отдельный Bearer-секрет входящего API доставки;
+  значение должно совпадать с одноимённой переменной платформы и не должно
+  совпадать с `MAESTRO_API_TOKEN`.
+- `TELEGRAM_DELIVERY_API_HOST` и `TELEGRAM_DELIVERY_API_PORT` — адрес внутреннего
+  HTTP-сервера (по умолчанию `0.0.0.0:8080`).
+- `TELEGRAM_DELIVERY_DB_PATH` — SQLite-файл реестра идемпотентности на Docker
+  volume (по умолчанию `/app/data/delivery.sqlite3`).
 
 Для production `MAESTRO_BASE_URL` должен использовать HTTPS: бот отправляет на
 платформу одноразовый токен привязки и числовой Telegram `chat_id`. Telegram bot
@@ -48,7 +55,9 @@ docker compose logs -f telegram-bot
 ```
 
 Контейнер запускается от непривилегированного пользователя, имеет политику
-`restart: unless-stopped` и healthcheck по heartbeat-файлу.
+`restart: unless-stopped`; healthcheck одновременно проверяет heartbeat polling
+и `GET /healthz`. Порт API публикуется на host только как `127.0.0.1:8080` и не
+должен быть открыт напрямую в интернет.
 
 После изменения `.env` пересобирать образ не нужно. Перезапустите процесс, чтобы он
 заново прочитал настройки из смонтированного файла:
@@ -69,16 +78,85 @@ python -m venv .venv
 
 В Windows используйте `.venv\\Scripts\\python.exe`.
 
+## Delivery API
+
+Платформа вызывает:
+
+```http
+POST /internal/v1/telegram/messages
+Authorization: Bearer <TELEGRAM_DELIVERY_API_TOKEN>
+Idempotency-Key: notification-delivery-<delivery_id>
+Content-Type: application/json
+```
+
+Тело содержит положительный `chat_id`, непустой `text` до 4096 символов,
+`parse_mode: "HTML"` и массив строк HTTPS inline-кнопок `buttons`. Успех и
+повтор уже завершённого ключа возвращают `200` с `telegram_message_id`; для
+повтора устанавливается `duplicate: true`. Некорректный ввод возвращает `400`
+или `413`, неверная авторизация — `401`, окончательный отказ Telegram — `422`,
+rate limit — `429`, временные сбои — `502/503`.
+
+Сервис хранит в SQLite только SHA-256-хеш idempotency key, статус, Telegram
+message ID и время. Успешные записи старше семи дней очищаются; параллельный
+запрос с уже обрабатываемым ключом не отправляется второй раз. Строгое
+`exactly once` невозможно гарантировать, если процесс завершится после принятия
+сообщения Telegram, но до фиксации результата в SQLite.
+
+Внутренний порт следует публиковать через HTTPS reverse proxy. Минимальный
+фрагмент Nginx:
+
+```nginx
+location = /internal/v1/telegram/messages {
+    client_max_body_size 16k;
+    proxy_connect_timeout 5s;
+    proxy_read_timeout 30s;
+    proxy_pass http://127.0.0.1:8080;
+}
+
+location = /healthz {
+    proxy_pass http://127.0.0.1:8080;
+}
+```
+
+На публичном endpoint нужен действительный TLS-сертификат. При постоянном IP
+платформы дополнительно ограничьте доступ к маршруту по IP, не убирая Bearer-
+аутентификацию.
+
 ## Внутренний сервис отправки
 
 Модуль `maestro_bot.service` формирует inline-клавиатуру, применяет таймауты и
-возвращает `False` вместо распространения ошибки Telegram API. Токен, `chat_id` и
-текст сообщения не записываются в логи.
+возвращает безопасную категорию ошибки Telegram API. Объект Bot и его пул
+соединений совместно используются polling и delivery API. BotFather-токен
+хранится только на зарубежном сервере; токен, `chat_id` и текст сообщения не
+записываются в логи.
 
-Сейчас это локальный Python API внутри сервиса. Поскольку платформа и бот находятся
-на разных серверах, будущую отправку уведомлений из платформы нужно подключать через
-отдельный аутентифицированный сетевой контракт или очередь. Публиковать токен бота в
-`.env` платформы для этого не следует.
+## Порядок развёртывания и ручная проверка
+
+1. Создайте новый секрет (`openssl rand -hex 32`) и задайте его как
+   `TELEGRAM_DELIVERY_API_TOKEN` на обоих серверах.
+2. Сначала разверните бот, volume и HTTPS reverse proxy; проверьте с платформы
+   `curl -fsS https://bot.example.com/healthz`.
+3. Выполните авторизованный тестовый POST с новым уникальным
+   `Idempotency-Key`; повтор того же POST должен вернуть `duplicate: true`.
+4. Только затем задайте `TELEGRAM_DELIVERY_API_URL`, token и timeout на
+   платформе и разверните web/worker.
+5. Отправьте реальное сообщение и убедитесь, что `NotificationDelivery`
+   перешёл в `sent`; после этого удалите старый `TELEGRAM_BOT_TOKEN` из `.env`
+   платформы.
+
+Для проверки восстановления перезапустите оба сервиса и повторите запрос с уже
+успешным ключом: Telegram не должен получить второе сообщение.
+
+Пример POST (подставьте тестовый chat ID и секрет из окружения, не сохраняйте
+команду с секретом в shell history):
+
+```shell
+curl --fail-with-body https://bot.example.com/internal/v1/telegram/messages \
+  -H "Authorization: Bearer $TELEGRAM_DELIVERY_API_TOKEN" \
+  -H "Idempotency-Key: manual-check-$(date +%s)" \
+  -H "Content-Type: application/json" \
+  --data '{"chat_id":123456789,"text":"Gateway check","parse_mode":"HTML","buttons":[]}'
+```
 
 ## Привязка аккаунта
 

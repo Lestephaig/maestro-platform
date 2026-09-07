@@ -1,4 +1,6 @@
 import json
+from io import BytesIO
+from urllib.error import HTTPError
 from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
@@ -12,6 +14,7 @@ from notifications.channels import get_active_channels
 from notifications.deliveries import (
     _send_telegram,
     build_message_preview,
+    build_telegram_payload,
     build_telegram_preview,
     enqueue_chat_message_deliveries,
     process_pending_deliveries,
@@ -25,8 +28,9 @@ from notifications.models import (
 
 @override_settings(
     SITE_URL='https://maestro.example',
-    TELEGRAM_BOT_TOKEN='test-token',
-    TELEGRAM_SEND_TIMEOUT=4,
+    TELEGRAM_DELIVERY_API_URL='https://bot.example/internal/v1/telegram/messages',
+    TELEGRAM_DELIVERY_API_TOKEN='test-delivery-token',
+    TELEGRAM_DELIVERY_API_TIMEOUT=4,
     NOTIFICATION_DELIVERY_MAX_ATTEMPTS=3,
     NOTIFICATION_DELIVERY_RETRY_SECONDS=60,
 )
@@ -145,14 +149,30 @@ class ChatMessageDeliveryTests(TestCase):
             def __exit__(self, *args):
                 return False
 
-            def read(self):
-                return b'{"ok": true}'
+            def getcode(self):
+                return 200
+
+            def read(self, size=-1):
+                return b'{"ok": true, "telegram_message_id": 42, "duplicate": false}'
 
         with patch('notifications.deliveries.urllib_request.urlopen', return_value=Response()) as urlopen:
             self.assertTrue(_send_telegram(delivery))
 
         request = urlopen.call_args.args[0]
         payload = json.loads(request.data.decode('utf-8'))
+        self.assertEqual(
+            request.full_url,
+            'https://bot.example/internal/v1/telegram/messages',
+        )
+        self.assertEqual(request.method, 'POST')
+        self.assertEqual(
+            request.get_header('Authorization'),
+            'Bearer test-delivery-token',
+        )
+        self.assertEqual(
+            request.get_header('Idempotency-key'),
+            f'notification-delivery-{delivery.pk}',
+        )
         self.assertEqual(payload['chat_id'], 777)
         self.assertEqual(payload['parse_mode'], 'HTML')
         self.assertIn('&lt;Маэстро &amp; друг&gt;', payload['text'])
@@ -161,10 +181,24 @@ class ChatMessageDeliveryTests(TestCase):
             payload['text'],
         )
         self.assertNotIn('<b>опасно', payload['text'])
-        button = payload['reply_markup']['inline_keyboard'][0][0]
+        button = payload['buttons'][0][0]
         self.assertEqual(button['text'], 'Открыть сообщение')
         self.assertEqual(button['url'], f'https://maestro.example/chat/{self.room.pk}/')
         self.assertEqual(urlopen.call_args.kwargs['timeout'], 4)
+
+    def test_payload_builder_is_independent_from_transport(self):
+        TelegramConnection.objects.create(user=self.recipient, telegram_chat_id=778)
+        delivery = NotificationDelivery.objects.create(
+            message=self._message('Payload'),
+            recipient=self.recipient,
+            channel=NotificationDelivery.CHANNEL_TELEGRAM,
+        )
+
+        payload = build_telegram_payload(delivery)
+
+        self.assertEqual(payload['chat_id'], 778)
+        self.assertEqual(payload['parse_mode'], 'HTML')
+        self.assertEqual(payload['buttons'][0][0]['text'], 'Открыть сообщение')
 
     def test_attachment_only_preview(self):
         message = self._message('')
@@ -229,3 +263,83 @@ class ChatMessageDeliveryTests(TestCase):
         self.assertEqual(delivery.attempts, 1)
         self.assertEqual(delivery.last_error, 'RuntimeError')
         send_telegram.assert_called_once()
+
+    def test_gateway_timeout_is_retried_with_safe_error_code(self):
+        self.preference.email_enabled = False
+        self.preference.telegram_enabled = True
+        self.preference.save()
+        TelegramConnection.objects.create(user=self.recipient, telegram_chat_id=123456789)
+        message = self._message('Secret notification text')
+        enqueue_chat_message_deliveries(message.pk)
+
+        with patch(
+            'notifications.deliveries.urllib_request.urlopen',
+            side_effect=TimeoutError('request timed out'),
+        ), self.assertLogs('notifications.deliveries', level='WARNING') as logs:
+            result = process_pending_deliveries()
+
+        delivery = NotificationDelivery.objects.get()
+        self.assertEqual(result, {'processed': 1, 'sent': 0})
+        self.assertEqual(delivery.status, NotificationDelivery.STATUS_PENDING)
+        self.assertEqual(delivery.last_error, 'gateway_timeout')
+        rendered_logs = '\n'.join(logs.output)
+        self.assertNotIn('test-delivery-token', rendered_logs)
+        self.assertNotIn('Secret notification text', rendered_logs)
+        self.assertNotIn('123456789', rendered_logs)
+
+    def test_rate_limit_and_server_errors_are_retried(self):
+        self.preference.email_enabled = False
+        self.preference.telegram_enabled = True
+        self.preference.save()
+        TelegramConnection.objects.create(user=self.recipient, telegram_chat_id=123)
+
+        for status, expected_code in ((429, 'gateway_rate_limited'), (503, 'gateway_unavailable')):
+            with self.subTest(status=status):
+                message = self._message(f'Message {status}')
+                enqueue_chat_message_deliveries(message.pk)
+                error = HTTPError(
+                    'https://bot.example/internal/v1/telegram/messages',
+                    status,
+                    'gateway error',
+                    {},
+                    BytesIO(b'ignored'),
+                )
+                with patch(
+                    'notifications.deliveries.urllib_request.urlopen',
+                    side_effect=error,
+                ):
+                    process_pending_deliveries()
+
+                delivery = NotificationDelivery.objects.get(message=message)
+                self.assertEqual(delivery.status, NotificationDelivery.STATUS_PENDING)
+                self.assertEqual(delivery.last_error, expected_code)
+                delivery.status = NotificationDelivery.STATUS_FAILED
+                delivery.save(update_fields=('status',))
+
+    def test_permanent_gateway_errors_are_not_retried(self):
+        self.preference.email_enabled = False
+        self.preference.telegram_enabled = True
+        self.preference.save()
+        TelegramConnection.objects.create(user=self.recipient, telegram_chat_id=123)
+
+        for status in (400, 401, 403, 413, 422):
+            with self.subTest(status=status):
+                message = self._message(f'Message {status}')
+                enqueue_chat_message_deliveries(message.pk)
+                error = HTTPError(
+                    'https://bot.example/internal/v1/telegram/messages',
+                    status,
+                    'gateway error',
+                    {},
+                    BytesIO(b'ignored'),
+                )
+                with patch(
+                    'notifications.deliveries.urllib_request.urlopen',
+                    side_effect=error,
+                ):
+                    process_pending_deliveries()
+
+                delivery = NotificationDelivery.objects.get(message=message)
+                self.assertEqual(delivery.status, NotificationDelivery.STATUS_FAILED)
+                self.assertEqual(delivery.attempts, 1)
+                self.assertTrue(delivery.last_error.startswith('gateway_'))

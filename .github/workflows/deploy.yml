@@ -36,7 +36,7 @@ jobs:
           fi
 
           # Проверяем обязательную Telegram-конфигурацию до остановки текущей версии.
-          for variable in TELEGRAM_BOT_NAME TELEGRAM_LINK_API_TOKEN TELEGRAM_BOT_TOKEN; do
+          for variable in TELEGRAM_BOT_NAME TELEGRAM_LINK_API_TOKEN TELEGRAM_DELIVERY_API_URL TELEGRAM_DELIVERY_API_TOKEN; do
             if ! grep -qE "^${variable}=.+$" .env; then
               echo "❌ Required variable ${variable} is missing or empty in server .env"
               exit 1

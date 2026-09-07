@@ -8,6 +8,7 @@ from telegram.ext import Application, ApplicationBuilder, CommandHandler, Messag
 from telegram.request import HTTPXRequest
 
 from .config import BotSettings
+from .delivery_api import DeliveryApiServer
 from .handlers import BOT_COMMANDS, error_handler, help_command, start_command, unknown_command
 
 logger = logging.getLogger(__name__)
@@ -32,12 +33,18 @@ def build_application(settings: BotSettings, heartbeat_file: Path = HEARTBEAT_FI
                     'error_type': type(error).__name__,
                 },
             )
+        delivery_api = DeliveryApiServer(settings, application.bot)
+        await delivery_api.start()
+        application.bot_data['delivery_api'] = delivery_api
         application.bot_data['heartbeat_task'] = asyncio.create_task(
             _heartbeat(heartbeat_file)
         )
         logger.info('telegram_bot_started', extra={'event': 'telegram_bot_started'})
 
     async def post_shutdown(application: Application):
+        delivery_api = application.bot_data.pop('delivery_api', None)
+        if delivery_api is not None:
+            await delivery_api.stop()
         task = application.bot_data.pop('heartbeat_task', None)
         if task is not None:
             task.cancel()

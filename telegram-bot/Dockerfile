@@ -7,7 +7,9 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt \
-    && useradd --create-home --uid 10001 bot
+    && useradd --create-home --uid 10001 bot \
+    && mkdir -p /app/data \
+    && chown bot:bot /app/data
 
 COPY --chown=bot:bot maestro_bot ./maestro_bot
 

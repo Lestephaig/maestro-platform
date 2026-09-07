@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 from pathlib import Path
 from decouple import config
 from email.utils import parseaddr
+from urllib.parse import urlsplit
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -225,11 +226,37 @@ LOGIN_URL = 'login'
 # Site URL для генерации ссылок в email
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
 
-# Telegram account linking. The API token is shared only with the separate bot service.
+# Telegram account linking and the separate outbound-delivery gateway.
 TELEGRAM_BOT_NAME = config('TELEGRAM_BOT_NAME', default='').strip().lstrip('@')
 TELEGRAM_LINK_API_TOKEN = config('TELEGRAM_LINK_API_TOKEN', default='').strip()
-TELEGRAM_BOT_TOKEN = config('TELEGRAM_BOT_TOKEN', default='').strip()
-TELEGRAM_SEND_TIMEOUT = config('TELEGRAM_SEND_TIMEOUT', default=10, cast=float)
+TELEGRAM_DELIVERY_API_URL = config('TELEGRAM_DELIVERY_API_URL', default='').strip()
+TELEGRAM_DELIVERY_API_TOKEN = config('TELEGRAM_DELIVERY_API_TOKEN', default='').strip()
+TELEGRAM_DELIVERY_API_TIMEOUT = config(
+    'TELEGRAM_DELIVERY_API_TIMEOUT', default=10, cast=float
+)
+if TELEGRAM_DELIVERY_API_TIMEOUT <= 0:
+    raise ValueError('TELEGRAM_DELIVERY_API_TIMEOUT must be positive')
+if (
+    TELEGRAM_LINK_API_TOKEN
+    and TELEGRAM_DELIVERY_API_TOKEN
+    and TELEGRAM_LINK_API_TOKEN == TELEGRAM_DELIVERY_API_TOKEN
+):
+    raise ValueError(
+        'TELEGRAM_LINK_API_TOKEN and TELEGRAM_DELIVERY_API_TOKEN must be different'
+    )
+if TELEGRAM_DELIVERY_API_URL:
+    telegram_delivery_url = urlsplit(TELEGRAM_DELIVERY_API_URL)
+    if telegram_delivery_url.scheme not in {'http', 'https'} or not telegram_delivery_url.netloc:
+        raise ValueError('TELEGRAM_DELIVERY_API_URL must be an absolute HTTP(S) URL')
+    if not DEBUG and telegram_delivery_url.scheme != 'https':
+        raise ValueError('TELEGRAM_DELIVERY_API_URL must use HTTPS when DEBUG=False')
+if not DEBUG and (
+    not TELEGRAM_DELIVERY_API_URL or not TELEGRAM_DELIVERY_API_TOKEN
+):
+    raise ValueError(
+        'TELEGRAM_DELIVERY_API_URL and TELEGRAM_DELIVERY_API_TOKEN are required '
+        'when DEBUG=False'
+    )
 NOTIFICATION_DELIVERY_MAX_ATTEMPTS = config(
     'NOTIFICATION_DELIVERY_MAX_ATTEMPTS', default=3, cast=int
 )
