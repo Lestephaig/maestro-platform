@@ -53,6 +53,25 @@ services:
       - maestro_network
     command: daphne -b 0.0.0.0 -p 8000 core.asgi:application
 
+  notification-worker:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://maestro_user:maestro_password@db:5432/maestro_db
+      REDIS_URL: redis://redis:6379/0
+      DEBUG: "False"
+      SITE_URL: https://www.maestrocast.ru/
+    volumes:
+      - ./logs:/app/logs
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - maestro_network
+    command: python manage.py process_notification_deliveries --watch
+
   nginx:
     image: nginx:alpine
     restart: unless-stopped

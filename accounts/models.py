@@ -20,6 +20,41 @@ class User(AbstractUser):
         return self.display_name or self.username or self.email
 
 
+class TelegramConnection(models.Model):
+    user = models.OneToOneField(
+        User,
+        on_delete=models.CASCADE,
+        related_name='telegram_connection',
+    )
+    telegram_chat_id = models.BigIntegerField(unique=True)
+    linked_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f'Telegram connection for user {self.user_id}'
+
+
+class TelegramLinkToken(models.Model):
+    user = models.ForeignKey(
+        User,
+        on_delete=models.CASCADE,
+        related_name='telegram_link_tokens',
+    )
+    token_hash = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(default=timezone.now)
+    expires_at = models.DateTimeField()
+    used_at = models.DateTimeField(blank=True, null=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user', 'created_at']),
+            models.Index(fields=['expires_at']),
+        ]
+
+    def __str__(self):
+        return f'Telegram link token for user {self.user_id}'
+
+
 class LegalAcceptance(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='legal_acceptances')
     document_slug = models.CharField(max_length=80)

@@ -30,3 +30,4 @@ staticfiles
 *.iml
 deployment_test_*.txt
 ssh_test.txt
+telegram-bot

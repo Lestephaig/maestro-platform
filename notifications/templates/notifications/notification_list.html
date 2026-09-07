@@ -18,6 +18,14 @@
     .notifications-empty-text {
         color: rgba(255, 255, 255, 0.82);
     }
+    .notification-channel-settings {
+        background: linear-gradient(135deg, rgba(13, 15, 26, 0.9), rgba(19, 21, 32, 0.92));
+    }
+    .notification-channel-switches {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem 1.5rem;
+    }
 </style>
 {% endblock %}
 
@@ -29,9 +37,6 @@
             <p class="mb-0 notifications-subtitle">Непрочитанных: {{ unread_count }}</p>
         </div>
         <div class="d-flex gap-2">
-            <a href="{% url 'notifications:settings' %}" class="btn btn-outline-light">
-                <i class="bi bi-gear me-1"></i>Настройки
-            </a>
             <form method="post" action="{% url 'notifications:mark_all_read' %}">
                 {% csrf_token %}
                 <input type="hidden" name="next" value="{{ request.get_full_path }}">
@@ -41,6 +46,44 @@
             </form>
         </div>
     </div>
+
+    <form method="post"
+          action="{% url 'notifications:channel_settings_update' %}"
+          class="card notification-channel-settings border-secondary mb-4">
+        {% csrf_token %}
+        <div class="card-body d-flex flex-wrap justify-content-between align-items-center gap-3">
+            <div>
+                <div class="notification-channel-switches">
+                    <label class="form-check form-switch text-light mb-0">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               name="email_enabled"
+                               {% if email_enabled %}checked{% endif %}>
+                        <span class="form-check-label">Получать уведомления по email</span>
+                    </label>
+                    <label class="form-check form-switch text-light mb-0">
+                        <input class="form-check-input"
+                               type="checkbox"
+                               role="switch"
+                               name="telegram_enabled"
+                               {% if telegram_enabled %}checked{% endif %}
+                               {% if not telegram_linked %}disabled{% endif %}>
+                        <span class="form-check-label">Получать уведомления в Telegram</span>
+                    </label>
+                </div>
+                {% if not telegram_linked %}
+                    <p class="notifications-subtitle small mb-0 mt-2">
+                        Чтобы включить Telegram-уведомления,
+                        <a href="{% url 'profile' %}#telegram-settings" class="link-warning">привяжите Telegram в настройках аккаунта</a>.
+                    </p>
+                {% endif %}
+            </div>
+            <button type="submit" class="btn btn-warning fw-bold">
+                <i class="bi bi-check2 me-1"></i>Сохранить
+            </button>
+        </div>
+    </form>
 
     <form method="get" class="card bg-dark border-secondary mb-4">
         <div class="card-body row g-3 align-items-end">

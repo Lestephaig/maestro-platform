@@ -39,6 +39,16 @@ cp .env.example .env
 # Установите SECRET_KEY, DEBUG=True, ALLOWED_HOSTS
 ```
 
+Для production Telegram-уведомления идут через gateway отдельного сервиса бота.
+Предпочтителен HTTPS. Если у сервера есть только белый IP, прямой HTTP разрешается
+явно через `TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True` и только для публичного
+IP URL; порт обязательно ограничивается firewall до IP платформы. На платформе
+также обязательны `TELEGRAM_DELIVERY_API_URL` и отдельный
+`TELEGRAM_DELIVERY_API_TOKEN`; BotFather-токен здесь хранить нельзя. Сначала
+разверните и проверьте `/healthz` и авторизованный POST gateway, затем обновляйте
+`web` и `notification-worker`. Подробности приведены в
+[`telegram-bot/README.md`](telegram-bot/README.md).
+
 ### 3. Запуск сервера разработки
 ```bash
 # Применение миграций

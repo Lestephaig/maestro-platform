@@ -42,7 +42,15 @@ class RequiredProfileCompletionMiddleware:
         '/accounts/profile/edit/',
         '/logout/',
     }
-    ALLOWED_PREFIXES = ('/legal/', '/admin/', '/grappelli/', '/static/', '/media/', '/favicon.ico')
+    ALLOWED_PREFIXES = (
+        '/accounts/api/telegram/',
+        '/legal/',
+        '/admin/',
+        '/grappelli/',
+        '/static/',
+        '/media/',
+        '/favicon.ico',
+    )
 
     def __init__(self, get_response):
         self.get_response = get_response

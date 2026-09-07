@@ -10,10 +10,11 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
+from ipaddress import ip_address
 from pathlib import Path
 from decouple import config
-import os
 from email.utils import parseaddr
+from urllib.parse import urlsplit
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,6 +22,34 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 def _split_csv(value: str):
     return [item.strip() for item in value.split(',') if item.strip()]
+
+
+def validate_telegram_delivery_api_url(value, *, debug, allow_insecure_http):
+    parsed = urlsplit(value)
+    if (
+        parsed.scheme not in {'http', 'https'}
+        or not parsed.netloc
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        raise ValueError('TELEGRAM_DELIVERY_API_URL must be an absolute HTTP(S) URL')
+    if parsed.scheme == 'https' or debug:
+        return
+    if not allow_insecure_http:
+        raise ValueError(
+            'HTTP TELEGRAM_DELIVERY_API_URL requires '
+            'TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True when DEBUG=False'
+        )
+    try:
+        gateway_ip = ip_address(parsed.hostname)
+    except (TypeError, ValueError):
+        raise ValueError(
+            'Insecure TELEGRAM_DELIVERY_API_URL must use a public IP address'
+        ) from None
+    if not gateway_ip.is_global:
+        raise ValueError(
+            'Insecure TELEGRAM_DELIVERY_API_URL must use a public IP address'
+        )
 
 
 # Quick-start development settings - unsuitable for production
@@ -98,6 +127,7 @@ TEMPLATES = [
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
                 'core.context_processors.legal_documents',
+                'accounts.context_processors.telegram_link_banner',
             ],
         },
     },
@@ -203,6 +233,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_USE_SSL = config('EMAIL_USE_SSL', default=False, cast=bool)
+EMAIL_TIMEOUT = config('EMAIL_TIMEOUT', default=10, cast=float)
 _raw_default_from_email = config('DEFAULT_FROM_EMAIL', default='')
 _fallback_from_email = EMAIL_HOST_USER or 'noreply@localhost'
 DEFAULT_FROM_EMAIL = _raw_default_from_email or _fallback_from_email
@@ -223,6 +254,47 @@ LOGIN_URL = 'login'
 
 # Site URL для генерации ссылок в email
 SITE_URL = config('SITE_URL', default='http://127.0.0.1:8000')
+
+# Telegram account linking and the separate outbound-delivery gateway.
+TELEGRAM_BOT_NAME = config('TELEGRAM_BOT_NAME', default='').strip().lstrip('@')
+TELEGRAM_LINK_API_TOKEN = config('TELEGRAM_LINK_API_TOKEN', default='').strip()
+TELEGRAM_DELIVERY_API_URL = config('TELEGRAM_DELIVERY_API_URL', default='').strip()
+TELEGRAM_DELIVERY_API_TOKEN = config('TELEGRAM_DELIVERY_API_TOKEN', default='').strip()
+TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP = config(
+    'TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP', default=False, cast=bool
+)
+TELEGRAM_DELIVERY_API_TIMEOUT = config(
+    'TELEGRAM_DELIVERY_API_TIMEOUT', default=10, cast=float
+)
+if TELEGRAM_DELIVERY_API_TIMEOUT <= 0:
+    raise ValueError('TELEGRAM_DELIVERY_API_TIMEOUT must be positive')
+if (
+    TELEGRAM_LINK_API_TOKEN
+    and TELEGRAM_DELIVERY_API_TOKEN
+    and TELEGRAM_LINK_API_TOKEN == TELEGRAM_DELIVERY_API_TOKEN
+):
+    raise ValueError(
+        'TELEGRAM_LINK_API_TOKEN and TELEGRAM_DELIVERY_API_TOKEN must be different'
+    )
+if TELEGRAM_DELIVERY_API_URL:
+    validate_telegram_delivery_api_url(
+        TELEGRAM_DELIVERY_API_URL,
+        debug=DEBUG,
+        allow_insecure_http=TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP,
+    )
+if not DEBUG and (
+    not TELEGRAM_DELIVERY_API_URL or not TELEGRAM_DELIVERY_API_TOKEN
+):
+    raise ValueError(
+        'TELEGRAM_DELIVERY_API_URL and TELEGRAM_DELIVERY_API_TOKEN are required '
+        'when DEBUG=False'
+    )
+NOTIFICATION_DELIVERY_MAX_ATTEMPTS = config(
+    'NOTIFICATION_DELIVERY_MAX_ATTEMPTS', default=3, cast=int
+)
+NOTIFICATION_DELIVERY_RETRY_SECONDS = config(
+    'NOTIFICATION_DELIVERY_RETRY_SECONDS', default=60, cast=int
+)
 
 # Channels
 ASGI_APPLICATION = 'core.asgi.application'

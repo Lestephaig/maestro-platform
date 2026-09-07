@@ -1,11 +1,19 @@
+import json
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_http_methods, require_POST
 
 from .models import Notification, NotificationPreference
+from .preferences import (
+    NotificationPreferenceValidationError,
+    get_channel_settings,
+    update_channel_settings,
+)
 
 
 @login_required
@@ -36,7 +44,7 @@ def notification_list(request):
     paginator = Paginator(notifications_qs, 20)
     page_obj = paginator.get_page(request.GET.get('page'))
 
-    return render(request, 'notifications/notification_list.html', {
+    context = {
         'page_obj': page_obj,
         'view_mode': view_mode if view_mode in {'all', 'unread'} else 'all',
         'type_filter': type_filter,
@@ -45,7 +53,9 @@ def notification_list(request):
             is_read=False,
             notification_type__in=enabled_in_app_types,
         ).count(),
-    })
+    }
+    context.update(get_channel_settings(request.user))
+    return render(request, 'notifications/notification_list.html', context)
 
 
 @require_POST
@@ -69,35 +79,45 @@ def notification_mark_all_read(request):
 
 @login_required
 def notification_settings(request):
-    if request.method == 'POST':
-        for notification_type, _ in Notification.NOTIFICATION_TYPE_CHOICES:
-            in_app_enabled = bool(request.POST.get(f'in_app_{notification_type}'))
-            email_enabled = bool(request.POST.get(f'email_{notification_type}'))
-            NotificationPreference.objects.update_or_create(
-                user=request.user,
-                notification_type=notification_type,
-                defaults={
-                    'in_app_enabled': in_app_enabled,
-                    'email_enabled': email_enabled,
-                },
-            )
-        messages.success(request, 'Настройки уведомлений сохранены.')
-        return redirect('notifications:settings')
+    return redirect('notifications:list')
 
-    preferences = {
-        pref.notification_type: pref
-        for pref in NotificationPreference.objects.filter(user=request.user)
-    }
-    rows = []
-    for notification_type, label in Notification.NOTIFICATION_TYPE_CHOICES:
-        preference = preferences.get(notification_type)
-        rows.append({
-            'notification_type': notification_type,
-            'label': label,
-            'in_app_enabled': True if preference is None else preference.in_app_enabled,
-            'email_enabled': True if preference is None else preference.email_enabled,
-        })
 
-    return render(request, 'notifications/notification_settings.html', {
-        'rows': rows,
+@require_POST
+@login_required
+def notification_channel_settings_update(request):
+    current_settings = get_channel_settings(request.user)
+    update_channel_settings(request.user, {
+        'email_enabled': bool(request.POST.get('email_enabled')),
+        'telegram_enabled': (
+            bool(request.POST.get('telegram_enabled'))
+            if current_settings['telegram_linked']
+            else False
+        ),
     })
+    messages.success(request, 'Настройки каналов уведомлений сохранены.')
+    return redirect('notifications:list')
+
+
+@login_required
+@require_http_methods(['GET', 'PATCH', 'PUT'])
+def notification_settings_api(request):
+    if request.method == 'GET':
+        return JsonResponse(get_channel_settings(request.user))
+
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({
+            'error': 'invalid_json',
+            'message': 'Тело запроса должно содержать корректный JSON.',
+        }, status=400)
+
+    try:
+        channel_settings = update_channel_settings(request.user, payload)
+    except NotificationPreferenceValidationError as error:
+        return JsonResponse({
+            'error': 'validation_error',
+            'fields': error.errors,
+        }, status=400)
+
+    return JsonResponse(channel_settings)

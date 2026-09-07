@@ -19,6 +19,8 @@ jobs:
         username: ${{ secrets.SERVER_USER }}
         key: ${{ secrets.SSH_PRIVATE_KEY }}
         script: |
+          set -eu
+
           # Переходим в папку проекта
           cd /home/${{ secrets.SERVER_USER }}/maestro-platform || exit
           
@@ -26,21 +28,47 @@ jobs:
           echo "📥 Pulling latest changes..."
           git pull origin main
           
-          # Копируем .env файл из секретов
-          echo "${{ secrets.ENV_FILE }}" > .env
+          # Production-конфигурация хранится локально на сервере и не
+          # перезаписывается при деплое.
+          if [ ! -f .env ]; then
+            echo "❌ Production .env file is missing on the server"
+            exit 1
+          fi
+
+          # Проверяем обязательную Telegram-конфигурацию до остановки текущей версии.
+          for variable in TELEGRAM_BOT_NAME TELEGRAM_LINK_API_TOKEN TELEGRAM_DELIVERY_API_URL TELEGRAM_DELIVERY_API_TOKEN; do
+            if ! grep -qE "^${variable}=.+$" .env; then
+              echo "❌ Required variable ${variable} is missing or empty in server .env"
+              exit 1
+            fi
+          done
+
+          # HTTP is permitted only as an explicit opt-in to a public IP gateway.
+          if grep -qE '^TELEGRAM_DELIVERY_API_URL=http://' .env && \
+             ! grep -qE '^TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True$' .env; then
+            echo "❌ HTTP Telegram gateway requires TELEGRAM_DELIVERY_ALLOW_INSECURE_HTTP=True"
+            exit 1
+          fi
           
-          # Запускаем через Docker Compose
-          echo "🐳 Building and starting containers..."
+          # Собираем новую версию до остановки текущих контейнеров.
+          echo "🐳 Building containers..."
+          docker-compose build
+
+          # Останавливаем старую версию и запускаем только инфраструктуру.
           docker-compose down
-          docker-compose up -d --build
+          docker-compose up -d db redis
           
-          # Применяем миграции
+          # Применяем миграции до запуска web и фонового worker-а.
           echo "🗄️ Applying database migrations..."
-          docker-compose exec -T web python manage.py migrate
+          docker-compose run --rm --no-deps web python manage.py migrate --noinput
           
           # Собираем статику
           echo "🎨 Collecting static files..."
-          docker-compose exec -T web python manage.py collectstatic --noinput
+          docker-compose run --rm --no-deps web python manage.py collectstatic --noinput
+
+          # Только после успешной подготовки БД запускаем приложение и worker.
+          echo "🚀 Starting application services..."
+          docker-compose up -d web notification-worker nginx
           
           # Проверяем статус
           echo "🔍 Checking container status..."

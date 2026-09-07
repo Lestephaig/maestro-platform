@@ -10,6 +10,11 @@ from clients.models import ClientProfile
 from agents.models import AgentProfile
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.conf import settings
+from django.utils import timezone
+from django.utils.crypto import constant_time_compare
+import json
 from django.db import transaction
 from performers.forms import PerformerProfileForm, PerformerPhotoForm, PerformerVideoForm
 from clients.forms import ClientProfileForm
@@ -20,8 +25,16 @@ from django.core.paginator import Paginator
 from chat.models import ChatRoom
 from announcements.models import Announcement
 from core.legal import get_client_ip, get_required_documents, get_user_agent
-from .models import LegalAcceptance
+from .models import LegalAcceptance, TelegramConnection
 from .profile_completion import get_missing_profile_fields, get_profile_completion
+from .telegram import (
+    TELEGRAM_LINK_BANNER_DISMISSED_SESSION_KEY,
+    TelegramLinkRateLimited,
+    TelegramLinkResult,
+    consume_telegram_link,
+    create_telegram_link,
+    telegram_link_is_available,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -159,6 +172,8 @@ def _build_profile_context(user, request=None):
         'profile_missing_fields': missing_fields,
         'profile_is_incomplete': bool(missing_fields),
         'profile_completion': get_profile_completion(user),
+        'telegram_connection': getattr(user, 'telegram_connection', None),
+        'telegram_link_available': telegram_link_is_available(settings.TELEGRAM_BOT_NAME),
     }
     base_queryset = Interaction.objects.select_related('created_by').prefetch_related('participant_links__user')
 
@@ -265,6 +280,111 @@ def _build_profile_context(user, request=None):
         context['admin_announcements_page_obj'] = announcements_page
         context['admin_announcements'] = announcements_page.object_list
     return context
+
+
+def _telegram_status_payload(user):
+    connection = getattr(user, 'telegram_connection', None)
+    return {
+        'linked': connection is not None,
+        'linked_at': connection.linked_at.isoformat() if connection else None,
+    }
+
+
+@login_required
+def telegram_link_status(request):
+    if request.method != 'GET':
+        return JsonResponse({'error': 'method_not_allowed'}, status=405)
+    return JsonResponse(_telegram_status_payload(request.user))
+
+
+@login_required
+@require_POST
+def telegram_link_create(request):
+    bot_name = settings.TELEGRAM_BOT_NAME
+    if not telegram_link_is_available(bot_name):
+        return JsonResponse(
+            {'error': 'telegram_not_configured', 'message': 'Привязка Telegram временно недоступна.'},
+            status=503,
+        )
+    try:
+        link = create_telegram_link(request.user, bot_name)
+    except TelegramLinkRateLimited as error:
+        response = JsonResponse(
+            {
+                'error': 'rate_limited',
+                'message': 'Слишком много попыток. Попробуйте немного позже.',
+                'retry_after': error.retry_after,
+            },
+            status=429,
+        )
+        response['Retry-After'] = str(error.retry_after)
+        return response
+    return JsonResponse({
+        'url': link.url,
+        'expires_at': link.expires_at.isoformat(),
+    }, status=201)
+
+
+@login_required
+@require_POST
+def telegram_link_banner_dismiss(request):
+    request.session[TELEGRAM_LINK_BANNER_DISMISSED_SESSION_KEY] = True
+    return JsonResponse({'dismissed': True})
+
+
+@login_required
+@require_POST
+def telegram_link_unlink(request):
+    deleted, _ = TelegramConnection.objects.filter(user=request.user).delete()
+    from notifications.models import NotificationChannelPreference
+
+    NotificationChannelPreference.objects.filter(
+        user=request.user,
+        telegram_enabled=True,
+    ).update(
+        telegram_enabled=False,
+        updated_at=timezone.now(),
+    )
+    return JsonResponse({'linked': False, 'unlinked': bool(deleted)})
+
+
+@csrf_exempt
+@require_POST
+def telegram_link_complete(request):
+    configured_token = settings.TELEGRAM_LINK_API_TOKEN
+    authorization = request.headers.get('Authorization', '')
+    supplied_token = authorization.removeprefix('Bearer ') if authorization.startswith('Bearer ') else ''
+    if not configured_token:
+        return JsonResponse({'status': 'service_unavailable'}, status=503)
+    if not supplied_token or not constant_time_compare(supplied_token, configured_token):
+        return JsonResponse({'status': 'unauthorized'}, status=401)
+
+    try:
+        payload = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return JsonResponse({'status': 'invalid_request'}, status=400)
+
+    raw_token = payload.get('token')
+    telegram_chat_id = payload.get('telegram_chat_id')
+    if (
+        not isinstance(raw_token, str)
+        or not raw_token
+        or len(raw_token) > 128
+        or not isinstance(telegram_chat_id, int)
+        or isinstance(telegram_chat_id, bool)
+        or telegram_chat_id <= 0
+    ):
+        return JsonResponse({'status': 'invalid_request'}, status=400)
+
+    result = consume_telegram_link(raw_token, telegram_chat_id)
+    status_codes = {
+        TelegramLinkResult.LINKED: 200,
+        TelegramLinkResult.INVALID_TOKEN: 404,
+        TelegramLinkResult.EXPIRED_TOKEN: 410,
+        TelegramLinkResult.USED_TOKEN: 409,
+        TelegramLinkResult.CHAT_ID_CONFLICT: 409,
+    }
+    return JsonResponse({'status': result.value}, status=status_codes[result])
 
 
 @login_required
