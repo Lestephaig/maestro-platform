@@ -1,6 +1,11 @@
 from django.contrib import admin
 
-from .models import Announcement, Tag, AnnouncementResponse
+from .models import (
+    Announcement,
+    AnnouncementResponse,
+    AnnouncementResponseAttachment,
+    Tag,
+)
 
 
 @admin.register(Tag)
@@ -40,3 +45,10 @@ class AnnouncementResponseAdmin(admin.ModelAdmin):
     list_filter = ('status', 'created_at')
     search_fields = ('announcement__title', 'responder__username', 'message')
     readonly_fields = ('created_at', 'updated_at')
+
+
+@admin.register(AnnouncementResponseAttachment)
+class AnnouncementResponseAttachmentAdmin(admin.ModelAdmin):
+    list_display = ('original_name', 'response', 'content_type', 'size', 'created_at')
+    search_fields = ('original_name', 'response__responder__username', 'response__announcement__title')
+    list_filter = ('content_type', 'created_at')

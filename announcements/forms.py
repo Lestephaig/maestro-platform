@@ -1,4 +1,7 @@
 from django import forms
+
+from chat.attachments import ATTACHMENT_ACCEPT, validate_attachments
+
 from .models import Announcement, AnnouncementResponse, Tag
 
 
@@ -87,7 +90,30 @@ class AnnouncementForm(forms.ModelForm):
 
 
 
+class MultipleFileInput(forms.ClearableFileInput):
+    allow_multiple_selected = True
+
+
+class MultipleFileField(forms.FileField):
+    def clean(self, data, initial=None):
+        single_file_clean = super().clean
+        if isinstance(data, (list, tuple)):
+            return [single_file_clean(item, initial) for item in data]
+        if data:
+            return [single_file_clean(data, initial)]
+        return []
+
+
 class AnnouncementResponseForm(forms.ModelForm):
+    attachments = MultipleFileField(
+        required=False,
+        label='Файлы',
+        widget=MultipleFileInput(attrs={
+            'class': 'form-control',
+            'accept': ATTACHMENT_ACCEPT,
+        }),
+    )
+
     class Meta:
         model = AnnouncementResponse
         fields = ['message']
@@ -100,3 +126,8 @@ class AnnouncementResponseForm(forms.ModelForm):
         labels = {
             'message': 'Сообщение'
         }
+
+    def clean_attachments(self):
+        files = self.cleaned_data['attachments']
+        validate_attachments(files, context='один отклик')
+        return files

@@ -26,11 +26,11 @@ def safe_attachment_name(name):
     return str(name).replace('\\', '/').rsplit('/', 1)[-1]
 
 
-def validate_attachments(files):
+def validate_attachments(files, *, context='одно сообщение'):
     limits = attachment_limits()
     if len(files) > limits['max_count']:
         raise ValidationError(
-            f'Можно прикрепить не более {limits["max_count"]} файлов за одно сообщение.'
+            f'Можно прикрепить не более {limits["max_count"]} файлов за {context}.'
         )
 
     total_size = sum(upload.size for upload in files)

@@ -113,6 +113,75 @@
         gap: 0.5rem;
         align-items: center;
     }
+
+    .response-attachments {
+        display: flex;
+        flex-direction: column;
+        gap: 0.55rem;
+        width: min(100%, 560px);
+        margin: 0 0 1rem;
+    }
+
+    .response-attachment-card {
+        display: grid;
+        grid-template-columns: auto minmax(0, 1fr) auto;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        border: 1px solid var(--silver-dark);
+        border-radius: 12px;
+        background: rgba(255, 255, 255, 0.06);
+    }
+
+    .response-attachment-icon {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2.4rem;
+        height: 2.4rem;
+        border-radius: 10px;
+        background: rgba(212, 175, 55, 0.16);
+        color: var(--gold);
+    }
+
+    .response-attachment-info {
+        min-width: 0;
+    }
+
+    .response-attachment-name {
+        display: block;
+        overflow: hidden;
+        color: var(--white);
+        font-weight: 650;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .response-attachment-meta {
+        color: var(--silver);
+        font-size: 0.78rem;
+    }
+
+    .response-attachment-actions {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .response-attachment-action {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 2rem;
+        height: 2rem;
+        border-radius: 8px;
+        color: var(--gold);
+        text-decoration: none;
+    }
+
+    .response-attachment-action:hover {
+        background: rgba(212, 175, 55, 0.16);
+        color: var(--gold-light);
+    }
 </style>
 {% endblock %}
 
@@ -172,6 +241,8 @@
                 Сообщение не указано
             </div>
             {% endif %}
+
+            {% include 'announcements/_response_attachments.html' with response=response %}
             
             <form method="post" class="status-form">
                 {% csrf_token %}

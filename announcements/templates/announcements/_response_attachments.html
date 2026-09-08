@@ -1,0 +1,21 @@
+{% if response.attachments.all %}
+<div class="response-attachments">
+    {% for attachment in response.attachments.all %}
+    <div class="response-attachment-card">
+        <span class="response-attachment-icon"><i class="bi bi-file-earmark"></i></span>
+        <span class="response-attachment-info">
+            <span class="response-attachment-name" title="{{ attachment.original_name }}">{{ attachment.original_name }}</span>
+            <span class="response-attachment-meta">{{ attachment.extension|default:"ФАЙЛ" }} · {{ attachment.size|filesizeformat }}</span>
+        </span>
+        <span class="response-attachment-actions">
+            <a class="response-attachment-action" href="{% url 'announcements:open_response_attachment' attachment.id %}" target="_blank" rel="noopener" title="Открыть" aria-label="Открыть {{ attachment.original_name }}">
+                <i class="bi bi-box-arrow-up-right"></i>
+            </a>
+            <a class="response-attachment-action" href="{% url 'announcements:download_response_attachment' attachment.id %}" title="Скачать" aria-label="Скачать {{ attachment.original_name }}">
+                <i class="bi bi-download"></i>
+            </a>
+        </span>
+    </div>
+    {% endfor %}
+</div>
+{% endif %}

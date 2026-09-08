@@ -1,6 +1,13 @@
-from django.db import models
+import uuid
+from pathlib import Path
+
+from django.db import models, transaction
 from django.conf import settings
+from django.db.models.signals import post_delete
+from django.dispatch import receiver
 from django.utils import timezone
+
+from .storage import private_announcement_storage
 
 
 class Tag(models.Model):
@@ -195,3 +202,49 @@ class AnnouncementResponse(models.Model):
 
     def __str__(self):
         return f'Отклик от {self.responder} на "{self.announcement.title}"'
+
+
+def response_attachment_upload_to(instance, filename):
+    extension = Path(filename).suffix.lower()
+    return (
+        f'announcements/responses/{instance.response_id}/'
+        f'{uuid.uuid4().hex}{extension}'
+    )
+
+
+class AnnouncementResponseAttachment(models.Model):
+    response = models.ForeignKey(
+        AnnouncementResponse,
+        on_delete=models.CASCADE,
+        related_name='attachments',
+        verbose_name='Отклик',
+    )
+    file = models.FileField(
+        upload_to=response_attachment_upload_to,
+        storage=private_announcement_storage,
+        max_length=500,
+    )
+    original_name = models.CharField('Исходное имя', max_length=255)
+    content_type = models.CharField('MIME-тип', max_length=100)
+    size = models.PositiveBigIntegerField('Размер')
+    created_at = models.DateTimeField('Создано', auto_now_add=True)
+
+    class Meta:
+        ordering = ('id',)
+        verbose_name = 'Вложение отклика'
+        verbose_name_plural = 'Вложения откликов'
+
+    @property
+    def extension(self):
+        return Path(self.original_name).suffix.lstrip('.').upper()
+
+    def __str__(self):
+        return self.original_name
+
+
+@receiver(post_delete, sender=AnnouncementResponseAttachment)
+def delete_response_attachment_file(sender, instance, **kwargs):
+    if instance.file:
+        storage = instance.file.storage
+        name = instance.file.name
+        transaction.on_commit(lambda: storage.delete(name))

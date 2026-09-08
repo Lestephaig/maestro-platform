@@ -1,15 +1,25 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.conf import settings
+from django.http import FileResponse, Http404
 from django.core.paginator import Paginator
 from django.db.models import Q, Count
 from django.db import transaction, close_old_connections
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 from datetime import date
 import logging
 import threading
 
-from .models import Announcement, AnnouncementResponse, Tag
+from chat.attachments import normalized_content_type, safe_attachment_name
+
+from .models import (
+    Announcement,
+    AnnouncementResponse,
+    AnnouncementResponseAttachment,
+    Tag,
+)
 from .forms import AnnouncementForm, AnnouncementResponseForm
 from notifications.utils import notify_performers_about_announcement_by_tags
 
@@ -216,7 +226,7 @@ def announcement_detail(request, announcement_id):
     user_response = None
     if request.user.is_authenticated:
         try:
-            user_response = AnnouncementResponse.objects.get(
+            user_response = AnnouncementResponse.objects.prefetch_related('attachments').get(
                 announcement=announcement,
                 responder=request.user
             )
@@ -236,12 +246,21 @@ def announcement_detail(request, announcement_id):
 
     if can_respond:
         if request.method == 'POST':
-            response_form = AnnouncementResponseForm(request.POST)
+            response_form = AnnouncementResponseForm(request.POST, request.FILES)
             if response_form.is_valid():
-                response = response_form.save(commit=False)
-                response.announcement = announcement
-                response.responder = request.user
-                response.save()
+                with transaction.atomic():
+                    response = response_form.save(commit=False)
+                    response.announcement = announcement
+                    response.responder = request.user
+                    response.save()
+                    for upload in response_form.cleaned_data['attachments']:
+                        AnnouncementResponseAttachment.objects.create(
+                            response=response,
+                            file=upload,
+                            original_name=safe_attachment_name(upload.name),
+                            content_type=normalized_content_type(upload),
+                            size=upload.size,
+                        )
                 messages.success(request, 'Ваш отклик успешно отправлен!')
                 return redirect('announcements:detail', announcement_id=announcement.id)
         else:
@@ -252,6 +271,8 @@ def announcement_detail(request, announcement_id):
         'user_response': user_response,
         'response_form': response_form,
         'can_respond': can_respond,
+        'attachment_max_size_mb': settings.CHAT_ATTACHMENT_MAX_SIZE_MB,
+        'attachment_max_count': settings.CHAT_ATTACHMENT_MAX_COUNT,
     }
     return render(request, 'announcements/announcement_detail.html', context)
 
@@ -366,7 +387,7 @@ def announcement_responses(request, announcement_id):
 
     responses = AnnouncementResponse.objects.filter(
         announcement=announcement
-    ).select_related('responder').order_by('-created_at')
+    ).select_related('responder').prefetch_related('attachments').order_by('-created_at')
 
     # Обработка изменения статуса отклика
     if request.method == 'POST' and request.user == announcement.author:
@@ -390,3 +411,59 @@ def announcement_responses(request, announcement_id):
         'responses': responses,
     }
     return render(request, 'announcements/announcement_responses.html', context)
+
+
+@login_required
+@require_POST
+def delete_response(request, response_id):
+    """Удаление собственного отклика вместе с его вложениями."""
+    announcement_response = get_object_or_404(
+        AnnouncementResponse.objects.select_related('announcement'),
+        id=response_id,
+        responder=request.user,
+    )
+    announcement_id = announcement_response.announcement_id
+    announcement_response.delete()
+    messages.success(request, 'Ваш отклик удалён. Вы можете откликнуться снова.')
+    return redirect('announcements:detail', announcement_id=announcement_id)
+
+
+def _attachment_response(request, attachment_id, download):
+    attachment = get_object_or_404(
+        AnnouncementResponseAttachment.objects.select_related(
+            'response__responder',
+            'response__announcement__author',
+        ),
+        id=attachment_id,
+    )
+    announcement_response = attachment.response
+    allowed = (
+        request.user == announcement_response.responder
+        or request.user == announcement_response.announcement.author
+        or request.user.is_staff
+    )
+    if not allowed:
+        raise Http404
+
+    try:
+        response = FileResponse(
+            attachment.file.open('rb'),
+            as_attachment=download,
+            filename=attachment.original_name,
+            content_type=attachment.content_type,
+        )
+    except FileNotFoundError:
+        raise Http404('Файл не найден.')
+    response['X-Content-Type-Options'] = 'nosniff'
+    response['Content-Security-Policy'] = "default-src 'none'; sandbox"
+    return response
+
+
+@login_required
+def open_response_attachment(request, attachment_id):
+    return _attachment_response(request, attachment_id, download=False)
+
+
+@login_required
+def download_response_attachment(request, attachment_id):
+    return _attachment_response(request, attachment_id, download=True)
